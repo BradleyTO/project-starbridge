@@ -1,4 +1,4 @@
-// Headless smoke test for the v0.2 (Milestone 2) UI.
+// Headless smoke test for the v0.3 UI (includes the v0.2 checks).
 // Usage: npm run build && npx vite preview --port 4173 &  then  node scripts/smoke.mjs [url]
 // Env: SHOTS_DIR (default ./smoke-shots)
 import { chromium } from 'playwright';
@@ -154,6 +154,51 @@ check('restart keeps the seed and resets', (await page.innerText('[data-testid=m
 await page.click('[data-testid=new-scenario]');
 await page.waitForTimeout(200);
 check('new scenario picks a new seed', !/^SEED 2$/.test((await page.innerText('[data-testid=seed]')).trim()), await page.innerText('[data-testid=seed]'));
+
+// v0.3: the captain's compound spatial order, typed verbatim, played to completion
+const USER_ORDER = 'Get us inbetween the two ships. Keep the weapons down and shields down. We don\'t want to appear hostile. And hail them on screen.';
+await page.goto(URL + (URL.includes('?') ? '&' : '?') + 'seed=42', { waitUntil: 'networkidle' });
+await page.click('[data-testid=skip-intro]');
+await page.waitForTimeout(200);
+const logStart = (await narrative()).length;
+await send(USER_ORDER);
+let v3 = (await narrative()).slice(logStart);
+check('v0.3: order echoed', v3.includes(USER_ORDER));
+check('v0.3: helm acknowledges interpose with ETA', /Plotting an interpose course between the Kestrel and the Ashen Covenant.*ETA/.test(v3));
+check('v0.3: tactical confirms weapons safe', /Weapons are (already )?safe/.test(v3));
+check('v0.3: tactical confirms shields down', /Shields are (already )?down|Shields down/.test(v3));
+check('v0.3: both ships hailed on screen', /Hailing both ships\. Putting them on screen/.test(v3));
+check('v0.3: helm reports underway', /Underway\. Heading \d+/.test(v3));
+check('v0.3: nothing misunderstood', !/didn't (follow|understand)|Couldn't parse/i.test(v3));
+check('v0.3: shields remain lowered', (await page.innerText('[data-testid=shield-state]')) === 'LOWERED');
+const helmOrder = page.locator('[data-testid=orders-strip] [data-dept=helm]').last();
+check('v0.3: orders strip shows helm interpose underway', (await helmOrder.getAttribute('data-status')) === 'underway' && /Interpose/i.test(await helmOrder.innerText()), await helmOrder.innerText());
+check('v0.3: course line drawn on tactical', (await page.locator('[data-testid=course-line]').count()) === 1);
+await page.screenshot({ path: `${SHOTS}/05-v03-order-underway.png` });
+let inPosition = false;
+for (let i = 0; i < 8 && !inPosition; i++) {
+  await send('wait');
+  inPosition = (await narrative()).slice(logStart).includes("We're in position between them, Captain");
+}
+v3 = (await narrative()).slice(logStart);
+check('v0.3: helm reports in position between them', inPosition);
+check('v0.3: orders strip shows interpose maintaining', (await helmOrder.getAttribute('data-status')) === 'maintaining', await helmOrder.getAttribute('data-status'));
+check('v0.3: Vane reacts to the shields-down interposition (comms)', /between my guns and that freighter with your shields down/.test(v3 + (await page.innerText('[data-testid=comms]'))));
+const pos = async (sel) => { const el = page.locator(sel); return { x: +(await el.getAttribute('data-x')), y: +(await el.getAttribute('data-y')) }; };
+const H = await pos('[data-testid=tactical-halcyon]');
+const K = await pos('[data-contact=kestrel]');
+const C = await pos('[data-contact=cruiser]');
+const dx = C.x - K.x, dy = C.y - K.y, len2 = dx * dx + dy * dy;
+const t = ((H.x - K.x) * dx + (H.y - K.y) * dy) / len2;
+const off = Math.hypot(K.x + t * dx - H.x, K.y + t * dy - H.y);
+const span = Math.sqrt(len2);
+check('v0.3: Halcyon lies between the Kestrel and the cruiser on tactical', t > 0.01 && t < 0.99 && off <= Math.max(1500, 0.1 * span), JSON.stringify({ H, K, C, t: +t.toFixed(3), offLineKm: Math.round(off) }));
+await page.screenshot({ path: `${SHOTS}/06-v03-in-position.png` });
+await page.locator('[data-testid=tactical]').screenshot({ path: `${SHOTS}/07-v03-tactical.png` });
+await page.click('[data-testid=zoom-near]');
+await page.waitForTimeout(150);
+await page.locator('[data-testid=tactical]').screenshot({ path: `${SHOTS}/08-v03-tactical-local.png` });
+await page.click('[data-testid=zoom-all]');
 
 // Responsive layouts
 for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape', 1180, 820], ['phone', 390, 844]]) {

@@ -68,14 +68,33 @@ Type `help` or `options` in the command bar, or tap a suggestion chip.
 - `fire torpedoes at their weak point`
 - `approach` (the interpreter asks "which contact?" and offers buttons)
 
+**Spatial and compound orders (v0.3):**
+
+- `Get us inbetween the two ships. Keep the weapons down and shields down. We don't want to appear hostile. And hail them on screen.`: one turn produces five tracked orders. Helm interposes between the Kestrel and the cruiser, tactical keeps weapons safe and shields down, the posture becomes non-hostile, and comms hails both ships on screen. Helm then reports underway and in position, and the Prefect notices.
+- `Escort the Kestrel` · `Circle the freighter` · `Slip in behind the cruiser` · `Put us in the cruiser's path`
+- `Shadow the warship at fifty thousand kilometres` · `Stay out of their weapons range` · `Close to transporter range of the Kestrel`
+- `Plot an intercept course for the Tessarine ship` · `Swing around so our bow faces the freighter` · `Run for Concord space`
+- `Back us away from that warship slowly` · `Evasive pattern delta, then return fire`
+- `Lock torpedos on the crusier` (misspellings are corrected against the game's vocabulary)
+- `Get between them` (resolved to the Kestrel and the cruiser) · `interpose in front of the cruiser`: helm asks "between the cruiser and the Kestrel, or between the cruiser and the border?" and offers buttons
+
 ## Architecture
 
 ```
 src/
   engine/              Generic, framework-free deterministic core (no scenario knowledge)
-    types.ts           WorldState v2: ships + systems (health/power/status), positions, crew & NPCs
+    types.ts           WorldState v3: ships + systems (health/power/status), 2D kinematics
+                       (position, velocity, heading, performance limits, nav goal), crew & NPCs
                        (goals, knowledge, resources, trust, memory), facts (hidden vs discovered),
-                       faction tension, clock, pending events, standing orders, RNG state
+                       faction tension, clock, pending events, tracked orders, posture, RNG state
+    kinematics.ts      Vector maths, reference resolution (ships/border), interpose geometry,
+                       guidance for 14 intents (approach, standoff, retreat, interpose, intercept,
+                       escort, follow, block, orbit, holdStation, face, flee, evasive, allStop),
+                       steering + limited acceleration / turn rate, ETA estimates
+    motion.ts          Sub-tick physics (12 × 5 s per turn): order lifecycle (underway, completed,
+                       maintaining, failed), predicted course line, betweenness flag
+    orders.ts          TrackedOrder list (ack → underway → completed/maintaining/failed/superseded)
+    helmTemplates.ts   In-character helm / posture / comms lifecycle reports
     rng.ts             Seeded RNG (mulberry32); state lives in WorldState.rng
     schema.ts          zod schemas: ProposedAction (discriminated union) and Interpretation
     validate.ts        Validator → accepted / partial (adjusted) / rejected, with in-character reasons
@@ -85,13 +104,18 @@ src/
     diff.ts            State-diff → narration reports (damage, detections, objectives)
     narrator.ts        Narrator interface + TemplateNarrator (role holders, relief officers,
                        the dead and those in stasis never speak)
-    invariants.ts      Consistency checker used by tests (bounds, destroyed ships, dead speakers…)
-    persistence.ts     Save format v2: full WorldState incl. seed + RNG, versioned & validated
+    invariants.ts      Consistency checker used by tests (bounds, speed/turn limits, no teleporting,
+                       one active helm order, destroyed ships, dead speakers…)
+    persistence.ts     Save format v3: full WorldState incl. seed + RNG, versioned & validated
     scenario.ts        ScenarioModule interface
   interpreter/
     types.ts           Interpreter interface + InterpreterContext (what the crew knows)
-    parser.ts          OfflineInterpreter: normalisation, synonyms, clause splitting, targets,
-                       pronouns, quantities, clarifying questions; output validated by zod
+    spell.ts           Spelling correction against the game vocabulary + run-together splitting
+    parser.ts          OfflineInterpreter: spelling → normalisation → addressee/department tags →
+                       sentence & clause splitting → per-clause intents (incl. spatial maneuvers,
+                       posture, rationale clauses) → reference resolution (pronouns, "the two
+                       ships", "them") → clarifying questions; leftovers returned as `unparsed`
+                       (the hook for a future AI interpreter); output validated by zod
     numbers.ts         "ten thousand", "10,000", "10k" → numbers
   scenarios/kestrel/
     setup.ts           Seeded scenario generation (variants, crew, NPCs, facts)
@@ -103,7 +127,8 @@ src/
                        CommandInput with voice + clarification chips), view.ts projections
 api/command.ts         Serverless stub (no AI calls, no secrets); reserved for M3
 tests/                 Vitest: parser table, validator, reducer, NPCs, determinism, playthroughs, fuzz
-scripts/smoke.mjs      Headless Playwright smoke test
+tests/eval/            Held-out order set (written before v0.3 tuning) + report-only evaluator
+scripts/smoke.mjs      Headless Playwright smoke test (incl. the v0.3 interpose order on tactical)
 ```
 
 **Core rule:** an interpreter (offline today, AI later) only *proposes* typed actions. Everything goes through one pipeline:
@@ -112,7 +137,9 @@ scripts/smoke.mjs      Headless Playwright smoke test
 2. **Schema check.** Every action is parsed with zod; anything malformed is dropped.
 3. **Validate.** Each action is checked against systems, power, range, shields and what the crew actually knows. The result is accepted, partially applied (adjusted), or rejected with a reason.
 4. **Apply.** A pure reducer updates `WorldState`.
-5. **Advance time.** This runs only if the order costs time; one sentence costs at most one minute. Standing helm orders continue, then the NPC agents act (cruiser, Kestrel captain, passenger, own officers), then scheduled events fire.
+5. **Advance time.** This runs only if the order costs time; one sentence costs at most one minute. Ships move in twelve 5-second sub-steps under their acceleration, speed and turn-rate limits, steered by their current maneuver goal. Tracked orders report underway, completed, maintaining or failed. Then the NPC agents act (cruiser, Kestrel captain, passenger, own officers) and scheduled events fire. The Prefect perceives your posture each turn: shields, weapons, locks, closing speed, what you have told him, and whether you are interposing.
+
+Maneuvers are typed `maneuver` actions (`{intent, target, second?, rangeKm?, speed}`). Posture is a separate `posture` action (`nonHostile`, `neutral` or `assertive`). The interpreter only proposes them, and the validator checks engines, references, range limits and conflicts (for example, intercepting the cruiser while claiming a non-hostile posture). A non-hostile posture caps closing speed on the cruiser and turns a plain hail into a reassuring one. Each order becomes a `TrackedOrder`, shown in the orders strip above the command bar. The active helm goal is drawn as a course line on the tactical plot.
 6. **Derive objectives and detect any outcome.**
 7. **Narrate.** Reports and the state diff are rendered by a `Narrator`. M2 uses deterministic templates; M3 can plug in an AI narrator that receives the same reports.
 
@@ -140,7 +167,7 @@ SHOTS_DIR=./smoke-shots npm run smoke
 
 ## Environment variables
 
-None are needed for Milestone 2. Reserved for Milestone 3 (set them in the Vercel project settings, **never** in client code and **never** with a `VITE_` prefix, which would expose them to the browser):
+None are needed for v0.3 (the interpreter and simulation run offline in the browser). Reserved for Milestone 3 (set them in the Vercel project settings, **never** in client code and **never** with a `VITE_` prefix, which would expose them to the browser):
 
 | Variable | Purpose |
 | --- | --- |
@@ -159,11 +186,12 @@ The app deploys to Vercel as a Vite static site plus serverless functions in `ap
 
 - **Voice (confirmed on a real device):** as of v0.1.1, Bradley Ockrant confirmed on his own phone that voice-to-text (speech recognition) and text-to-speech (spoken crew/comms responses) both work. Automated tests still use stubbed speech APIs, because headless browsers have no microphone or audio output.
 - **v0.2.0 voice not re-verified on a device yet.** The speech code is unchanged except that the captain's own orders are no longer read back aloud. Automated checks use stubs.
-- **The offline interpreter is rule-based.** It covers a wide vocabulary (88 phrasings in the test table, plus fuzzing), but unusual wording can be misread or not recognised. When that happens the XO says so, and nothing changes. It handles one clarifying question at a time.
+- **The offline interpreter is rule-based.** It covers a wide vocabulary (the parser test table, 20+ paraphrases of the v0.3 order, spatial-intent tests and fuzzing), but unusual wording can be misread or not recognised. On a held-out set of 42 orders written before tuning, it fully parses **33/42 (78.6%)**; see `tests/eval/RESULTS.md` for the failures. Parts of an order it cannot read are reported and left as `unparsed`, and the rest still executes. It handles one clarifying question at a time.
+- **Kinematics are simplified 2D.** There are no collisions or gravity, a single border line, and one helm goal at a time.
 - **Balance is first-pass.** Coolant-leak seeds leave little time for long negotiations. Combat takes several turns. Reinforcements end long stand-offs.
 - **The Prefect will not fire on the ship he believes carries his quarry** unless you start a fight. If the Kestrel is lost with crew aboard, the run ends, unless the Halcyon has already opened fire; in that case the battle continues.
-- **Old v0.1 saves cannot be loaded.** The save format changed to v2, and the app reports this instead of loading them.
-- **Small UI issues:** radar labels can overlap when two contacts share a bearing, and on phones the toast briefly covers the bottom of the command area.
+- **Old v0.1 and v0.2 saves cannot be loaded.** The save format changed to v3 (ship kinematics and tracked orders), and the app reports this instead of loading them.
+- **Small UI issues:** tactical labels can still crowd when several ships sit close together at "Fit all" zoom (use "Local"), and on phones the toast briefly covers the bottom of the command area.
 - Not yet tested in desktop Safari or Firefox, or on dedicated tablets/bridge consoles.
 
 ## Roadmap

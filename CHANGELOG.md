@@ -2,6 +2,47 @@
 
 All notable changes to Project Starbridge are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.0] — 2026-10-19 — Intent interpretation & spatial simulation
+
+Prompted by a user-testing order the offline engine could not handle: *"Get us inbetween the two ships. Keep the weapons down and shields down. We don't want to appear hostile. And hail them on screen."* No scripted mission content was added. The order is handled by reusable systems.
+
+### Added
+- **2D kinematics** (`src/engine/kinematics.ts`, `motion.ts`):
+  - every ship has a velocity, heading and performance limits (max speed, acceleration, turn rate); damaged engines and towing reduce them
+  - time advances in twelve 5-second sub-steps per turn
+  - a steering controller with braking, velocity matching near the goal and RCS station-keeping
+- **Guidance behaviours for 14 intents:**
+  - approach / close to range, standoff, retreat, interpose (between two ships, or between a ship and the border)
+  - intercept (lead pursuit), escort, follow, block, orbit, hold station, face, flee to the border, evasive, all stop
+- **`maneuver` and `posture` actions** in the zod schema. The validator checks engines, references, range limits, unreachable targets and posture conflicts. `communicate` gains `target: 'all'` and `onScreen`.
+- **Order lifecycle:**
+  - `TrackedOrder` moves through ack → underway → completed / maintaining / failed / superseded / impossible, with in-character reports and ETAs ("Underway. Heading 355, 235 km/s." … "We're in position between them, Captain.")
+  - orders strip above the command bar
+  - the course line and goal are drawn on the tactical plot
+- **Posture.** A declared non-hostile posture caps closing speed on the cruiser and makes hails reassuring.
+- **NPC perception.** Prefect Vane perceives shields, weapons, locks, closing speed, your stated posture and interposition every turn, and his patience reacts. He keeps his own agenda, so hardliners still lock on.
+- **Interpreter:**
+  - spelling correction and run-together splitting against the game vocabulary
+  - addressee/department tagging, and sentence-then-clause splitting
+  - coordinated objects ("weapons and shields down")
+  - rationale clauses mapped to posture ("we don't want to appear hostile")
+  - reference resolution: "the two ships", "them", "between us and…", border
+  - named ranges (transporter, tractor, weapons, torpedo)
+  - clarification chips for ambiguous interposition
+  - partial execution, with leftover text returned as `unparsed` (the hook for a future AI interpreter)
+- **Tactical plot rewritten.** It is a north-up linear plot with "Fit all" / "Local" zoom, the border line, velocity vectors, and closing/opening speed for each contact. The viewscreen shows relative bearings.
+- **Tests (267 total, up from 162):**
+  - the exact order and 20 paraphrases
+  - each spatial intent, the lifecycle, time and NPC reaction, physical limits, no-teleport transitions and determinism
+  - an end-to-end playthrough in which a shields-down interposition keeps the Prefect from firing, compared with a shields-up control
+- **Held-out evaluation.** `tests/eval/heldout.ts` holds 42 orders written before tuning, and a report-only evaluator writes `tests/eval/RESULTS.md`. The result is **33/42 (78.6%)**.
+- **Smoke test.** It types the exact order on the site, checks the lifecycle messages and orders-strip states, and verifies that the Halcyon ends up between the ships on tactical.
+
+### Changed
+- `WorldState` v3. The save key is `starbridge.save.v3`; v1 and v2 saves are reported as incompatible.
+- Cruiser movement uses the same guidance and steering as the Halcyon.
+- Leaving the reach via the border counts as a withdrawal for outcomes.
+
 ## [0.2.0] — 2026-10-18 — Milestone 2: deterministic simulation
 
 ### Added
