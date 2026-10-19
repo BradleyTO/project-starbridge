@@ -8,9 +8,12 @@ import type { ProposedAction } from './schema';
 import type { Rng } from './rng';
 import type { Report } from './report';
 import { say } from './report';
-import type { ShipId, SystemId, WorldState } from './types';
+import type { NavGoal, ShipId, SystemId, WorldState } from './types';
 import { resolveAttack } from './combat';
 import { clamp, efficiency, km, range, systemLabel } from './rules';
+import { addOrder, getOrder, goalLabel, refName, updateOrder } from './orders';
+import { estimateEta, guidanceFor, headingOf, sub } from './kinematics';
+import { etaText, roundEta } from './motion';
 import { addTension, adjustTrust, knows, patchCharacter, patchShip, patchSystem, setCounter, setFlag } from './state';
 
 export interface Applied {
@@ -54,22 +57,26 @@ export function applyAction(s: WorldState, action: ProposedAction, rng: Rng, hoo
     case 'scan':
       return hooks.scan(s, action.target, rng);
 
-    case 'communicate':
-      return hooks.communicate(s, action, rng);
+    case 'communicate': {
+      // A declared non-hostile posture colours a plain hail: the channel opens with reassurance.
+      const intent = action.intent === 'open' && s.posture.stance === 'nonHostile' ? 'reassure' : action.intent;
+      const targets = action.target === 'all' ? (['kestrel', 'cruiser'] as const).filter((t) => commReachable(s, t)) : [action.target];
+      if (action.onScreen) reports.push(say('comms', targets.length > 1 ? 'onScreenSplit' : 'onScreen'));
+      for (const t of targets) {
+        const r = hooks.communicate(s, { ...action, target: t, intent }, rng);
+        s = r.state;
+        reports.push(...r.reports);
+      }
+      if (s.posture.stance !== 'neutral' && targets.includes('cruiser')) s = setCounter(s, 'postureHeardTurn', s.turn);
+      return { state: s, reports };
+    }
 
-    case 'move': {
-      if (action.mode === 'hold') {
-        s = { ...s, orders: { ...s.orders, helm: null } };
-        return { state: s, reports: [say('helm', 'holding')] };
-      }
-      if (action.mode === 'evasive') {
-        s = setCounter(s, 'evasive_halcyon', s.turn + 1);
-        return { state: s, reports: [say('helm', 'evasive')] };
-      }
-      const target: ShipId | null = action.mode === 'interpose' ? 'kestrel' : (action.target ?? null);
-      s = { ...s, orders: { ...s.orders, helm: { mode: action.mode, target, rangeKm: action.rangeKm ?? null } } };
-      const vars: Record<string, string | number> = { target: target ? s.ships[target].name : '', km: action.rangeKm ? km(action.rangeKm) : '', now: target ? km(range(s, 'halcyon', target)) : '' };
-      return { state: s, reports: [say('helm', `helm_${action.mode}`, vars)] };
+    case 'maneuver':
+      return setHelmGoal(s, action);
+
+    case 'posture': {
+      s = { ...s, posture: { stance: action.stance, since: s.turn } };
+      return { state: s, reports: [say('xo', `posture_${action.stance}`)] };
     }
 
     case 'power': {
@@ -159,19 +166,22 @@ export function applyAction(s: WorldState, action: ProposedAction, rng: Rng, hoo
     case 'jump': {
       if (action.mode === 'charge') {
         s = { ...s, orders: { ...s.orders, jumpCharging: true } };
+        s = addOrder(s, 'helm', 'Charge jump drive', 'underway').state;
         return { state: s, reports: [say('helm', 'jumpCharging', { charge: Math.round(h.jump.charge) })] };
       }
       if (action.mode === 'engage') {
         const towing = h.tractor.target === 'kestrel' && efficiency(h, 'tractor') >= 0.5 && !s.ships.kestrel.destroyed;
         s = setFlag(s, 'jumped');
         if (towing) s = setFlag(s, 'kestrelTowedOut');
-        s = { ...s, orders: { helm: null, jumpCharging: false } };
+        s = { ...s, orders: { ...s.orders, jumpCharging: false } };
         return { state: s, reports: [say('helm', towing ? 'jumpWithKestrel' : 'jumpEngaged')] };
       }
       // withdraw: start charging and open the range
       const threat: ShipId = s.ships.cruiser.detected && !s.ships.cruiser.destroyed && !s.flags.cruiserGone ? 'cruiser' : 'kestrel';
-      s = { ...s, orders: { jumpCharging: true, helm: { mode: 'away', target: threat, rangeKm: null } } };
-      return { state: s, reports: [say('helm', 'withdrawing', { charge: Math.round(h.jump.charge) })] };
+      s = { ...s, orders: { ...s.orders, jumpCharging: true } };
+      s = addOrder(s, 'helm', 'Charge jump drive (withdraw)', 'underway').state;
+      const r = setHelmGoal(s, { type: 'maneuver', intent: 'retreat', target: threat, speed: 'full' }, true);
+      return { state: r.state, reports: [say('helm', 'withdrawing', { charge: Math.round(h.jump.charge) })] };
     }
 
     case 'improvise':
@@ -229,3 +239,61 @@ function transport(s: WorldState, action: Extract<ProposedAction, { type: 'trans
   }
 }
 
+
+function commReachable(s: WorldState, t: 'kestrel' | 'cruiser'): boolean {
+  const sh = s.ships[t];
+  if (!sh.detected || sh.destroyed || (t === 'cruiser' && s.flags.cruiserGone)) return false;
+  if (t === 'kestrel') {
+    const arden = s.characters.arden;
+    if (!arden || arden.status === 'dead') return false;
+    if (arden.ship === 'kestrel' && sh.systems.comms.health <= 0) return false;
+  }
+  return true;
+}
+
+const SPEED: Record<'slow' | 'half' | 'full', number> = { slow: 0.3, half: 0.55, full: 1 };
+
+/** Replace the Halcyon's helm goal with a new manoeuvre, superseding the previous order. */
+export function setHelmGoal(s: WorldState, action: Extract<ProposedAction, { type: 'maneuver' }>, quiet = false): Applied {
+  const reports: Report[] = [];
+  const h = s.ships.halcyon;
+  const prev = h.nav;
+  const prevOrder = prev ? getOrder(s, prev.orderId) : undefined;
+  if (prevOrder && (prevOrder.status === 'acknowledged' || prevOrder.status === 'underway' || prevOrder.maintaining)) {
+    s = updateOrder(s, prevOrder.id, { status: prevOrder.status === 'completed' ? 'completed' : 'superseded', maintaining: false });
+    if (!quiet) reports.push(say('helm', 'helmSuperseded', { label: prevOrder.label }));
+  }
+  let offset: NavGoal['offset'] = null;
+  if (action.intent === 'holdStation' && action.target && action.target !== 'border') offset = sub(h.position, s.ships[action.target].position);
+  if (action.intent === 'face' && !action.target) offset = { x: (h.heading + 180) % 360, y: 0 };
+  const draft: NavGoal = {
+    intent: action.intent,
+    target: action.target ?? null,
+    second: action.second ?? null,
+    rangeKm: action.rangeKm ?? null,
+    speedFactor: SPEED[action.speed ?? 'full'],
+    offset,
+    orderId: null,
+    reached: false,
+    startedTurn: s.turn,
+  };
+  const label = goalLabel(s, draft);
+  const tmp = patchShip(s, 'halcyon', { nav: draft });
+  const eta = roundEta(estimateEta(tmp, 'halcyon', draft));
+  const added = addOrder(s, 'helm', label, 'acknowledged', '', eta);
+  s = patchShip(added.state, 'halcyon', { nav: { ...draft, orderId: added.id } });
+  if (action.intent === 'evasive') s = setCounter(s, 'evasive_halcyon', s.turn + 1);
+  const g = guidanceFor(s, 'halcyon', draft);
+  const course = g.point ? headingOf(sub(g.point, h.position)) : g.heading ?? h.heading;
+  const vars: Record<string, string | number> = {
+    label,
+    target: refName(s, draft.target),
+    second: refName(s, draft.second),
+    km: draft.rangeKm !== null ? km(draft.rangeKm) : '',
+    now: draft.target && draft.target !== 'border' ? km(range(s, 'halcyon', draft.target)) : '',
+    eta: etaText(eta),
+    course: String(Math.round(course) % 360).padStart(3, '0'),
+  };
+  if (!quiet) reports.push(say('helm', `helmAck_${action.intent}`, vars));
+  return { state: s, reports };
+}

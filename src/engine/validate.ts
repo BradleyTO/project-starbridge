@@ -13,6 +13,7 @@ import type { ShipId, WorldState } from './types';
 import { weaponRange } from './combat';
 import { TRACTOR_RANGE, efficiency, km, range, systemLabel, transportRange, usable } from './rules';
 import { knows } from './state';
+import { dot, effectivePerf, len, sub } from './kinematics';
 
 export interface Validation {
   status: 'accepted' | 'partial' | 'rejected';
@@ -20,7 +21,10 @@ export interface Validation {
   reasons: Report[];
   /** Does this action consume a turn (60 s)? */
   timeCost: 0 | 1;
+  /** The order is already satisfied (e.g. "keep shields down" while they are down): confirm, change nothing. */
+  noop?: boolean;
 }
+const confirm = (action: ProposedAction, reasons: Report[]): Validation => ({ status: 'accepted', action, reasons, timeCost: 0, noop: true });
 
 const ok = (action: ProposedAction, timeCost: 0 | 1, reasons: Report[] = []): Validation => ({ status: 'accepted', action, reasons, timeCost });
 const partial = (action: ProposedAction, timeCost: 0 | 1, reasons: Report[]): Validation => ({ status: 'partial', action, reasons, timeCost });
@@ -47,9 +51,9 @@ export function validate(s: WorldState, action: ProposedAction): Validation {
     case 'shields':
       if (action.raise) {
         if (!usable(h, 'shields')) return no(action, [say('tactical', 'systemUnavailable', { system: 'shields', status: h.systems.shields.status })]);
-        if (h.shields.raised) return no(action, [say('tactical', 'shieldsAlready', { state: 'up' })]);
+        if (h.shields.raised) return confirm(action, [say('tactical', 'shieldsAlready', { state: 'up' })]);
         if (h.shields.strength <= 0) return no(action, [say('tactical', 'shieldsDepleted')]);
-      } else if (!h.shields.raised) return no(action, [say('tactical', 'shieldsAlready', { state: 'down' })]);
+      } else if (!h.shields.raised) return confirm(action, [say('tactical', 'shieldsAlready', { state: 'down' })]);
       return ok(action, 0);
 
     case 'scan': {
@@ -73,6 +77,11 @@ export function validate(s: WorldState, action: ProposedAction): Validation {
         if (p.status === 'stasis') return no(action, [say('comms', 'passengerStasis', { name: p.name })]);
         return ok(action, 1);
       }
+      if (action.target === 'all') {
+        const reachable = (['kestrel', 'cruiser'] as const).filter((t) => validate(s, { ...action, target: t }).status !== 'rejected');
+        if (!reachable.length) return no(action, [say('comms', 'nobodyToHail')]);
+        return ok(action, 1);
+      }
       if (action.target === 'kestrel') {
         const arden = s.characters.arden;
         if (arden.status === 'dead') return no(action, [say('comms', 'nobodyAnswers', { ship: 'Kestrel' })]);
@@ -85,24 +94,44 @@ export function validate(s: WorldState, action: ProposedAction): Validation {
       return ok(action, 1);
     }
 
-    case 'move': {
-      if (action.mode === 'hold') return ok(action, 0);
+    case 'maneuver': {
+      const reasons: Report[] = [];
+      if (action.intent === 'allStop' || (action.intent === 'holdStation' && !action.target)) return ok(action, 1);
       if (!usable(h, 'engines', 0.1)) return no(action, [say('helm', 'systemUnavailable', { system: 'impulse engines', status: h.systems.engines.status })]);
-      if (action.mode === 'evasive') return ok(action, 1);
-      if (action.mode === 'interpose') {
-        if (!present(s, 'kestrel') || !present(s, 'cruiser')) return no(action, [say('helm', 'cannotInterpose')]);
+      if (action.intent === 'flee') return s.landmarks.border ? ok(action, 1) : no(action, [say('helm', 'noBorder')]);
+      if (action.intent === 'evasive' || (action.intent === 'face' && !action.target)) return ok(action, 1);
+      if (action.intent === 'interpose') {
+        const a = action.target;
+        const b = action.second;
+        if (!a || !b || a === b) return no(action, [say('helm', 'cannotInterpose')]);
+        for (const ref of [a, b]) {
+          if (ref === 'border') continue;
+          if (!present(s, ref)) return no(action, [say('helm', 'noContact', { target: ref })]);
+        }
         return ok(action, 1);
       }
       const target = action.target;
       if (!target) return no(action, [say('helm', 'needTarget')]);
+      if (target === 'border') return ok({ ...action, intent: 'flee', target: undefined }, 1);
       if (!present(s, target)) return no(action, [say('helm', 'noContact', { target })]);
-      if (action.mode === 'range') {
-        const want = action.rangeKm ?? 10000;
-        const min = target === 'cruiser' ? 2000 : 500;
-        if (want < min) return partial({ ...action, rangeKm: min }, 1, [say('helm', 'rangeClamped', { km: km(min) })]);
+      const min = target === 'cruiser' ? 2000 : 500;
+      if (action.rangeKm !== undefined && action.rangeKm < min && action.intent !== 'retreat') {
+        return partial({ ...action, rangeKm: min }, 1, [say('helm', 'rangeClamped', { km: km(min) })]);
       }
-      return ok(action, 1);
+      // Feasibility: a faster target that is opening the range cannot be caught.
+      if (action.intent === 'intercept' || action.intent === 'follow') {
+        const t = s.ships[target];
+        const perf = effectivePerf(s, 'halcyon');
+        const opening = dot(sub(t.position, h.position), t.velocity) > 0;
+        if (opening && len(t.velocity) > perf.maxSpeed * 1.05) reasons.push(say('helm', 'cannotCatch', { target: t.name, theirs: Math.round(len(t.velocity)), ours: Math.round(perf.maxSpeed) }));
+      }
+      if (s.posture.stance === 'nonHostile' && target === 'cruiser' && (action.intent === 'intercept' || action.intent === 'block'))
+        reasons.push(say('xo', 'postureConflict'));
+      return reasons.length ? { status: 'accepted', action, reasons, timeCost: 1 } : ok(action, 1);
     }
+
+    case 'posture':
+      return ok(action, 0);
 
     case 'power': {
       const { to, from } = action;
@@ -126,7 +155,7 @@ export function validate(s: WorldState, action: ProposedAction): Validation {
     }
 
     case 'weapons': {
-      if (action.mode === 'safe') return h.weapons.state === 'safe' ? no(action, [say('tactical', 'weaponsAlreadySafe')]) : ok(action, 0);
+      if (action.mode === 'safe') return h.weapons.state === 'safe' ? confirm(action, [say('tactical', 'weaponsAlreadySafe')]) : ok(action, 0);
       if (!usable(h, 'weapons')) return no(action, [say('tactical', 'systemUnavailable', { system: 'weapons', status: h.systems.weapons.status })]);
       if (action.mode === 'arm') return h.weapons.state !== 'safe' ? no(action, [say('tactical', 'weaponsAlreadyArmed')]) : ok(action, 0);
       const target = action.target;
@@ -218,7 +247,7 @@ export function validate(s: WorldState, action: ProposedAction): Validation {
     case 'jump': {
       if (!usable(h, 'jumpDrive', 0.2)) {
         if (action.mode === 'withdraw' && usable(h, 'engines', 0.1))
-          return partial({ type: 'move', mode: 'away', target: present(s, 'cruiser') ? 'cruiser' : 'kestrel' }, 1, [say('helm', 'jumpDownImpulseOnly')]);
+          return partial({ type: 'maneuver', intent: 'retreat', target: present(s, 'cruiser') ? 'cruiser' : 'kestrel', speed: 'full' }, 1, [say('helm', 'jumpDownImpulseOnly')]);
         return no(action, [say('helm', 'systemUnavailable', { system: 'jump drive', status: h.systems.jumpDrive.status })]);
       }
       if (action.mode === 'charge') return h.jump.charge >= 100 ? no(action, [say('helm', 'jumpReadyAlready')]) : ok(action, 0);

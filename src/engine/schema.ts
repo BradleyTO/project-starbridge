@@ -1,7 +1,7 @@
 /**
  * ProposedAction schema — the ONLY thing an interpreter may hand the engine.
  *
- * Milestone 2 uses the deterministic offline parser (src/interpreter/parser.ts).
+ * The deterministic offline parser (src/interpreter/parser.ts) produces these today.
  * Milestone 3 can plug an AI interpreter in behind the same Interpreter
  * interface; its JSON output is validated with these schemas before the
  * engine's validator ever sees it. Interpreters never touch WorldState.
@@ -36,6 +36,25 @@ export const ImproviseMethodSchema = z.enum([
   'other',
 ]);
 
+export const ManeuverIntentSchema = z.enum([
+  'approach', // close to a (default or given) range
+  'standoff', // hold a given distance (closer or further)
+  'interpose', // sit between two references, continuously updated
+  'intercept', // pursuit with lead
+  'follow', // shadow from behind
+  'escort', // formation alongside
+  'block', // sit in the target's path
+  'retreat', // open the range from a threat
+  'flee', // run for the Concord border
+  'orbit',
+  'holdStation', // keep the current offset from a target (or hold position)
+  'allStop',
+  'face', // come about to face a target (or reverse heading)
+  'evasive',
+]);
+export const NavRefSchema = z.enum(['kestrel', 'cruiser', 'border']);
+export const StanceSchema = z.enum(['neutral', 'nonHostile', 'assertive']);
+
 const base = { note: z.string().max(200).optional() };
 
 export const ProposedActionSchema = z.discriminatedUnion('type', [
@@ -45,19 +64,27 @@ export const ProposedActionSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('scan'), target: z.enum(['kestrel', 'cruiser', 'compartment', 'area', 'halcyon']), ...base }),
   z.object({
     type: z.literal('communicate'),
-    target: z.enum(['kestrel', 'cruiser', 'passenger']),
+    /** 'all' hails every contact in view. */
+    target: z.enum(['kestrel', 'cruiser', 'passenger', 'all']),
+    /** Put the channel on the main viewscreen. */
+    onScreen: z.boolean().default(false),
     intent: CommIntentSchema,
     offer: TradeOfferSchema.optional(),
     topic: z.enum(['cargo', 'passenger', 'intentions', 'crew', 'general']).optional(),
     ...base,
   }),
   z.object({
-    type: z.literal('move'),
-    mode: z.enum(['approach', 'range', 'away', 'interpose', 'hold', 'evasive']),
-    target: ContactSchema.optional(),
+    type: z.literal('maneuver'),
+    intent: ManeuverIntentSchema,
+    target: NavRefSchema.optional(),
+    /** Other end of an interposition. */
+    second: NavRefSchema.optional(),
     rangeKm: z.number().min(0).max(500000).optional(),
+    speed: z.enum(['slow', 'half', 'full']).default('full'),
     ...base,
   }),
+  /** Declared posture/intent; perceivable by NPCs and biases other orders. */
+  z.object({ type: z.literal('posture'), stance: StanceSchema, ...base }),
   z.object({ type: z.literal('power'), to: SystemIdSchema.optional(), from: SystemIdSchema.optional(), amount: z.number().int().min(5).max(150).default(25), ...base }),
   z.object({
     type: z.literal('weapons'),
@@ -84,6 +111,7 @@ export const ProposedActionSchema = z.discriminatedUnion('type', [
 export type ProposedAction = z.infer<typeof ProposedActionSchema>;
 export type ProposedActionInput = z.input<typeof ProposedActionSchema>;
 export type ActionType = ProposedAction['type'];
+export type ManeuverIntentT = z.infer<typeof ManeuverIntentSchema>;
 export type CommIntent = z.infer<typeof CommIntentSchema>;
 export type TradeOffer = z.infer<typeof TradeOfferSchema>;
 export type ImproviseMethod = z.infer<typeof ImproviseMethodSchema>;
@@ -97,11 +125,17 @@ export const ClarificationSchema = z.object({
 export type Clarification = z.infer<typeof ClarificationSchema>;
 
 export const InterpretationSchema = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('actions'), actions: z.array(ProposedActionSchema).min(1).max(6), unparsed: z.array(z.string()), source: z.string() }),
-  z.object({ kind: z.literal('clarify'), clarification: ClarificationSchema, actions: z.array(ProposedActionSchema).max(6), unparsed: z.array(z.string()), source: z.string() }),
-  z.object({ kind: z.literal('unrecognised'), unparsed: z.array(z.string()), source: z.string() }),
+  z.object({ kind: z.literal('actions'), actions: z.array(ProposedActionSchema).min(1).max(8), unparsed: z.array(z.string()), notes: z.array(z.string()).default([]), source: z.string() }),
+  z.object({ kind: z.literal('clarify'), clarification: ClarificationSchema, actions: z.array(ProposedActionSchema).max(8), unparsed: z.array(z.string()), notes: z.array(z.string()).default([]), source: z.string() }),
+  z.object({ kind: z.literal('unrecognised'), unparsed: z.array(z.string()), notes: z.array(z.string()).default([]), source: z.string() }),
 ]);
+/**
+ * `unparsed` holds clause fragments the interpreter could not map to any action:
+ * the hook for a future AI fallback interpreter. `notes` holds rationale it
+ * understood but that needs no action ("we have no quarrel with them").
+ */
 export type Interpretation = z.infer<typeof InterpretationSchema>;
+export type InterpretationInput = z.input<typeof InterpretationSchema>;
 
 /** Parse untrusted interpreter output; returns null (never throws) if invalid. */
 export function parseInterpretation(raw: unknown): Interpretation | null {

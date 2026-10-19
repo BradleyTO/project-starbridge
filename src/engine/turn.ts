@@ -16,9 +16,11 @@ import { TemplateNarrator } from './narrator';
 import { validate } from './validate';
 import { applyAction } from './reduce';
 import { diffReports } from './diff';
-import type { ShipId, WorldState } from './types';
-import { STANDOFF_CRUISER, STANDOFF_KESTREL, TURN_SECONDS, clamp, distance, efficiency, halcyonSpeed, km, pointBetween, range, stepAway, stepToward } from './rules';
+import type { Department, ShipId, WorldState } from './types';
+import { TURN_SECONDS, clamp, efficiency } from './rules';
 import { addLog, patchShip, patchSystem, setCounter } from './state';
+import { runPhysics } from './motion';
+import { addOrder, goalLabel, updateOrder } from './orders';
 
 export interface TurnResult {
   state: WorldState;
@@ -73,7 +75,9 @@ export function processOrders(
   const rng = createRng(s.rng);
   let timePasses = false;
 
-  const actions = interp.kind === 'unrecognised' ? [] : interp.actions;
+  // Declared posture is applied first so it can colour the other orders in the same breath.
+  const raw0 = interp.kind === 'unrecognised' ? [] : interp.actions;
+  const actions = [...raw0.filter((a) => a.type === 'posture'), ...raw0.filter((a) => a.type !== 'posture')];
   if (interp.kind === 'unrecognised') reports.push(say('xo', 'notUnderstood', { text: interp.unparsed.join(' / ') || text }));
   else if (interp.unparsed.length) reports.push(say('xo', 'partlyUnderstood', { text: interp.unparsed.join(' / ') }));
 
@@ -86,17 +90,27 @@ export function processOrders(
     const v = validate(s, parsed.data);
     reports.push(...v.reasons);
     results.push({ action: v.action, status: v.status });
-    if (v.status === 'rejected') continue;
+    const label = orderLabel(s, parsed.data);
+    if (v.status === 'rejected') {
+      if (label) s = addOrder(s, deptOf(parsed.data), label, 'impossible', v.reasons[0]?.key ?? '').state;
+      continue;
+    }
+    if (v.noop) {
+      if (label) s = addOrder(s, deptOf(parsed.data), label, 'completed', 'already in effect').state;
+      continue;
+    }
     const applied = applyAction(s, v.action, rng, scenario.hooks);
     s = applied.state;
     reports.push(...applied.reports);
+    // Manoeuvres and jump charging track their own lifecycle; everything else completes now.
+    if (label && v.action.type !== 'maneuver' && !(v.action.type === 'jump' && v.action.mode !== 'engage')) s = addOrder(s, deptOf(v.action), orderLabel(s, v.action) ?? label, 'completed').state;
     if (v.timeCost) timePasses = true;
     if (s.flags.jumped || s.ships.halcyon.destroyed) break;
   }
 
   s = { ...s, lastTarget: lastTargetOf(actions, s.lastTarget) };
   const lastComm = [...results].reverse().find((r) => r.action.type === 'communicate' && r.status !== 'rejected');
-  if (lastComm && lastComm.action.type === 'communicate') s = setCounter(s, 'lastCommTarget', ['kestrel', 'cruiser', 'passenger'].indexOf(lastComm.action.target) + 1);
+  if (lastComm && lastComm.action.type === 'communicate' && lastComm.action.target !== 'all') s = setCounter(s, 'lastCommTarget', ['kestrel', 'cruiser', 'passenger'].indexOf(lastComm.action.target) + 1);
   s = { ...s, clarification: interp.kind === 'clarify' ? interp.clarification : null };
   if (interp.kind === 'clarify') reports.push(say('xo', 'clarify', { question: interp.clarification.question }));
 
@@ -114,9 +128,69 @@ export function processOrders(
   return { state: s, results };
 }
 
+function deptOf(a: ProposedAction): Department {
+  switch (a.type) {
+    case 'maneuver':
+    case 'jump':
+    case 'tractor':
+      return 'helm';
+    case 'weapons':
+    case 'shields':
+    case 'setAlert':
+      return 'tactical';
+    case 'power':
+    case 'repair':
+    case 'transport':
+    case 'improvise':
+      return 'ops';
+    case 'scan':
+      return 'science';
+    case 'communicate':
+      return 'comms';
+    default:
+      return 'xo';
+  }
+}
+
+/** Short label for the orders strip; null for things that are not orders (queries, waiting). */
+function orderLabel(s: WorldState, a: ProposedAction): string | null {
+  const name = (t: string | undefined) => (t === 'kestrel' || t === 'cruiser' ? s.ships[t].name : t === 'all' ? 'all contacts' : (t ?? ''));
+  switch (a.type) {
+    case 'query':
+    case 'wait':
+      return null;
+    case 'setAlert':
+      return `${a.level[0].toUpperCase()}${a.level.slice(1)} alert`;
+    case 'shields':
+      return a.raise ? 'Shields up' : 'Shields down';
+    case 'weapons':
+      return a.mode === 'safe' ? 'Weapons safe' : a.mode === 'arm' ? 'Arm weapons' : a.mode === 'lock' ? `Lock on ${name(a.target)}` : `Fire ${a.weapon} at ${name(a.target)}`;
+    case 'scan':
+      return `Scan ${a.target === 'area' ? 'area' : a.target === 'compartment' ? 'compartment' : name(a.target)}`;
+    case 'communicate':
+      return `${a.intent === 'open' ? 'Hail' : 'Message'} ${a.target === 'passenger' ? 'passenger' : name(a.target)}${a.onScreen ? ' (on screen)' : ''}`;
+    case 'maneuver':
+      return goalLabel(s, { intent: a.intent, target: a.target ?? null, second: a.second ?? null, rangeKm: a.rangeKm ?? null });
+    case 'posture':
+      return a.stance === 'nonHostile' ? 'Posture: non-hostile' : a.stance === 'assertive' ? 'Posture: assertive' : 'Posture: neutral';
+    case 'power':
+      return `Power${a.from ? ` from ${a.from}` : ''}${a.to ? ` to ${a.to}` : ''}`;
+    case 'tractor':
+      return a.engage ? `Tractor ${name(a.target)}` : 'Release tractor';
+    case 'transport':
+      return `Transport ${a.payload}`;
+    case 'repair':
+      return `Repair ${a.system}${a.ship === 'kestrel' ? ' (Kestrel)' : ''}`;
+    case 'jump':
+      return a.mode === 'engage' ? 'Engage jump drive' : a.mode === 'charge' ? 'Charge jump drive' : 'Withdraw';
+    case 'improvise':
+      return `Improvise: ${a.method}`;
+  }
+}
+
 function finalise(s: WorldState, scenario: ScenarioModule): WorldState {
   const outcome = s.outcome ?? scenario.detectOutcome(s);
-  if (outcome && !s.outcome) s = { ...s, outcome, orders: { helm: null, jumpCharging: false }, clarification: null };
+  if (outcome && !s.outcome) s = { ...s, outcome, orders: { ...s.orders, jumpCharging: false, list: s.orders.list.map((o) => (o.status === 'acknowledged' || o.status === 'underway' || o.maintaining ? { ...o, status: o.status === 'acknowledged' || o.status === 'underway' ? ('failed' as const) : o.status, maintaining: false, detail: 'simulation ended' } : o)) }, clarification: null };
   return { ...s, objectives: scenario.objectives(s, !!s.outcome) };
 }
 
@@ -125,47 +199,10 @@ export function advanceTurn(s: WorldState, rng: Rng, scenario: ScenarioModule): 
   const reports: Report[] = [];
   s = { ...s, turn: s.turn + 1, time: s.time + TURN_SECONDS };
 
-  // Helm standing order.
-  const order = s.orders.helm;
-  const h0 = s.ships.halcyon;
-  if (order && !h0.destroyed) {
-    const speed = halcyonSpeed(s);
-    const from = h0.position;
-    let to = from;
-    let done = false;
-    const tgt = order.target ? s.ships[order.target] : null;
-    if (order.mode === 'approach' && tgt) {
-      const standoff = order.target === 'cruiser' ? STANDOFF_CRUISER : STANDOFF_KESTREL;
-      to = stepToward(from, tgt.position, speed, standoff);
-      done = distance(to, tgt.position) <= standoff + 50;
-      if (done) reports.push(say('helm', 'arrived', { target: tgt.name, km: km(distance(to, tgt.position)) }));
-    } else if (order.mode === 'range' && tgt && order.rangeKm !== null) {
-      const d = distance(from, tgt.position);
-      if (d > order.rangeKm) to = stepToward(from, tgt.position, speed, order.rangeKm);
-      else to = stepAway(from, tgt.position, Math.min(speed, order.rangeKm - d));
-      done = Math.abs(distance(to, tgt.position) - order.rangeKm) <= 100;
-      if (done) reports.push(say('helm', 'atRange', { target: tgt.name, km: km(order.rangeKm) }));
-    } else if (order.mode === 'away' && tgt) {
-      to = stepAway(from, tgt.position, speed);
-    } else if (order.mode === 'interpose') {
-      const k = s.ships.kestrel;
-      const c = s.ships.cruiser;
-      if (!k.destroyed && !c.destroyed && c.detected) to = stepToward(from, pointBetween(k.position, c.position, 1000), speed, 0);
-    }
-    s = patchShip(s, 'halcyon', { position: { x: Math.round(to.x), y: Math.round(to.y) } });
-    // Towing drags the Kestrel along.
-    if (s.ships.halcyon.tractor.target === 'kestrel' && !s.ships.kestrel.destroyed) {
-      const k = s.ships.kestrel.position;
-      s = patchShip(s, 'kestrel', { position: { x: Math.round(k.x + (to.x - from.x)), y: Math.round(k.y + (to.y - from.y)) } });
-    }
-    if (done) s = { ...s, orders: { ...s.orders, helm: null } };
-  }
-  const k = s.ships.kestrel;
-  const c = s.ships.cruiser;
-  if (!k.destroyed && !c.destroyed && c.detected) {
-    const point = pointBetween(k.position, c.position, 1000);
-    s = { ...s, flags: { ...s.flags, interposing: distance(s.ships.halcyon.position, point) <= 2500 && range(s, 'halcyon', 'kestrel') <= 3500 } };
-  }
+  // Physics: every ship follows its nav goal for TURN_SECONDS in sub-steps.
+  const phys = runPhysics(s);
+  s = phys.state;
+  reports.push(...phys.reports);
 
   // Jump drive charging.
   if (s.orders.jumpCharging) {
@@ -174,6 +211,8 @@ export function advanceTurn(s: WorldState, rng: Rng, scenario: ScenarioModule): 
     s = patchShip(s, 'halcyon', { jump: { charge } });
     if (charge >= 100) {
       s = { ...s, orders: { ...s.orders, jumpCharging: false } };
+      const o = [...s.orders.list].reverse().find((x) => x.label.startsWith('Charge jump drive') && (x.status === 'underway' || x.status === 'acknowledged'));
+      if (o) s = updateOrder(s, o.id, { status: 'completed', etaSeconds: 0 });
       reports.push(say('helm', 'jumpReady'));
     }
   }

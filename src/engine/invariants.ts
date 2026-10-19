@@ -27,6 +27,12 @@ export function checkInvariants(s: WorldState): string[] {
     num(`${id}.jump.charge`, sh.jump.charge, 0, 100);
     if (!Number.isInteger(sh.souls)) v.push(`${id}.souls not an integer`);
     if (!Number.isFinite(sh.position.x) || !Number.isFinite(sh.position.y)) v.push(`${id}.position not finite`);
+    if (!Number.isFinite(sh.velocity.x) || !Number.isFinite(sh.velocity.y)) v.push(`${id}.velocity not finite`);
+    num(`${id}.heading`, sh.heading, 0, 359.99);
+    // Speed never exceeds the ship's nominal limit at maximum engine efficiency.
+    const speed = Math.hypot(sh.velocity.x, sh.velocity.y);
+    if (speed > sh.perf.maxSpeed * 1.25 + 1) v.push(`${id} speed ${Math.round(speed)} km/s exceeds limit ${sh.perf.maxSpeed}`);
+    if (sh.nav && sh.nav.speedFactor > 1) v.push(`${id} nav speed factor above 1`);
     for (const sid of SYSTEM_IDS) {
       const sys = sh.systems[sid];
       num(`${id}.${sid}.health`, sys.health, 0, 100);
@@ -62,9 +68,32 @@ export function checkInvariants(s: WorldState): string[] {
     }
     if (c.status === 'stasis' && c.ship !== 'kestrel' && c.ship !== 'cruiser') v.push(`${c.name} in stasis aboard ${c.ship}`);
   }
+  const activeHelm = s.orders.list.filter((o) => o.dept === 'helm' && !o.label.startsWith('Charge jump') && (o.status === 'acknowledged' || o.status === 'underway' || o.maintaining));
+  if (activeHelm.length > 1) v.push(`${activeHelm.length} helm manoeuvres active at once`);
   if (s.outcome && s.objectives.some((o) => o.status === 'active')) v.push('objective still active after outcome');
   const ids = s.log.map((e) => e.id);
   if (new Set(ids).size !== ids.length) v.push('duplicate log ids');
   if (s.log.some((e) => e.text.startsWith('['))) v.push(`missing template: ${s.log.find((e) => e.text.startsWith('['))?.text}`);
   return v;
 }
+
+/**
+ * Checks between consecutive states: no ship moves further in one step than its
+ * speed limit allows over the elapsed time (no teleporting). A jump ends the
+ * simulation, so it is exempt.
+ */
+export function checkTransition(prev: WorldState, next: WorldState): string[] {
+  const v: string[] = [];
+  const dt = Math.max(0, next.time - prev.time);
+  for (const id of SHIP_IDS) {
+    const a = prev.ships[id];
+    const b = next.ships[id];
+    if (b.destroyed || next.flags.jumped) continue;
+    const moved = Math.hypot(b.position.x - a.position.x, b.position.y - a.position.y);
+    const limit = Math.max(a.perf.maxSpeed, s(a), s(b)) * 1.25 * dt + 50;
+    if (moved > limit) v.push(`${id} moved ${Math.round(moved)} km in ${dt}s (limit ${Math.round(limit)})`);
+    if (next.turn < prev.turn) v.push('time went backwards');
+  }
+  return v;
+}
+const s = (sh: { velocity: { x: number; y: number } }) => Math.hypot(sh.velocity.x, sh.velocity.y);

@@ -1,5 +1,5 @@
 /**
- * Authoritative world-state types for Project Starbridge (schema version 2).
+ * Authoritative world-state types for Project Starbridge (schema version 3).
  *
  * Only deterministic engine code produces a new WorldState. Interpreters
  * (offline parser today, AI in Milestone 3) may only emit ProposedActions
@@ -53,7 +53,68 @@ export interface Ship {
   scanLevel: number;
   /** How the player's ship classifies this contact. */
   disposition: Disposition;
+  /** Kinematics (km, km/s, degrees; heading 0 = +y "north", clockwise). */
+  velocity: Vec2;
+  heading: number;
+  /** Nominal performance at 100% engine efficiency. */
+  perf: { maxSpeed: number; accel: number; turnRate: number };
+  /** Active guidance behaviour (helm order for the Halcyon, agent decision for NPCs). */
+  nav: NavGoal | null;
 }
+
+export type ManeuverIntent =
+  | 'approach'
+  | 'standoff'
+  | 'interpose'
+  | 'intercept'
+  | 'follow'
+  | 'escort'
+  | 'block'
+  | 'retreat'
+  | 'flee'
+  | 'orbit'
+  | 'holdStation'
+  | 'allStop'
+  | 'face'
+  | 'evasive';
+
+/** A navigation reference: another ship or a scenario landmark. */
+export type NavRef = ShipId | 'border';
+
+export interface NavGoal {
+  intent: ManeuverIntent;
+  target: NavRef | null;
+  /** Second reference (interpose: the other end of the segment). */
+  second: NavRef | null;
+  rangeKm: number | null;
+  /** Fraction of maximum speed to use (0–1). */
+  speedFactor: number;
+  /** Relative offset to hold (holdStation), km. */
+  offset: Vec2 | null;
+  /** Tracked order this goal executes (Halcyon helm orders). */
+  orderId: number | null;
+  /** Has the goal been reached at least once (station-keeping continues)? */
+  reached: boolean;
+  startedTurn: number;
+}
+
+export type Department = 'helm' | 'tactical' | 'ops' | 'science' | 'comms' | 'xo';
+export type OrderStatus = 'acknowledged' | 'underway' | 'completed' | 'failed' | 'impossible' | 'superseded';
+export interface TrackedOrder {
+  id: number;
+  dept: Department;
+  label: string;
+  status: OrderStatus;
+  issuedTurn: number;
+  updatedTurn: number;
+  /** Estimated seconds to completion when last reported. */
+  etaSeconds: number | null;
+  /** Still holding position/formation after completion. */
+  maintaining: boolean;
+  detail: string;
+}
+
+export type Stance = 'neutral' | 'nonHostile' | 'assertive';
 
 export type FactionId = 'concord' | 'directorate' | 'independent';
 
@@ -132,14 +193,9 @@ export interface VisualFx {
   to: ShipId;
 }
 
-export interface HelmOrder {
-  mode: 'approach' | 'range' | 'away' | 'interpose';
-  target: ShipId | null;
-  rangeKm: number | null;
-}
 
 export interface WorldState {
-  version: 2;
+  version: 3;
   scenarioId: string;
   seed: number;
   /** Current RNG state; advancing it is part of every deterministic transition. */
@@ -162,9 +218,15 @@ export interface WorldState {
   counters: Record<string, number>;
   /** Standing orders that persist across turns until complete or replaced. */
   orders: {
-    helm: HelmOrder | null;
     jumpCharging: boolean;
+    /** Recent and active orders with lifecycle status (newest last). */
+    list: TrackedOrder[];
+    nextId: number;
   };
+  /** Declared posture/intent ("we don't want to appear hostile"); biases helm and is perceivable by NPCs. */
+  posture: { stance: Stance; since: number };
+  /** Scenario landmarks (e.g. the Concord border), km. */
+  landmarks: Record<string, Vec2>;
   /** Pending clarifying question from the interpreter, if any. */
   clarification: { question: string; options: string[]; clause: string } | null;
   /** Last target the captain referred to (pronoun resolution). */
