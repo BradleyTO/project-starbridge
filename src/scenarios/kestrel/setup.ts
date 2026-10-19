@@ -4,6 +4,7 @@
  */
 import type { Character, Fact, Ship, ShipId, ShipSystem, SystemId, WorldState } from '../../engine/types';
 import { SYSTEM_IDS } from '../../engine/types';
+import { headingOf, headingVec, sub } from '../../engine/kinematics';
 import { createRng, normaliseSeed } from '../../engine/rng';
 import { deriveStatus } from '../../engine/rules';
 
@@ -37,7 +38,8 @@ function systems(overrides: Partial<Record<SystemId, ShipSystem>> = {}): Record<
   return out;
 }
 
-function ship(id: ShipId, p: Omit<Ship, 'id' | 'destroyed' | 'shields' | 'weapons' | 'tractor' | 'jump' | 'detected' | 'scanLevel'> & Partial<Ship>): Ship {
+type ShipInit = Omit<Ship, 'id' | 'destroyed' | 'shields' | 'weapons' | 'tractor' | 'jump' | 'detected' | 'scanLevel' | 'velocity' | 'heading' | 'nav'> & Partial<Ship>;
+function ship(id: ShipId, p: ShipInit): Ship {
   return {
     id,
     destroyed: false,
@@ -47,6 +49,9 @@ function ship(id: ShipId, p: Omit<Ship, 'id' | 'destroyed' | 'shields' | 'weapon
     jump: { charge: 0 },
     detected: false,
     scanLevel: 0,
+    velocity: { x: 0, y: 0 },
+    heading: 0,
+    nav: null,
     ...p,
   };
 }
@@ -72,12 +77,18 @@ export function createScenario(seedInput: number | string = 1): WorldState {
   const pp = PASSENGER_PROFILES[variant.passenger];
   const patience = { hardliner: 3, pragmatic: 5, cautious: 6 }[variant.temperament];
 
+  const cruiserPos = { x: Math.round(Math.sin(cruiserAngle) * cruiserDist), y: Math.round(Math.cos(cruiserAngle) * cruiserDist) };
+  const kestrelPos = { x: -5300, y: 37600 };
+  const cruiserHeading = headingOf(sub(kestrelPos, cruiserPos));
+  const cv = headingVec(cruiserHeading);
   const ships: Record<ShipId, Ship> = {
     halcyon: ship('halcyon', {
       name: 'CSV Halcyon',
       classification: 'Survey cruiser',
       faction: 'concord',
       position: { x: 0, y: 0 },
+      heading: Math.round(headingOf(kestrelPos)),
+      perf: { maxSpeed: 235, accel: 12, turnRate: 6 },
       hull: 100,
       systems: systems(variant.complication === 'ionStorm' ? { sensors: sys(70) } : {}),
       souls: 212,
@@ -90,7 +101,9 @@ export function createScenario(seedInput: number | string = 1): WorldState {
       name: 'Kestrel',
       classification: 'Bulk freighter',
       faction: 'independent',
-      position: { x: -5300, y: 37600 },
+      position: kestrelPos,
+      heading: 115,
+      perf: { maxSpeed: 120, accel: 4, turnRate: 3 },
       hull: 45,
       systems: systems({ engines: sys(0, 0), shields: sys(0, 0), weapons: sys(0, 0), reactor: sys(30), jumpDrive: sys(0, 0), comms: sys(60), tractor: sys(0, 0), transporter: sys(0, 0) }),
       souls: kestrelCrew,
@@ -101,7 +114,11 @@ export function createScenario(seedInput: number | string = 1): WorldState {
       name: 'Ashen Covenant',
       classification: 'Vigil-class heavy cruiser',
       faction: 'directorate',
-      position: { x: Math.round(Math.sin(cruiserAngle) * cruiserDist), y: Math.round(Math.cos(cruiserAngle) * cruiserDist) },
+      position: cruiserPos,
+      heading: cruiserHeading,
+      velocity: { x: cv.x * 450, y: cv.y * 450 },
+      nav: { intent: 'approach', target: 'kestrel', second: null, rangeKm: 8000, speedFactor: 1, offset: null, orderId: null, reached: false, startedTurn: 0 },
+      perf: { maxSpeed: 500, accel: 10, turnRate: 3 },
       hull: 100,
       systems: systems(),
       shields: { raised: true, strength: 100 },
@@ -185,7 +202,7 @@ export function createScenario(seedInput: number | string = 1): WorldState {
   );
 
   return {
-    version: 2,
+    version: 3,
     scenarioId: SCENARIO_ID,
     seed,
     rng: rng.state,
@@ -204,7 +221,9 @@ export function createScenario(seedInput: number | string = 1): WorldState {
     pending: [],
     flags: {},
     counters: { torpedoes: 6, kestrelCrewStart: kestrelCrew, trapped: variant.complication === 'trappedCrew' ? 4 : 0, rescued: 0, kestrelDead: 0, cargo: 1 },
-    orders: { helm: null, jumpCharging: false },
+    orders: { jumpCharging: false, list: [], nextId: 1 },
+    posture: { stance: 'neutral', since: 0 },
+    landmarks: { border: { x: 0, y: -120000 } },
     clarification: null,
     lastTarget: null,
     fx: [],

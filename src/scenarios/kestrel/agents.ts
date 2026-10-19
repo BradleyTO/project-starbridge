@@ -8,9 +8,10 @@ import type { Applied } from '../../engine/reduce';
 import type { Report } from '../../engine/report';
 import { comms, narrate, say } from '../../engine/report';
 import type { Rng } from '../../engine/rng';
-import type { PendingEvent, ShipId, WorldState } from '../../engine/types';
+import type { ManeuverIntent, NavGoal, NavRef, PendingEvent, ShipId, WorldState } from '../../engine/types';
 import { resolveAttack, destroyShip } from '../../engine/combat';
-import { BEAM_RANGE, CRUISER_SPEED, TRACTOR_RANGE, efficiency, range, stepAway, stepToward } from '../../engine/rules';
+import { BEAM_RANGE, TRACTOR_RANGE, range } from '../../engine/rules';
+import { dot, len, sub, unit } from '../../engine/kinematics';
 import { addTension, knows, patchCharacter, patchShip, revealFact, schedule, setFlag, setMemory } from '../../engine/state';
 import { containmentRate, turnsToBreach } from './hooks';
 
@@ -73,7 +74,6 @@ function cruiserAgent(s: WorldState, rng: Rng, r: Report[]): WorldState {
   if (c.destroyed || s.flags.cruiserGone || !c.detected) return s;
   const temp = s.variant.temperament;
   const mem = () => s.characters.vane.memory;
-  const speed = Math.round(CRUISER_SPEED * Math.min(1, efficiency(c, 'engines')) * (s.ships.halcyon.tractor.target === 'cruiser' ? 0.4 : 1));
 
   // Retreat when badly hurt (threshold depends on temperament) or when he has yielded.
   if (c.hull <= RETREAT_AT[temp] || s.flags.cruiserRetreating) {
@@ -81,7 +81,8 @@ function cruiserAgent(s: WorldState, rng: Rng, r: Report[]): WorldState {
       s = setFlag(s, 'cruiserRetreating');
       r.push(comms('vane', 'vaneRetreats'));
     }
-    s = patchShip(s, 'cruiser', { position: roundV(stepAway(c.position, s.ships.halcyon.position, speed || 10000)), weapons: { state: 'safe', target: null } });
+    s = steer(s, 'retreat', 'halcyon', null);
+    s = patchShip(s, 'cruiser', { weapons: { state: 'safe', target: null } });
     s = setMemory(s, 'vane', 'lockedOn', 0);
     if (range(s, 'halcyon', 'cruiser') > 150000) {
       s = setFlag(s, 'cruiserGone');
@@ -115,7 +116,7 @@ function cruiserAgent(s: WorldState, rng: Rng, r: Report[]): WorldState {
     }
     const anchor = mem().agreement === 3 ? (p.ship === 'halcyon' ? 'halcyon' : 'kestrel') : 'kestrel';
     const standoff = mem().agreement === 3 ? 8000 : 25000;
-    if (!s.ships[anchor].destroyed) s = patchShip(s, 'cruiser', { position: roundV(stepToward(c.position, s.ships[anchor].position, speed, standoff)) });
+    if (!s.ships[anchor].destroyed) s = steer(s, 'approach', anchor, standoff);
     if (mem().agreement === 3 && p.status !== 'dead' && p.ship !== 'cruiser' && range(s, 'cruiser', p.ship) <= 20000) {
       s = patchCharacter(s, 'passenger', { ship: 'cruiser', status: p.status === 'stasis' ? 'stasis' : 'active' });
       s = setFlag(s, 'passengerHandedOver');
@@ -127,12 +128,11 @@ function cruiserAgent(s: WorldState, rng: Rng, r: Report[]): WorldState {
 
   // A successful bluff (or a cautious captain's hesitation) holds him back.
   if ((mem().bluffUntil ?? -1) >= s.turn) {
-    s = patchShip(s, 'cruiser', { position: roundV(stepAway(c.position, s.ships.halcyon.position, 5000)) });
-    return s;
+    return steer(s, 'retreat', 'halcyon', null, 0.2);
   }
 
-  // Close on the quarry.
-  if (!s.ships[hunt].destroyed) s = patchShip(s, 'cruiser', { position: roundV(stepToward(c.position, s.ships[hunt].position, speed, 8000)) });
+  // Close on the quarry (the move happens over the next minute of physics).
+  if (!s.ships[hunt].destroyed) s = steer(s, 'approach', hunt, 8000);
   const dHalcyon = range(s, 'cruiser', 'halcyon');
 
   // First contact: the demand.
@@ -160,15 +160,41 @@ function cruiserAgent(s: WorldState, rng: Rng, r: Report[]): WorldState {
   }
 
   if (mem().attacking) {
-    s = patchShip(s, 'cruiser', { position: roundV(stepToward(s.ships.cruiser.position, s.ships.halcyon.position, speed, 15000)), weapons: { state: 'locked', target: 'halcyon' } });
+    s = steer(s, 'approach', 'halcyon', 15000);
+    s = patchShip(s, 'cruiser', { weapons: { state: 'locked', target: 'halcyon' } });
     if (range(s, 'cruiser', 'halcyon') <= BEAM_RANGE && !smoke) s = cruiserFires(s, 'halcyon', rng, r);
     return s;
   }
 
-  // Patience erodes while the Halcyon stays near the quarry.
+  // What does Vane make of the Halcyon's posture and motion?
+  const view = vanePerceive(s);
+  if (mem().hailed && s.turn > (mem().hailTurn ?? 0) && view.stance !== (mem().perceived ?? 0)) {
+    s = setMemory(s, 'vane', 'perceived', view.stance);
+    if (view.stance === 1 && !mem().saidPeaceful && !view.interposing) {
+      s = setMemory(s, 'vane', 'saidPeaceful', 1);
+      r.push(comms('vane', 'vaneSeesPeaceful'));
+    } else if (view.stance === -1 && !mem().saidThreat) {
+      s = setMemory(s, 'vane', 'saidThreat', 1);
+      r.push(comms('vane', view.closingFast ? 'vaneSeesClosing' : 'vaneSeesThreat'));
+    }
+  }
+
+  // A peaceful ship sitting squarely between his guns and the freighter gets one acknowledgement.
+  if (mem().hailed && view.stance === 1 && view.interposing && !mem().saidInterpose) {
+    s = setMemory(s, 'vane', 'saidInterpose', 1);
+    s = setMemory(s, 'vane', 'saidPeaceful', 1);
+    r.push(comms('vane', 'vaneSeesPeacefulInterpose'));
+  }
+
+  // Patience erodes while the Halcyon stays near the quarry; how fast depends on how she looks.
   if (mem().hailed && s.turn > (mem().hailTurn ?? 0)) {
     const complying = range(s, 'halcyon', 'kestrel') > 30000 && !s.flags.passengerAboard;
-    if (!complying) s = setMemory(s, 'vane', 'patience', (mem().patience ?? 0) - 1);
+    if (!complying) {
+      let loss = 1;
+      if (view.stance === 1) loss = temp === 'hardliner' ? s.turn % 2 : 0;
+      else if (view.stance === -1) loss = 2;
+      if (loss) s = setMemory(s, 'vane', 'patience', (mem().patience ?? 0) - loss);
+    }
   }
 
   if ((mem().patience ?? 0) <= 0 && !mem().lockedOn && range(s, 'cruiser', hunt) <= 30000) {
@@ -177,6 +203,48 @@ function cruiserAgent(s: WorldState, rng: Rng, r: Report[]): WorldState {
     else s = lockOn(s, hunt === believedHolder(s) && hunt === 'kestrel' ? 'halcyon' : hunt, r);
   }
   return s;
+}
+
+/** Point the cruiser's helm at a new guidance goal (kept if unchanged so "reached" survives). */
+function steer(s: WorldState, intent: ManeuverIntent, target: NavRef, rangeKm: number | null, speedFactor = 1): WorldState {
+  const cur = s.ships.cruiser.nav;
+  if (cur && cur.intent === intent && cur.target === target && cur.rangeKm === rangeKm && cur.speedFactor === speedFactor) return s;
+  const nav: NavGoal = { intent, target, second: null, rangeKm, speedFactor, offset: null, orderId: null, reached: false, startedTurn: s.turn };
+  return patchShip(s, 'cruiser', { nav });
+}
+
+export interface VaneView {
+  /** 1 peaceful, 0 wary, −1 threatening. */
+  stance: 1 | 0 | -1;
+  score: number;
+  interposing: boolean;
+  closingFast: boolean;
+}
+
+/**
+ * Vane's reading of the Halcyon from what his sensors show: shield and weapon
+ * state, whether she is locked on, how fast she is closing on him, whether she
+ * is sitting between him and the Kestrel, and any posture the captain has
+ * declared over an open channel.
+ */
+export function vanePerceive(s: WorldState): VaneView {
+  const h = s.ships.halcyon;
+  const c = s.ships.cruiser;
+  let score = 0;
+  if (!h.shields.raised) score += 1;
+  else score -= 1;
+  if (h.weapons.state === 'armed') score -= 1;
+  if (h.weapons.state === 'locked' && h.weapons.target === 'cruiser') score -= 3;
+  const toC = sub(c.position, h.position);
+  const closing = dot(sub(h.velocity, c.velocity), unit(toC));
+  const ownClosing = dot(h.velocity, unit(toC));
+  const closingFast = len(toC) < 100000 && ownClosing > 150 && closing > 150;
+  if (closingFast) score -= 2;
+  if (s.posture.stance === 'nonHostile' && (s.counters.postureHeardTurn ?? -1) >= s.posture.since) score += 1;
+  if (s.posture.stance === 'assertive') score -= 1;
+  const interposing = !!s.flags.interposing;
+  if (interposing) score += score >= 2 ? 0 : -1;
+  return { stance: score >= 2 ? 1 : score <= -2 ? -1 : 0, score, interposing, closingFast };
 }
 
 /** Where Vane believes his quarry is (he will not destroy that ship unless he is in a fight). */
@@ -361,6 +429,3 @@ function officerAgent(s: WorldState, _rng: Rng, r: Report[]): WorldState {
   return s;
 }
 
-function roundV(v: { x: number; y: number }) {
-  return { x: Math.round(v.x), y: Math.round(v.y) };
-}

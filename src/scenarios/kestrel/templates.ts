@@ -7,6 +7,7 @@ import type { TemplateFn } from '../../engine/scenario';
 import { SYSTEM_IDS } from '../../engine/types';
 import { efficiency, km, range, systemLabel } from '../../engine/rules';
 import { knows } from '../../engine/state';
+import { HELM_TEMPLATES } from '../../engine/helmTemplates';
 
 type V = Record<string, string | number>;
 const n = (v: V, k: string) => Number(v[k] ?? 0);
@@ -225,6 +226,10 @@ const T: Record<string, TemplateFn> = {
   vaneAgreement_3: (v) => `"A sensible choice. Transfer ${v.name} and you may all go."`,
   vaneCollectsPassenger: (v) => `"We have ${v.name}. You are free to go, Captain."`,
   vaneBetrayed: () => '"You took the fugitive under cover of our agreement. Our understanding is over."',
+  vaneSeesPeaceful: () => '"Shields down and guns cold. Either you are very brave or very foolish, Captain. I will allow you a little time."',
+  vaneSeesPeacefulInterpose: () => '"You put your ship between my guns and that freighter with your shields down? ... Bold. Very well — I will not fire through you. Yet."',
+  vaneSeesClosing: () => '"You are closing on my ship at speed, Captain. Turn away or be treated as hostile."',
+  vaneSeesThreat: () => '"Raised shields, armed weapons. I see how this is going to go, Captain."',
   vaneLockWarning: () => '"Your weapons are locked on my ship. Release them, now."',
   vaneUltimatumKestrel: () => '"I have run out of patience. Weapons are locked on the Kestrel. You have one minute."',
   vaneUltimatumHalcyon: () => '"Weapons locked on your ship, Captain. Your move."',
@@ -266,4 +271,4 @@ const T: Record<string, TemplateFn> = {
   adviseOptions: () => 'Captain, time is passing. We could close and evacuate, send engineers to stabilise her, or talk to the Prefect. Say "options" if you want my read.',
 };
 
-export const templates = T;
+export const templates: Record<string, TemplateFn> = { ...HELM_TEMPLATES, ...T };

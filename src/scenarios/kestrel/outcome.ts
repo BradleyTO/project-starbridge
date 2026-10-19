@@ -24,7 +24,7 @@ export function passengerFate(s: WorldState): PassengerFate {
   const p = s.characters.passenger;
   if (p.status === 'dead') return 'dead';
   if (p.ship === 'cruiser') return 'returned';
-  if (p.ship === 'halcyon') return s.flags.jumped || s.outcome ? 'asylum' : 'unknown';
+  if (p.ship === 'halcyon') return s.flags.jumped || s.flags.leftReach || s.outcome ? 'asylum' : 'unknown';
   // Still aboard the Kestrel
   if (s.flags.kestrelTowedOut) return 'asylum';
   if (s.flags.kestrelCeded || (!s.ships.cruiser.destroyed && !s.flags.cruiserGone)) return 'captured';
@@ -43,7 +43,7 @@ export function computeObjectives(s: WorldState, ended: boolean): Objective[] {
 
   const dead = (s.counters.kestrelDead ?? 0) > 0;
   const k = s.ships.kestrel;
-  const savedInPlace = !!s.flags.kestrelStable && !s.flags.jumped && !k.destroyed && !!s.outcome?.success;
+  const savedInPlace = !!s.flags.kestrelStable && !s.flags.jumped && !s.flags.leftReach && !k.destroyed && !!s.outcome?.success;
   const protect: ObjectiveStatus = dead ? 'failed' : k.souls === 0 ? 'complete' : ended ? (crewSafe(s) || savedInPlace ? 'complete' : 'failed') : 'active';
   add('protect', "Protect the Kestrel's crew", protect);
 
@@ -78,10 +78,11 @@ export function detectOutcome(s: WorldState): Outcome | null {
 
   if (s.ships.halcyon.destroyed) return mk('halcyon-lost', 'Halcyon Lost', 'The CSV Halcyon was destroyed with all hands.', false);
 
-  if (s.flags.jumped) {
+  if (s.flags.jumped || s.flags.leftReach) {
     const dead = s.counters.kestrelDead ?? 0;
-    if (crewSafe(s)) return mk('rescue-withdrawal', 'Rescue and Withdrawal', s.flags.kestrelTowedOut ? 'You jumped clear of the Reach with the Kestrel in tow and every one of her crew alive.' : 'You jumped clear of the Reach with every surviving Kestrel crew member aboard.', true);
-    if ((s.counters.rescued ?? 0) > 0 && dead === 0) return mk('partial-withdrawal', 'Partial Rescue', `You jumped out with ${s.counters.rescued} Kestrel crew aboard, leaving ${k.souls} behind.`, false);
+    const how = s.flags.jumped ? 'jumped clear of the Reach' : 'crossed the border into Concord space';
+    if (crewSafe(s)) return mk('rescue-withdrawal', 'Rescue and Withdrawal', s.flags.kestrelTowedOut ? `You ${how} with the Kestrel in tow and every one of her crew alive.` : `You ${how} with every surviving Kestrel crew member aboard.`, true);
+    if ((s.counters.rescued ?? 0) > 0 && dead === 0) return mk('partial-withdrawal', 'Partial Rescue', `You ${s.flags.jumped ? 'jumped out' : 'reached Concord space'} with ${s.counters.rescued} Kestrel crew aboard, leaving ${k.souls} behind.`, false);
     return mk('abandoned', 'Kestrel Abandoned', dead > 0 ? `You left the Reach after ${dead} Kestrel crew died.` : 'You left the Reach without rescuing the Kestrel crew.', false);
   }
 
