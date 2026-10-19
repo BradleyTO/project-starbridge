@@ -1,43 +1,67 @@
-import type { ShipSystems } from '../../engine/types';
+import type { Ship, SystemId } from '../../engine/types';
+import { SYSTEM_IDS } from '../../engine/types';
+import { systemLabel } from '../../engine/rules';
 import { Panel } from './Panel';
 
-function Bar({ label, value, warn = 50 }: { label: string; value: number; warn?: number }) {
-  const tone = value < 25 ? 'crit' : value < warn ? 'warn' : 'ok';
+function Bar({ label, value, warn = 50, testId }: { label: string; value: number; warn?: number; testId?: string }) {
+  const v = Math.round(value);
+  const tone = v < 25 ? 'crit' : v < warn ? 'warn' : 'ok';
   return (
-    <div className="bar-row">
+    <div className="bar-row" data-testid={testId}>
       <span className="bar-label">{label}</span>
-      <div className="bar-track" role="meter" aria-label={label} aria-valuenow={value} aria-valuemin={0} aria-valuemax={100}>
-        <div className={`bar-fill ${tone}`} style={{ width: `${value}%` }} />
+      <div className="bar-track" role="meter" aria-label={label} aria-valuenow={v} aria-valuemin={0} aria-valuemax={100}>
+        <div className={`bar-fill ${tone}`} style={{ width: `${Math.min(100, v)}%` }} />
       </div>
-      <span className="bar-value">{value}%</span>
+      <span className="bar-value">{v}%</span>
     </div>
   );
 }
 
-export function ShipStatus({ ship }: { ship: ShipSystems }) {
+const SHORT: Partial<Record<SystemId, string>> = { lifeSupport: 'Life supp.', jumpDrive: 'Jump drive', transporter: 'Transport' };
+
+export function ShipStatus({ ship, torpedoes, targetName }: { ship: Ship; torpedoes: number; targetName: (id: string) => string }) {
   return (
     <Panel title="Ship Status" code="04-117" accent="amber" testId="ship-status">
       <div className="ship-id">
         <ShipGlyph />
         <div>
           <div className="ship-name">{ship.name}</div>
-          <div className="ship-reg">{ship.registry} · Concord Exploration Service</div>
+          <div className="ship-reg">{ship.classification} · Concord Exploration Service</div>
         </div>
       </div>
-      <Bar label="Hull" value={ship.hull} />
-      <Bar label="Shields" value={ship.shields} />
-      <Bar label="Reactor" value={ship.reactor} />
-      <Bar label="Impulse" value={ship.impulse} />
-      <Bar label="Sensors" value={ship.sensors} />
+      <Bar label="Hull" value={ship.hull} testId="hull" />
+      <Bar label="Shields" value={ship.shields.strength} />
+      <Bar label="Jump chg" value={ship.jump.charge} warn={0} />
+      <table className="systems" data-testid="systems">
+        <thead>
+          <tr><th>System</th><th>Health</th><th>Power</th></tr>
+        </thead>
+        <tbody>
+          {SYSTEM_IDS.map((id) => {
+            const sys = ship.systems[id];
+            return (
+              <tr key={id} className={`sys-${sys.status}`} data-system={id}>
+                <td>{SHORT[id] ?? systemLabel(id)}</td>
+                <td>{Math.round(sys.health)}%</td>
+                <td>{Math.round(sys.power)}%</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
       <dl className="sys-grid">
         <dt>Shields</dt>
-        <dd data-testid="shield-state" className={ship.shieldsRaised ? 'on' : ''}>{ship.shieldsRaised ? 'RAISED' : 'LOWERED'}</dd>
+        <dd data-testid="shield-state" className={ship.shields.raised ? 'on' : ''}>{ship.shields.raised ? 'RAISED' : 'LOWERED'}</dd>
         <dt>Weapons</dt>
-        <dd className={ship.weapons !== 'safe' ? 'hot' : ''}>{ship.weapons.toUpperCase()}</dd>
-        <dt>Jump drive</dt>
-        <dd>{ship.jumpDrive.toUpperCase()}</dd>
+        <dd className={ship.weapons.state !== 'safe' ? 'hot' : ''} data-testid="weapons-state">
+          {ship.weapons.state.toUpperCase()}{ship.weapons.target ? ` · ${targetName(ship.weapons.target).toUpperCase()}` : ''}
+        </dd>
+        <dt>Torpedoes</dt>
+        <dd>{torpedoes}</dd>
         <dt>Tractor</dt>
-        <dd className={ship.tractor === 'engaged' ? 'on' : ''}>{ship.tractor.toUpperCase()}</dd>
+        <dd className={ship.tractor.target ? 'on' : ''}>{ship.tractor.target ? `ON · ${targetName(ship.tractor.target).toUpperCase()}` : 'IDLE'}</dd>
+        <dt>Aboard</dt>
+        <dd data-testid="souls">{ship.souls}</dd>
       </dl>
     </Panel>
   );

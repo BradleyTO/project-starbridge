@@ -1,10 +1,11 @@
 /**
- * POST /api/command — Milestone 1 stub.
+ * POST /api/command — stub (Milestone 2).
  *
  * Future milestones: this server-side function will call the configured AI
  * provider (OpenRouter by default) with OPENROUTER_API_KEY read from the
  * server environment, validate the structured response against a schema, and
- * return *proposed* actions + narrative. The browser engine stays authoritative.
+ * return *proposed* actions (the same zod ProposedAction schema the offline
+ * interpreter emits) + narrative. The browser engine stays authoritative.
  *
  * Today it never contacts an AI provider and needs no secrets: it returns a
  * deterministic fallback so the client contract can be exercised.
@@ -23,7 +24,7 @@ export function GET(): Response {
   return json({
     ok: true,
     service: 'starbridge-command',
-    milestone: 1,
+    milestone: 2,
     aiConfigured: Boolean(process.env.OPENROUTER_API_KEY),
     mode: 'deterministic-fallback',
   });
@@ -45,6 +46,6 @@ export async function POST(request: Request): Promise<Response> {
     mode: 'deterministic-fallback',
     proposal: null,
     narrative: null,
-    note: 'AI narration is not enabled in Milestone 1. The client uses its local scripted demo.',
+    note: 'AI interpretation is not enabled yet (Milestone 3). The client uses its local offline interpreter and deterministic engine.',
   });
 }

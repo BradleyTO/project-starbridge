@@ -1,10 +1,10 @@
-import type { Contact } from '../../engine/types';
+import type { ContactView } from '../view';
 import { formatRange } from '../../engine/state';
 import { Panel } from './Panel';
 import { plotPosition } from './radarMath';
 
-export function Tactical({ contacts, shieldsRaised }: { contacts: Contact[]; shieldsRaised: boolean }) {
-  const visible = contacts.filter((c) => c.visible);
+export function Tactical({ contacts, shieldsRaised }: { contacts: ContactView[]; shieldsRaised: boolean }) {
+  const visible = contacts;
   return (
     <Panel title="Tactical / Sensors" code="12-090" accent="sky" testId="tactical">
       <svg className="radar" viewBox="0 0 200 200" role="img" aria-label="Tactical plot">
@@ -27,7 +27,7 @@ export function Tactical({ contacts, shieldsRaised }: { contacts: Contact[]; shi
         <path d="M100 94 L104 104 L100 102 L96 104 Z" fill="#ffb347" />
         {visible.map((c) => {
           const p = plotPosition(c);
-          const color = c.disposition === 'hostile' ? '#ff5d5d' : c.disposition === 'distressed' ? '#ffd166' : c.disposition === 'neutral' ? '#9fd3ff' : '#c9a0ff';
+          const color = c.destroyed ? '#6b7280' : c.disposition === 'hostile' ? '#ff5d5d' : c.disposition === 'distressed' ? '#ffd166' : c.disposition === 'neutral' || c.disposition === 'evacuated' ? '#9fd3ff' : '#c9a0ff';
           return (
             <g key={c.id} data-contact={c.id}>
               {c.id === 'cruiser' ? (
@@ -58,7 +58,7 @@ export function Tactical({ contacts, shieldsRaised }: { contacts: Contact[]; shi
                 ))}
               </ul>
             )}
-            {!c.scanned && <div className="contact-sub muted">Not yet scanned</div>}
+            {!c.scanned && !c.destroyed && <div className="contact-sub muted">Not yet scanned</div>}
           </li>
         ))}
       </ul>

@@ -7,9 +7,11 @@ interface Props {
   onCommand: (text: string) => void;
   suggestions: string[];
   disabled?: boolean;
+  busy?: boolean;
+  clarification?: { question: string; options: string[] } | null;
 }
 
-export function CommandInput({ onCommand, suggestions, disabled }: Props) {
+export function CommandInput({ onCommand, suggestions, disabled, busy, clarification }: Props) {
   const [text, setText] = useState('');
   const [listening, setListening] = useState(false);
   const [micNote, setMicNote] = useState('');
@@ -21,7 +23,7 @@ export function CommandInput({ onCommand, suggestions, disabled }: Props) {
   function submit(e?: FormEvent) {
     e?.preventDefault();
     const t = text.trim();
-    if (!t) return;
+    if (!t || busy || disabled) return;
     onCommand(t);
     setText('');
     setMicNote('');
@@ -58,7 +60,7 @@ export function CommandInput({ onCommand, suggestions, disabled }: Props) {
           data-testid="command-input"
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder={disabled ? 'Simulation ended — restart or load' : 'e.g. "Scan the Kestrel" or "Hail the cruiser"'}
+          placeholder={disabled ? 'Simulation ended — restart or load' : 'Give any order, e.g. "Lower shields and beam the crew over"'}
           autoComplete="off"
           spellCheck={false}
         />
@@ -73,16 +75,29 @@ export function CommandInput({ onCommand, suggestions, disabled }: Props) {
         >
           {listening ? '■ Stop' : '🎙 Voice'}
         </button>
-        <button type="submit" className="btn transmit" data-testid="command-submit">Transmit</button>
+        <button type="submit" className="btn transmit" data-testid="command-submit" disabled={busy || disabled}>{busy ? 'Working…' : 'Transmit'}</button>
       </form>
       {(micNote || !micSupported) && (
         <p className="mic-note">{micNote || 'Voice input unavailable in this browser; typed orders are fully supported.'}</p>
       )}
-      <div className="chips" aria-label="Suggested demo orders">
-        {suggestions.map((s) => (
-          <button key={s} type="button" className="chip" onClick={() => onCommand(s)}>{s}</button>
-        ))}
-      </div>
+      {clarification && !disabled ? (
+        <div className="clarify" data-testid="clarification">
+          <span className="clarify-q">{clarification.question}</span>
+          <div className="chips" aria-label="Clarification options">
+            {clarification.options.map((o) => (
+              <button key={o} type="button" className="chip chip-clarify" onClick={() => !busy && onCommand(o)}>{o}</button>
+            ))}
+          </div>
+        </div>
+      ) : (
+        !disabled && (
+          <div className="chips" aria-label="Suggested orders" data-testid="suggestions">
+            {suggestions.map((s) => (
+              <button key={s} type="button" className="chip" onClick={() => !busy && onCommand(s)}>{s}</button>
+            ))}
+          </div>
+        )
+      )}
     </section>
   );
 }

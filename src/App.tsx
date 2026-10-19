@@ -1,9 +1,13 @@
-import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
-import { gameReducer } from './ui/gameReducer';
-import { createInitialState, SCENARIO_TITLE } from './scenarios/kestrel/initialState';
-import { DEMO_SUGGESTIONS, OPENING_BEATS } from './scenarios/kestrel/demoScript';
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import type { WorldState } from './engine/types';
+import type { Interpretation } from './engine/schema';
+import { completeIntro, playIntroBeat, processOrders } from './engine/turn';
 import { loadGame, peekSave, saveGame } from './engine/persistence';
 import { formatMissionClock } from './engine/state';
+import { kestrelScenario as scenario } from './scenarios/kestrel';
+import { OfflineInterpreter } from './interpreter/parser';
+import { contextFrom } from './interpreter/types';
+import { contactsView } from './ui/view';
 import { Viewscreen } from './ui/components/Viewscreen';
 import { ShipStatus } from './ui/components/ShipStatus';
 import { Objectives } from './ui/components/Objectives';
@@ -15,6 +19,27 @@ import './App.css';
 
 const BEAT_MS = 3500;
 const VOICE_KEY = 'starbridge.voice';
+const APP_VERSION = '0.2.0';
+const interpreter = new OfflineInterpreter();
+
+type Msg =
+  | { type: 'beat' }
+  | { type: 'skipIntro' }
+  | { type: 'orders'; text: string; interp: Interpretation }
+  | { type: 'replace'; state: WorldState };
+
+function reducer(s: WorldState, m: Msg): WorldState {
+  switch (m.type) {
+    case 'beat':
+      return playIntroBeat(s, scenario);
+    case 'skipIntro':
+      return completeIntro(s, scenario);
+    case 'orders':
+      return processOrders(s, m.text, m.interp, scenario).state;
+    case 'replace':
+      return m.state;
+  }
+}
 
 function safeStorage(): Storage | null {
   try {
@@ -24,8 +49,22 @@ function safeStorage(): Storage | null {
   }
 }
 
+function randomSeed(): number {
+  return Math.floor(Math.random() * 1_000_000);
+}
+
+function initialSeed(): number | string {
+  const q = new URLSearchParams(window.location.search).get('seed');
+  return q && q.trim() ? q.trim() : randomSeed();
+}
+
 export default function App() {
-  const [state, dispatch] = useReducer(gameReducer, undefined, createInitialState);
+  const [state, dispatch] = useReducer(reducer, undefined, () => scenario.create(initialSeed()));
+  const stateRef = useRef(state);
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+  const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState('');
   const [hasSave, setHasSave] = useState(() => {
     const st = safeStorage();
@@ -33,14 +72,16 @@ export default function App() {
   });
   const [voiceOn, setVoiceOn] = useState(() => safeStorage()?.getItem(VOICE_KEY) === 'on');
   const lastSpoken = useRef(state.nextLogId - 1);
-  const introRunning = state.beat < OPENING_BEATS.length;
+  const introRunning = state.intro < scenario.intro.length;
+  const contacts = useMemo(() => contactsView(state, scenario), [state]);
+  const suggestions = useMemo(() => scenario.suggestions(state), [state]);
 
-  // Scripted opening: play beats on a timer until the intro completes.
+  // Opening exposition beats on a timer until the intro completes (or is skipped).
   useEffect(() => {
     if (!introRunning) return;
-    const id = window.setTimeout(() => dispatch({ type: 'beat' }), state.beat === 0 ? 600 : BEAT_MS);
+    const id = window.setTimeout(() => dispatch({ type: 'beat' }), state.intro === 0 ? 600 : BEAT_MS);
     return () => window.clearTimeout(id);
-  }, [introRunning, state.beat]);
+  }, [introRunning, state.intro]);
 
   // Optional spoken crew / comms responses.
   useEffect(() => {
@@ -48,7 +89,7 @@ export default function App() {
       lastSpoken.current = state.nextLogId - 1;
       return;
     }
-    const fresh = state.log.filter((e) => e.id > lastSpoken.current && (e.channel === 'crew' || e.channel === 'comms' || e.channel === 'narrative'));
+    const fresh = state.log.filter((e) => e.id > lastSpoken.current && e.speaker !== 'Captain' && (e.channel === 'crew' || e.channel === 'comms' || e.channel === 'narrative'));
     lastSpoken.current = state.nextLogId - 1;
     for (const e of fresh) speak(e.text);
   }, [state.log, state.nextLogId, voiceOn]);
@@ -63,28 +104,44 @@ export default function App() {
   // Bumped on load/restart so transient input state (e.g. voice notes) resets with the simulation.
   const [session, setSession] = useState(0);
 
+  const onCommand = useCallback(async (text: string) => {
+    setBusy(true);
+    try {
+      const interp = await interpreter.interpret(text, contextFrom(stateRef.current));
+      dispatch({ type: 'orders', text, interp });
+    } finally {
+      setBusy(false);
+    }
+  }, []);
+
+  const reset = (next: WorldState, msg: string) => {
+    cancelSpeech();
+    dispatch({ type: 'replace', state: next });
+    setSession((n) => n + 1);
+    flash(msg);
+  };
   const onSave = () => {
     const st = safeStorage();
     if (!st) return flash('Local storage unavailable — cannot save.');
-    const meta = saveGame(state, st);
+    const meta = saveGame(state, st, APP_VERSION);
     setHasSave(true);
-    flash(`Saved at turn ${meta.turn}.`);
+    flash(`Saved at turn ${meta.turn} (seed ${meta.seed}).`);
   };
   const onLoad = () => {
     const st = safeStorage();
     const res = st ? loadGame(st) : null;
-    if (!res) return flash('No valid save found.');
-    cancelSpeech();
-    dispatch({ type: 'load', state: res.state });
-    setSession((n) => n + 1);
-    flash(`Loaded save from turn ${res.meta.turn}.`);
+    if (!res || !res.ok) return flash(res?.ok === false && res.reason === 'legacy' ? 'That save is from an older version and cannot be loaded.' : 'No valid save found.');
+    reset(res.state, `Loaded save from turn ${res.meta.turn}.`);
   };
+  const confirmLoss = () => state.turn === 0 || state.outcome !== null || window.confirm('Abandon this run? Unsaved progress will be lost.');
   const onRestart = () => {
-    if (state.turn > 0 && !window.confirm('Restart the simulation? Unsaved progress will be lost.')) return;
-    cancelSpeech();
-    dispatch({ type: 'restart' });
-    setSession((n) => n + 1);
-    flash('Simulation restarted.');
+    if (!confirmLoss()) return;
+    reset(scenario.create(state.seed), `Restarted with the same seed (${state.seed}).`);
+  };
+  const onNewScenario = () => {
+    if (!confirmLoss()) return;
+    const seed = randomSeed();
+    reset(scenario.create(seed), `New scenario — seed ${seed}.`);
   };
   const toggleVoice = () => {
     const next = !voiceOn;
@@ -100,13 +157,16 @@ export default function App() {
           <span className="brand-elbow" aria-hidden="true" />
           <div>
             <h1>STARBRIDGE</h1>
-            <p className="subtitle">{SCENARIO_TITLE}</p>
+            <p className="subtitle">{scenario.title}</p>
           </div>
         </div>
         <div className="topbar-status">
-          <span className="demo-badge" data-testid="demo-badge" title="Milestone 1: deterministic keyword script, not the full simulation">SCRIPTED DEMO</span>
+          <span className="demo-badge" data-testid="demo-badge" title="Deterministic simulation engine with the offline (rule-based) order interpreter. AI interpretation and narration arrive in Milestone 3.">
+            SIMULATION · OFFLINE INTERPRETER
+          </span>
           <span className={`alert-pill alert-${state.alert}`} data-testid="alert-level">{state.alert.toUpperCase()} ALERT</span>
           <span className="clock" data-testid="mission-clock">{formatMissionClock(state.time)} · TURN {state.turn}</span>
+          <span className="seed" data-testid="seed" title="Scenario seed — the same seed and orders reproduce a run exactly. Add ?seed=N to the URL to choose one.">SEED {state.seed}</span>
         </div>
         <nav className="controls" aria-label="Simulation controls">
           {introRunning && (
@@ -124,7 +184,8 @@ export default function App() {
           </button>
           <button className="btn save" onClick={onSave} data-testid="save">Save</button>
           <button className="btn load" onClick={onLoad} disabled={!hasSave} data-testid="load">Load</button>
-          <button className="btn restart" onClick={onRestart} data-testid="restart">Restart</button>
+          <button className="btn restart" onClick={onRestart} data-testid="restart" title="Restart this scenario with the same seed">Restart</button>
+          <button className="btn ghost" onClick={onNewScenario} data-testid="new-scenario" title="Start a fresh scenario with a random seed">New</button>
         </nav>
       </header>
 
@@ -132,28 +193,38 @@ export default function App() {
 
       <main className="grid">
         <aside className="col-left">
-          <ShipStatus ship={state.ship} />
+          <ShipStatus ship={state.ships.halcyon} torpedoes={state.counters.torpedoes ?? 0} targetName={(id) => contacts.find((c) => c.id === id)?.name ?? id} />
           <Objectives objectives={state.objectives} />
         </aside>
         <div className="col-center">
-          <Viewscreen state={state} />
+          <Viewscreen state={state} contacts={contacts} />
           {state.outcome && (
-            <div className="outcome" role="alert" data-testid="outcome">
+            <div className={`outcome ${state.outcome.success ? 'outcome-good' : 'outcome-bad'}`} role="alert" data-testid="outcome">
               <strong>{state.outcome.title}</strong>
               <span>{state.outcome.summary}</span>
-              <button className="btn restart" onClick={() => { cancelSpeech(); dispatch({ type: 'restart' }); setSession((n) => n + 1); }}>Run again</button>
+              <div className="outcome-actions">
+                <button className="btn restart" onClick={() => reset(scenario.create(state.seed), `Restarted with the same seed (${state.seed}).`)}>Same seed</button>
+                <button className="btn ghost" onClick={() => { const seed = randomSeed(); reset(scenario.create(seed), `New scenario — seed ${seed}.`); }}>New scenario</button>
+              </div>
             </div>
           )}
           <NarrativePanel log={state.log} />
-          <CommandInput key={session} onCommand={(text) => dispatch({ type: 'command', text })} suggestions={DEMO_SUGGESTIONS} disabled={!!state.outcome} />
+          <CommandInput
+            key={session}
+            onCommand={onCommand}
+            suggestions={suggestions}
+            disabled={!!state.outcome}
+            busy={busy}
+            clarification={state.clarification}
+          />
         </div>
         <aside className="col-right">
-          <Tactical contacts={state.contacts} shieldsRaised={state.ship.shieldsRaised} />
+          <Tactical contacts={contacts} shieldsRaised={state.ships.halcyon.shields.raised} />
           <CommsLog log={state.log} />
         </aside>
       </main>
       <footer className="footer">
-        Project Starbridge · Milestone 1 prototype · Original fiction and artwork · Typed orders always available; voice where supported.
+        Project Starbridge v{APP_VERSION} · Milestone 2: deterministic simulation · Original fiction and artwork · Typed orders always available; voice where supported.
       </footer>
     </div>
   );

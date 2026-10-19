@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
-import type { WorldState } from '../../engine/types';
-import { getContact } from '../../engine/state';
+import type { VisualFx, WorldState } from '../../engine/types';
+import type { ContactView } from '../view';
 
 interface Star {
   x: number;
@@ -127,12 +127,25 @@ function drawCruiser(ctx: CanvasRenderingContext2D, x: number, y: number, size: 
   ctx.restore();
 }
 
-export function Viewscreen({ state }: { state: WorldState }) {
+interface FxLive extends VisualFx {
+  start: number;
+}
+
+/** Signed bearing (−180..180) mapped across the forward view. */
+const signed = (b: number) => (b > 180 ? b - 360 : b);
+
+export function Viewscreen({ state, contacts }: { state: WorldState; contacts: ContactView[] }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const stateRef = useRef(state);
+  const stateRef = useRef({ state, contacts });
+  const fxRef = useRef<FxLive[]>([]);
   useEffect(() => {
-    stateRef.current = state;
-  }, [state]);
+    stateRef.current = { state, contacts };
+  }, [state, contacts]);
+  // Each new turn's visual effects (weapons, explosions, plasma, tractor pulses) play once.
+  useEffect(() => {
+    const now = performance.now();
+    fxRef.current = state.fx.map((f) => ({ ...f, start: now }));
+  }, [state.fx]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -155,7 +168,7 @@ export function Viewscreen({ state }: { state: WorldState }) {
     ro.observe(canvas);
 
     const frame = (t: number) => {
-      const s = stateRef.current;
+      const { state: s, contacts: cs } = stateRef.current;
       const w = canvas.clientWidth;
       const h = canvas.clientHeight;
       ctx.fillStyle = '#02040a';
@@ -180,33 +193,67 @@ export function Viewscreen({ state }: { state: WorldState }) {
         ctx.fillRect(px, py, st.z * 2, st.z * 2);
       }
 
-      const k = getContact(s, 'kestrel');
-      const c = getContact(s, 'cruiser');
-      const bx = (bearing: number) => w / 2 + Math.max(-1, Math.min(1, bearing / 45)) * w * 0.4;
+      const k = cs.find((x) => x.id === 'kestrel');
+      const c = cs.find((x) => x.id === 'cruiser');
+      const bx = (bearing: number) => w / 2 + Math.max(-1, Math.min(1, signed(bearing) / 60)) * w * 0.4;
+      const pos: Record<string, { x: number; y: number }> = { halcyon: { x: w / 2, y: h } };
 
-      if (c.visible) {
+      if (c && !c.destroyed) {
         const size = Math.max(10, 14 + 150 * Math.pow(1 - Math.min(c.range, 220000) / 220000, 2.2)) * (w / 900);
-        drawCruiser(ctx, bx(c.bearing), h * 0.3, size, t, c.disposition === 'hostile');
+        pos.cruiser = { x: bx(c.bearing), y: h * 0.3 };
+        drawCruiser(ctx, pos.cruiser.x, pos.cruiser.y, size, t, c.disposition === 'hostile');
       }
-      if (k.visible) {
+      if (k && !k.destroyed) {
         const size = (24 + 150 * (1 - Math.min(k.range, 40000) / 40000)) * (w / 900);
-        const kx = bx(k.bearing);
-        const ky = h * 0.6;
-        if (s.ship.tractor === 'engaged') {
-          const g = ctx.createLinearGradient(w / 2, h, kx, ky);
+        pos.kestrel = { x: bx(k.bearing), y: h * 0.6 };
+        const tractorOn = s.ships.halcyon.tractor.target === 'kestrel';
+        if (tractorOn) {
+          const g = ctx.createLinearGradient(w / 2, h, pos.kestrel.x, pos.kestrel.y);
           g.addColorStop(0, 'rgba(120,200,255,0.55)');
           g.addColorStop(1, 'rgba(120,200,255,0.1)');
           ctx.strokeStyle = g;
           ctx.lineWidth = 10 + 4 * Math.sin(t * 0.01);
           ctx.beginPath();
           ctx.moveTo(w / 2, h);
-          ctx.lineTo(kx, ky);
+          ctx.lineTo(pos.kestrel.x, pos.kestrel.y);
           ctx.stroke();
         }
-        drawKestrel(ctx, kx, ky, size, reduced ? 0 : t, !!s.flags.kestrelDestroyed);
+        drawKestrel(ctx, pos.kestrel.x, pos.kestrel.y, size, reduced ? 0 : t, k.disposition !== 'distressed');
       }
 
-      if (s.ship.shieldsRaised) {
+      // One-shot effects from the last turn (~1.6 s each).
+      for (const f of fxRef.current) {
+        const age = (t - f.start) / 1600;
+        if (age < 0 || age > 1) continue;
+        const a = pos[f.from];
+        const b = pos[f.to] ?? a;
+        if (!a || !b) continue;
+        if (f.kind === 'beam') {
+          ctx.strokeStyle = `rgba(255,${f.from === 'cruiser' ? 80 : 200},80,${1 - age})`;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+        } else if (f.kind === 'torpedo') {
+          const px = a.x + (b.x - a.x) * age;
+          const py = a.y + (b.y - a.y) * age;
+          ctx.fillStyle = 'rgba(255,120,60,0.95)';
+          ctx.beginPath();
+          ctx.arc(px, py, 5, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (f.kind === 'explosion') {
+          ctx.fillStyle = `rgba(255,220,160,${1 - age})`;
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, 10 + age * 90, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (f.kind === 'plasma') {
+          ctx.fillStyle = `rgba(190,120,255,${0.45 * (1 - age)})`;
+          ctx.fillRect(0, h * 0.4, w, h * 0.6);
+        }
+      }
+
+      if (s.ships.halcyon.shields.raised) {
         ctx.strokeStyle = `rgba(110,220,255,${0.25 + 0.15 * Math.sin(t * 0.004)})`;
         ctx.lineWidth = 6;
         ctx.strokeRect(4, 4, w - 8, h - 8);
@@ -235,8 +282,8 @@ export function Viewscreen({ state }: { state: WorldState }) {
     };
   }, []);
 
-  const k = getContact(state, 'kestrel');
-  const c = getContact(state, 'cruiser');
+  const k = contacts.find((x) => x.id === 'kestrel');
+  const c = contacts.find((x) => x.id === 'cruiser');
   return (
     <section className="viewscreen" aria-label="Forward viewscreen" data-testid="viewscreen">
       <canvas ref={canvasRef} />
@@ -245,8 +292,8 @@ export function Viewscreen({ state }: { state: WorldState }) {
         <span className={`vs-alert alert-${state.alert}`}>{state.alert.toUpperCase()} ALERT</span>
       </div>
       <div className="vs-labels">
-        {k.visible && <span>KESTREL · {Math.round(k.range).toLocaleString('en-US')} KM</span>}
-        {c.visible && <span className="hostile">{c.name.toUpperCase()} · {Math.round(c.range).toLocaleString('en-US')} KM</span>}
+        {k && <span>{k.name.toUpperCase()} · {k.destroyed ? 'DESTROYED' : `${Math.round(k.range).toLocaleString('en-US')} KM`}</span>}
+        {c && <span className={c.disposition === 'hostile' ? 'hostile' : ''}>{c.name.toUpperCase()} · {c.destroyed ? 'DESTROYED' : `${Math.round(c.range).toLocaleString('en-US')} KM`}</span>}
       </div>
     </section>
   );
