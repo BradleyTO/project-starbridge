@@ -87,6 +87,11 @@ See `.env.example`. All `.env*` files except the example are git-ignored.
 
 The app deploys to Vercel as a Vite static site plus serverless functions in `api/`. `GET /api/command` returns a health payload; `POST /api/command` returns a deterministic fallback in M1.
 
+## Known issues & device testing
+
+- **Voice (confirmed on a real device):** as of v0.1.1, Bradley Ockrant confirmed on his own phone that voice-to-text (speech recognition) and text-to-speech (spoken crew/comms responses) both work. Automated tests still use stubbed speech APIs, because headless browsers have no microphone or audio output.
+- Not yet tested in desktop Safari or Firefox, or on dedicated tablets/bridge consoles.
+
 ## Roadmap
 
 - [x] **Milestone 1** — Complete interface and scripted demonstration, deployed preview.
