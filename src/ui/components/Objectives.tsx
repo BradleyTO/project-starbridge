@@ -1,7 +1,7 @@
 import type { Objective } from '../../engine/types';
 import { Panel } from './Panel';
 
-const ICON = { active: '◇', complete: '◆', failed: '✕' } as const;
+const ICON = { active: '◇', complete: '◆', failed: '✕', missed: '–' } as const;
 
 export function Objectives({ objectives }: { objectives: Objective[] }) {
   return (

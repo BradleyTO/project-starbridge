@@ -53,10 +53,15 @@ export default function App() {
     for (const e of fresh) speak(e.text);
   }, [state.log, state.nextLogId, voiceOn]);
 
+  const toastTimer = useRef<number | undefined>(undefined);
   const flash = useCallback((msg: string) => {
     setToast(msg);
-    window.setTimeout(() => setToast(''), 2600);
+    window.clearTimeout(toastTimer.current);
+    toastTimer.current = window.setTimeout(() => setToast(''), 2600);
   }, []);
+  useEffect(() => () => window.clearTimeout(toastTimer.current), []);
+  // Bumped on load/restart so transient input state (e.g. voice notes) resets with the simulation.
+  const [session, setSession] = useState(0);
 
   const onSave = () => {
     const st = safeStorage();
@@ -71,12 +76,14 @@ export default function App() {
     if (!res) return flash('No valid save found.');
     cancelSpeech();
     dispatch({ type: 'load', state: res.state });
+    setSession((n) => n + 1);
     flash(`Loaded save from turn ${res.meta.turn}.`);
   };
   const onRestart = () => {
     if (state.turn > 0 && !window.confirm('Restart the simulation? Unsaved progress will be lost.')) return;
     cancelSpeech();
     dispatch({ type: 'restart' });
+    setSession((n) => n + 1);
     flash('Simulation restarted.');
   };
   const toggleVoice = () => {
@@ -97,7 +104,7 @@ export default function App() {
           </div>
         </div>
         <div className="topbar-status">
-          <span className="demo-badge" title="Milestone 1: deterministic keyword script, not the full simulation">SCRIPTED DEMO</span>
+          <span className="demo-badge" data-testid="demo-badge" title="Milestone 1: deterministic keyword script, not the full simulation">SCRIPTED DEMO</span>
           <span className={`alert-pill alert-${state.alert}`} data-testid="alert-level">{state.alert.toUpperCase()} ALERT</span>
           <span className="clock" data-testid="mission-clock">{formatMissionClock(state.time)} · TURN {state.turn}</span>
         </div>
@@ -134,11 +141,11 @@ export default function App() {
             <div className="outcome" role="alert" data-testid="outcome">
               <strong>{state.outcome.title}</strong>
               <span>{state.outcome.summary}</span>
-              <button className="btn restart" onClick={() => dispatch({ type: 'restart' })}>Run again</button>
+              <button className="btn restart" onClick={() => { cancelSpeech(); dispatch({ type: 'restart' }); setSession((n) => n + 1); }}>Run again</button>
             </div>
           )}
           <NarrativePanel log={state.log} />
-          <CommandInput onCommand={(text) => dispatch({ type: 'command', text })} suggestions={DEMO_SUGGESTIONS} disabled={!!state.outcome} />
+          <CommandInput key={session} onCommand={(text) => dispatch({ type: 'command', text })} suggestions={DEMO_SUGGESTIONS} disabled={!!state.outcome} />
         </div>
         <aside className="col-right">
           <Tactical contacts={state.contacts} shieldsRaised={state.ship.shieldsRaised} />

@@ -26,7 +26,8 @@
 .btn.restart { background: var(--rose); }
 .btn.ghost { background: #2a2f3d; color: var(--ink); }
 .btn.on { background: var(--mint); }
-.toast { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); background: var(--amber-2); color: #111; padding: 8px 18px; border-radius: 18px; font-weight: 700; z-index: 10; box-shadow: 0 4px 20px #000; }
+/* Bottom-right so it can never cover the header badges or controls. */
+.toast { position: fixed; bottom: 16px; right: 16px; max-width: calc(100vw - 32px); pointer-events: none; background: var(--amber-2); color: #111; padding: 8px 18px; border-radius: 18px; font-weight: 700; z-index: 10; box-shadow: 0 4px 20px #000; }
 
 /* ---------- layout ---------- */
 .grid { display: grid; grid-template-columns: minmax(240px, 300px) minmax(0, 1fr) minmax(260px, 340px); gap: 10px; flex: 1; min-height: 0; }
@@ -73,6 +74,8 @@
 .obj-complete .obj-status { background: var(--mint); color: #111; }
 .obj-failed { color: var(--red); text-decoration: line-through; }
 .obj-failed .obj-status { background: var(--red); color: #111; }
+.obj-missed { color: var(--muted); }
+.obj-missed .obj-status { background: #3a3f4d; color: var(--muted); }
 
 /* ---------- viewscreen ---------- */
 .viewscreen { position: relative; aspect-ratio: 16 / 7; min-height: 200px; border-radius: 22px; overflow: hidden; border: 3px solid #222838; box-shadow: inset 0 0 40px #000; }
@@ -150,4 +153,5 @@
   .col-center { order: -1; }
   .viewscreen { aspect-ratio: 16 / 9; }
   .brand h1 { font-size: 1.3rem; }
+  .toast { left: 16px; right: 16px; text-align: center; }
 }

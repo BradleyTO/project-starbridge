@@ -41,6 +41,17 @@ const send = async (cmd) => {
   await page.waitForTimeout(150);
 };
 
+
+const overlaps = (a, b) => a && b && a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+const checkToast = async (label) => {
+  await page.click('[data-testid=save]');
+  await page.waitForTimeout(100);
+  const toast = await page.locator('[data-testid=toast]').boundingBox();
+  const badge = await page.locator('[data-testid=demo-badge]').boundingBox();
+  const header = await page.locator('header.topbar').boundingBox();
+  check(`${label}: toast does not overlap demo badge or header`, toast && !overlaps(toast, badge) && !overlaps(toast, header), JSON.stringify({ toast, badge }));
+};
+
 await page.goto(URL, { waitUntil: 'networkidle' });
 check('title', (await page.title()).includes('Starbridge'), await page.title());
 for (const id of ['viewscreen', 'ship-status', 'narrative', 'command', 'tactical', 'comms', 'objectives', 'save', 'load', 'restart']) {
@@ -81,7 +92,7 @@ await send('gibberish order xyz');
 check('unknown order handled', (await narrative()).includes('did not recognise'));
 
 // Save / load
-await page.click('[data-testid=save]');
+await checkToast('desktop');
 check('save toast', (await page.innerText('[data-testid=toast]')).includes('Saved'));
 await send('Raise shields');
 check('shields raised', (await page.innerText('[data-testid=shield-state]')) === 'RAISED');
@@ -110,11 +121,14 @@ await page.screenshot({ path: `${SHOTS}/02-desktop-midgame.png` });
 // Rescue playthrough to an ending
 for (const c of ['Approach the Kestrel', 'Approach the Kestrel', 'Approach the Kestrel', 'Evacuate the Kestrel crew', 'Withdraw']) await send(c);
 check('rescue ending shown', (await page.innerText('[data-testid=outcome]')).toLowerCase().includes('rescue and withdrawal'));
+const objText = (await page.innerText('[data-testid=objectives]')).toLowerCase();
+check('no objective left active after ending', !/\bactive\b/.test(objText), objText.replace(/\n/g, ' | '));
 await page.screenshot({ path: `${SHOTS}/03-desktop-ending.png` });
 
 page.once('dialog', (d) => d.accept());
 await page.click('[data-testid=restart]');
 await page.waitForTimeout(300);
+check('voice note cleared on restart', !(await page.locator('.mic-note').allInnerTexts()).some((t) => t.startsWith('Heard')));
 check('restart resets', (await page.innerText('[data-testid=mission-clock]')).includes('TURN 0') && !(await page.locator('[data-testid=outcome]').count()));
 
 // Responsive layouts
@@ -123,6 +137,7 @@ for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape',
   await page.waitForTimeout(400);
   if (await page.locator('[data-testid=skip-intro]').count()) await page.click('[data-testid=skip-intro]');
   await send('Scan the Kestrel');
+  await checkToast(name);
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   check(`${name}: no horizontal overflow`, overflow <= 0, `overflow ${overflow}px`);
   check(`${name}: command input visible`, await page.locator('[data-testid=command-input]').isVisible());

@@ -8,7 +8,8 @@
  */
 
 export type AlertLevel = 'green' | 'yellow' | 'red';
-export type ObjectiveStatus = 'active' | 'complete' | 'failed';
+/** 'missed' = an optional/informational objective not achieved before the simulation ended. */
+export type ObjectiveStatus = 'active' | 'complete' | 'failed' | 'missed';
 export type Disposition = 'unknown' | 'neutral' | 'distressed' | 'hostile' | 'friendly';
 export type LogChannel = 'narrative' | 'comms' | 'system' | 'captain' | 'crew';
 

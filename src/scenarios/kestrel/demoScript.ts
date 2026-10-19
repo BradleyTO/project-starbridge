@@ -173,7 +173,7 @@ function statusReport(s: WorldState): string {
   const c = getContact(s, 'cruiser');
   const parts = [
     `Hull ${s.ship.hull}%, shields ${s.ship.shieldsRaised ? 'raised' : 'lowered'}, weapons ${s.ship.weapons}.`,
-    k.visible ? `Kestrel at ${Math.round(k.range).toLocaleString('en-US')} km, reactor ${s.flags.kestrelStabilized ? 'stabilised' : `breach in ~${s.counters.kestrelReactor} min`}.` : '',
+    s.flags.kestrelDestroyed ? 'Kestrel destroyed; her crew is aboard.' : k.visible ? `Kestrel at ${Math.round(k.range).toLocaleString('en-US')} km, reactor ${s.flags.kestrelStabilized ? 'stabilised' : `breach in ~${s.counters.kestrelReactor} min`}.` : '',
     c.visible ? `Cruiser at ${Math.round(c.range).toLocaleString('en-US')} km.` : '',
   ];
   return parts.filter(Boolean).join(' ');
@@ -206,6 +206,11 @@ function handleIntent(s: WorldState, intent: Intent, target: Target): IntentResu
   const k = getContact(s, 'kestrel');
   const c = getContact(s, 'cruiser');
   const ok = (state: WorldState, consumesTime = true): IntentResult => ({ state, consumesTime });
+  const kestrelAction: Intent[] = ['approach', 'evacuate', 'stabilize', 'tractor'];
+  const aimsAtKestrel = target === 'kestrel' || target === 'compartment' || (target === null && (intent === 'scan' || intent === 'hail'));
+  if (s.flags.kestrelDestroyed && (kestrelAction.includes(intent) || ((intent === 'scan' || intent === 'hail') && aimsAtKestrel))) {
+    return ok(addLog(s, 'crew', CREW.xo, 'The Kestrel is gone, Captain. Her crew is safe aboard the Halcyon.'), false);
+  }
 
   switch (intent) {
     case 'help':
@@ -216,13 +221,17 @@ function handleIntent(s: WorldState, intent: Intent, target: Target): IntentResu
 
     case 'redAlert':
       s = { ...s, alert: 'red', ship: { ...s.ship, shieldsRaised: true } };
-      return ok(addLog(s, 'crew', CREW.tactical, 'Red alert. Shields up, all stations report ready.'));
+      return ok(addLog(s, 'crew', CREW.tactical, 'Red alert. Shields up, all stations report ready.'), false);
 
     case 'yellowAlert':
       return ok(addLog({ ...s, alert: 'yellow' }, 'crew', CREW.xo, 'Yellow alert, aye.'), false);
 
     case 'standDown':
       s = { ...s, alert: 'green', ship: { ...s.ship, shieldsRaised: false, weapons: 'safe' } };
+      if (s.flags.weaponsHot) {
+        s = setFlag(s, 'weaponsHot', false);
+        if (!s.flags.cruiserLockedKestrel) s = updateContact(s, 'cruiser', { disposition: s.flags.cruiserTalked ? 'neutral' : 'unknown' });
+      }
       return ok(addLog(s, 'crew', CREW.xo, 'Standing down. Shields lowered, weapons safed.'), false);
 
     case 'shieldsUp':
@@ -296,9 +305,13 @@ function handleIntent(s: WorldState, intent: Intent, target: Target): IntentResu
     }
 
     case 'arm': {
-      s = { ...s, ship: { ...s.ship, weapons: target === 'cruiser' || c.visible ? 'locked' : 'armed' } };
+      if (s.ship.weapons === 'locked') return ok(addLog(s, 'crew', CREW.tactical, 'Weapons are already locked on the cruiser.'), false);
+      s = { ...s, ship: { ...s.ship, weapons: c.visible ? 'locked' : 'armed' } };
       s = setFlag(s, 'weaponsHot');
-      if (c.visible) s = updateContact(s, 'cruiser', { disposition: 'hostile' });
+      if (c.visible) {
+        s = markEscalated(s, 'lockedOnCruiser');
+        s = updateContact(s, 'cruiser', { disposition: 'hostile' });
+      }
       return ok(
         addLog(
           s,
@@ -313,10 +326,10 @@ function handleIntent(s: WorldState, intent: Intent, target: Target): IntentResu
       if (target === 'kestrel')
         return ok(addLog(s, 'crew', CREW.tactical, 'Captain, the Kestrel is a civilian vessel. I will not fire on her without a confirmed reason.'), false);
       if (!c.visible) return ok(addLog(s, 'crew', CREW.tactical, 'No hostile targets on the board.'), false);
-      s = setFlag(s, 'shotsFired');
+      s = markEscalated(s, 'shotsFired');
+      s = setFlag(s, 'weaponsHot');
       s = { ...s, alert: 'red', ship: { ...s.ship, shieldsRaised: true, weapons: 'locked' } };
       s = updateContact(s, 'cruiser', { disposition: 'hostile' });
-      s = setObjective(s, 'escalation', 'failed');
       s = addLog(s, 'crew', CREW.tactical, 'Firing! Direct hit on their forward shield array. They are powering weapons and returning fire.');
       return ok(
         endWith(s, {
@@ -431,7 +444,7 @@ function hail(s: WorldState, target: Exclude<Target, null>): IntentResult {
     }
     s = setFlag(s, 'cruiserTalked');
     s = setObjective(s, 'intentions', 'complete');
-    s = updateContact(s, 'cruiser', { name: 'Ashen Covenant', faction: 'Tessarine Directorate', disposition: s.flags.weaponsHot ? 'hostile' : 'neutral' });
+    s = updateContact(s, 'cruiser', { name: 'Ashen Covenant', faction: 'Tessarine Directorate', disposition: s.flags.weaponsHot || s.flags.cruiserLockedKestrel ? 'hostile' : 'neutral' });
     s = addLog(
       s,
       'comms',
@@ -493,17 +506,16 @@ function withdraw(s: WorldState): WorldState {
   const rescued = s.flags.crewEvacuated || s.flags.towing;
   s = addLog(s, 'crew', CREW.helm, 'Plotting a course out of the Reach. Jump drive charging… engaging.');
   if (rescued) {
-    s = setObjective(s, 'protect', 'complete');
-    if (!s.flags.shotsFired) s = setObjective(s, 'escalation', s.flags.weaponsHot ? 'failed' : 'complete');
     return endWith(s, {
       id: 'rescue',
       title: 'Rescue and Withdrawal',
-      summary: s.flags.towing
+      summary: s.flags.kestrelDestroyed
+        ? 'You withdrew from the Reach with the Kestrel crew aboard. The freighter herself was lost to her reactor breach.'
+        : s.flags.towing
         ? 'You withdrew from the Reach with the Kestrel in tow. The Directorate will protest, but her crew — and her secret passenger — are under Concord protection.'
         : 'You withdrew from the Reach with the Kestrel crew aboard. The derelict freighter, and whatever remains in her hold, was left to the Ashen Covenant.',
     });
   }
-  s = setObjective(s, 'protect', 'failed');
   return endWith(s, {
     id: 'abandoned',
     title: 'Kestrel Abandoned',
@@ -511,8 +523,50 @@ function withdraw(s: WorldState): WorldState {
   });
 }
 
+/**
+ * ESCALATION RULE (deterministic).
+ * The border dispute counts as escalated the moment ANY of these happens:
+ *   - the Halcyon locks weapons on the cruiser          (flag weaponsHot / lockedOnCruiser)
+ *   - the Halcyon fires on anyone                        (flag shotsFired)
+ *   - the cruiser locks weapons on the Kestrel or Halcyon (flag cruiserLockedKestrel)
+ *   - the cruiser fires on anyone                        (flag cruiserFired; reserved, not reachable in M1)
+ * Once escalated, the "Avoid escalating" objective fails immediately and cannot recover.
+ * Standing down afterwards de-escalates the ships' posture but does not undo the failure.
+ */
+export const ESCALATION_FLAGS = ['lockedOnCruiser', 'shotsFired', 'cruiserLockedKestrel', 'cruiserFired'] as const;
+
+export function hasEscalated(s: WorldState): boolean {
+  return ESCALATION_FLAGS.some((f) => s.flags[f]);
+}
+
+function markEscalated(s: WorldState, flag: (typeof ESCALATION_FLAGS)[number]): WorldState {
+  s = setFlag(s, flag);
+  return setObjective(s, 'escalation', 'failed');
+}
+
+/**
+ * Resolves every objective that is still active when the simulation ends.
+ *   assess / intentions / secret (informational): complete if achieved, otherwise "missed".
+ *   protect: complete if the crew was evacuated or the Kestrel towed out, otherwise failed.
+ *   escalation: failed if hasEscalated(), otherwise complete.
+ */
+export function resolveObjectives(s: WorldState): WorldState {
+  const rescued = !!(s.flags.crewEvacuated || (s.flags.towing && s.outcome?.id === 'rescue'));
+  const final: Record<string, 'complete' | 'failed' | 'missed'> = {
+    assess: getContact(s, 'kestrel').scanned ? 'complete' : 'missed',
+    intentions: s.flags.cruiserTalked ? 'complete' : 'missed',
+    secret: s.flags.secretRevealed ? 'complete' : 'missed',
+    protect: rescued ? 'complete' : 'failed',
+    escalation: hasEscalated(s) ? 'failed' : 'complete',
+  };
+  return {
+    ...s,
+    objectives: s.objectives.map((o) => (o.status === 'active' && final[o.id] ? { ...o, status: final[o.id] } : o)),
+  };
+}
+
 function endWith(s: WorldState, outcome: WorldState['outcome']): WorldState {
-  s = { ...s, outcome };
+  s = resolveObjectives({ ...s, outcome });
   s = addLog(s, 'system', COMPUTER, `SIMULATION ENDED — ${outcome!.title}. ${outcome!.summary}`);
   return s;
 }
@@ -539,7 +593,6 @@ export function npcTurn(s: WorldState): WorldState {
         if (s.flags.towing) s = { ...s, ship: { ...s.ship, tractor: 'idle', impulse: 100 } };
         s = setFlag(s, 'towing', false);
       } else {
-        s = setObjective(s, 'protect', 'failed');
         return endWith(s, {
           id: 'kestrel-lost',
           title: 'Kestrel Lost',
@@ -553,7 +606,8 @@ export function npcTurn(s: WorldState): WorldState {
   const c = getContact(s, 'cruiser');
   if (c.visible) {
     const speed = s.flags.cruiserPlacated ? 8000 : s.flags.weaponsHot ? 45000 : 30000;
-    const floor = s.flags.cruiserPlacated ? 60000 : 8000;
+    // A placated cruiser holds at 60,000 km (or wherever it already is, if closer); it never jumps backwards.
+    const floor = Math.min(s.flags.cruiserPlacated ? 60000 : 8000, c.range);
     const range = clamp(c.range - speed, floor, c.range);
     s = updateContact(s, 'cruiser', { range, bearing: Math.max(12, Math.round(c.bearing - 3)) });
 
@@ -563,7 +617,8 @@ export function npcTurn(s: WorldState): WorldState {
       s = addLog(s, 'comms', 'Unidentified warship', '"Concord vessel. You will move away from the freighter. This is your only warning."');
     }
     if (range <= 30000 && !s.flags.cruiserPlacated && !s.flags.cruiserLockedKestrel) {
-      s = setFlag(s, 'cruiserLockedKestrel');
+      s = markEscalated(s, 'cruiserLockedKestrel');
+      s = updateContact(s, 'cruiser', { disposition: 'hostile' });
       s = { ...s, alert: 'red' };
       s = addLog(s, 'crew', CREW.tactical, 'The cruiser has locked weapons on the Kestrel! Going to red alert.');
     }
