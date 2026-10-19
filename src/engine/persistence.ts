@@ -1,6 +1,9 @@
 import type { WorldState } from './types';
 
-export const SAVE_KEY = 'starbridge.save.v1';
+/** Save format v2: the full authoritative WorldState (including seed and RNG state). */
+export const SAVE_KEY = 'starbridge.save.v2';
+export const LEGACY_SAVE_KEY = 'starbridge.save.v1';
+export const SAVE_FORMAT_VERSION = 2;
 
 export interface StorageLike {
   getItem(key: string): string | null;
@@ -9,9 +12,12 @@ export interface StorageLike {
 }
 
 export interface SaveMeta {
+  format: number;
   savedAt: string;
   scenarioId: string;
+  seed: number;
   turn: number;
+  appVersion: string;
 }
 
 interface SaveFile {
@@ -19,39 +25,42 @@ interface SaveFile {
   state: WorldState;
 }
 
-function isWorldState(v: unknown): v is WorldState {
+export type LoadResult = { ok: true; meta: SaveMeta; state: WorldState } | { ok: false; reason: 'none' | 'corrupt' | 'legacy' | 'version' };
+
+export function isWorldState(v: unknown): v is WorldState {
   if (!v || typeof v !== 'object') return false;
   const s = v as Partial<WorldState>;
   return (
-    s.version === 1 &&
+    s.version === 2 &&
     typeof s.scenarioId === 'string' &&
+    typeof s.seed === 'number' &&
+    typeof s.rng === 'number' &&
     typeof s.turn === 'number' &&
-    Array.isArray(s.contacts) &&
-    Array.isArray(s.objectives) &&
-    Array.isArray(s.log) &&
-    typeof s.ship === 'object'
+    !!s.ships && !!s.ships.halcyon && !!s.ships.kestrel && !!s.ships.cruiser &&
+    !!s.characters && !!s.facts && Array.isArray(s.log) && Array.isArray(s.pending) && !!s.orders
   );
 }
 
-export function saveGame(state: WorldState, storage: StorageLike, now = new Date()): SaveMeta {
-  const meta: SaveMeta = { savedAt: now.toISOString(), scenarioId: state.scenarioId, turn: state.turn };
-  const file: SaveFile = { meta, state };
-  storage.setItem(SAVE_KEY, JSON.stringify(file));
+export function saveGame(state: WorldState, storage: StorageLike, appVersion: string, now = new Date()): SaveMeta {
+  const meta: SaveMeta = { format: SAVE_FORMAT_VERSION, savedAt: now.toISOString(), scenarioId: state.scenarioId, seed: state.seed, turn: state.turn, appVersion };
+  storage.setItem(SAVE_KEY, JSON.stringify({ meta, state } satisfies SaveFile));
   return meta;
 }
 
-export function loadGame(storage: StorageLike): { meta: SaveMeta; state: WorldState } | null {
+export function loadGame(storage: StorageLike): LoadResult {
   const raw = storage.getItem(SAVE_KEY);
-  if (!raw) return null;
+  if (!raw) return { ok: false, reason: storage.getItem(LEGACY_SAVE_KEY) ? 'legacy' : 'none' };
   try {
     const parsed = JSON.parse(raw) as Partial<SaveFile>;
-    if (!parsed.meta || !isWorldState(parsed.state)) return null;
-    return { meta: parsed.meta, state: parsed.state };
+    if (!parsed.meta || parsed.meta.format !== SAVE_FORMAT_VERSION) return { ok: false, reason: 'version' };
+    if (!isWorldState(parsed.state)) return { ok: false, reason: 'corrupt' };
+    return { ok: true, meta: parsed.meta, state: parsed.state };
   } catch {
-    return null;
+    return { ok: false, reason: 'corrupt' };
   }
 }
 
 export function peekSave(storage: StorageLike): SaveMeta | null {
-  return loadGame(storage)?.meta ?? null;
+  const r = loadGame(storage);
+  return r.ok ? r.meta : null;
 }
