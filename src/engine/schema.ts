@@ -57,7 +57,22 @@ export const StanceSchema = z.enum(['neutral', 'nonHostile', 'assertive']);
 
 const base = { note: z.string().max(200).optional() };
 
-export const ProposedActionSchema = z.discriminatedUnion('type', [
+/** Events a standing (conditional / sequenced) order can wait for. */
+export const TriggerSchema = z.discriminatedUnion('kind', [
+  /** A ship's weapons reach a state: armed (or more), locked on, or fired. */
+  z.object({ kind: z.literal('weapons'), ship: ContactSchema, state: z.enum(['armed', 'locked', 'fired']) }),
+  /** A ship comes within / goes beyond a range of the Halcyon. */
+  z.object({ kind: z.literal('range'), ship: ContactSchema, op: z.enum(['within', 'beyond']), km: z.number().min(100).max(500000) }),
+  /** The helm order issued earlier in the same command completes (sequencing: "…, then …"). */
+  z.object({ kind: z.literal('helmDone') }),
+]);
+export type Trigger = z.infer<typeof TriggerSchema>;
+
+/** Things a captain can forbid until further notice (or until a trigger). */
+export const RestrictSubjectSchema = z.enum(['armWeapons', 'fireWeapons', 'raiseShields', 'lowerShields']);
+export type RestrictSubject = z.infer<typeof RestrictSubjectSchema>;
+
+const BASE_ACTIONS = [
   z.object({ type: z.literal('query'), topic: z.enum(['status', 'systems', 'contacts', 'objectives', 'options', 'help']), ...base }),
   z.object({ type: z.literal('setAlert'), level: z.enum(['green', 'yellow', 'red']), ...base }),
   z.object({ type: z.literal('shields'), raise: z.boolean(), ...base }),
@@ -81,6 +96,8 @@ export const ProposedActionSchema = z.discriminatedUnion('type', [
     second: NavRefSchema.optional(),
     rangeKm: z.number().min(0).max(500000).optional(),
     speed: z.enum(['slow', 'half', 'full']).default('full'),
+    /** "No matter what": keep at it indefinitely; automatic fallbacks never displace it. */
+    persistent: z.boolean().default(false),
     ...base,
   }),
   /** Declared posture/intent; perceivable by NPCs and biases other orders. */
@@ -106,6 +123,20 @@ export const ProposedActionSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('jump'), mode: z.enum(['charge', 'engage', 'withdraw']), ...base }),
   z.object({ type: z.literal('improvise'), method: ImproviseMethodSchema, target: ContactSchema.optional(), description: z.string().max(300), ...base }),
   z.object({ type: z.literal('wait'), ...base }),
+] as const;
+
+/** Actions that can be executed directly (and the only kind a standing order may carry). */
+export const BaseActionSchema = z.discriminatedUnion('type', [...BASE_ACTIONS]);
+export type BaseAction = z.infer<typeof BaseActionSchema>;
+
+export const ProposedActionSchema = z.discriminatedUnion('type', [
+  ...BASE_ACTIONS,
+  /** "If the Kestrel arms its weapons, raise our shields": runs `actions` when `trigger` is met. */
+  z.object({ type: z.literal('standing'), trigger: TriggerSchema, actions: z.array(BaseActionSchema).min(1).max(4), ...base }),
+  /** "Do not power up weapons" / "not until then": a prohibition, optionally lifted by a trigger. */
+  z.object({ type: z.literal('restrict'), subject: RestrictSubjectSchema, until: TriggerSchema.optional(), ...base }),
+  /** "When I say 'go dark', I mean …": teach the crew a phrase (stored as familiarity, not world state). */
+  z.object({ type: z.literal('learn'), phrase: z.string().min(2).max(60), meaning: z.string().min(2).max(300), ...base }),
 ]);
 
 export type ProposedAction = z.infer<typeof ProposedActionSchema>;

@@ -10,6 +10,8 @@ import { deriveStatus } from '../../engine/rules';
 
 export const SCENARIO_ID = 'kestrel-incident';
 export const SCENARIO_TITLE = 'Training Simulation 001: The Kestrel Incident';
+/** Bump when scenario rules change; stored in snapshots so replays can say what they ran. */
+export const SCENARIO_VERSION = '1.1.0';
 
 /** Bridge roles → character ids, with relief officers if the primary is lost. */
 export const ROLE_HOLDERS = {
@@ -202,7 +204,8 @@ export function createScenario(seedInput: number | string = 1): WorldState {
   );
 
   return {
-    version: 3,
+    version: 4,
+    provenance: { timeline: 'simulation', missionId: null, archiveId: null, scenarioVersion: SCENARIO_VERSION },
     scenarioId: SCENARIO_ID,
     seed,
     rng: rng.state,
@@ -223,6 +226,9 @@ export function createScenario(seedInput: number | string = 1): WorldState {
     counters: { torpedoes: 6, kestrelCrewStart: kestrelCrew, trapped: variant.complication === 'trappedCrew' ? 4 : 0, rescued: 0, kestrelDead: 0, cargo: 1 },
     orders: { jumpCharging: false, list: [], nextId: 1 },
     posture: { stance: 'neutral', since: 0 },
+    standing: [],
+    restrictions: [],
+    familiarity: { drilled: {} },
     landmarks: { border: { x: 0, y: -120000 } },
     clarification: null,
     lastTarget: null,

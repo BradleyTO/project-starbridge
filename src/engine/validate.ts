@@ -247,7 +247,7 @@ export function validate(s: WorldState, action: ProposedAction): Validation {
     case 'jump': {
       if (!usable(h, 'jumpDrive', 0.2)) {
         if (action.mode === 'withdraw' && usable(h, 'engines', 0.1))
-          return partial({ type: 'maneuver', intent: 'retreat', target: present(s, 'cruiser') ? 'cruiser' : 'kestrel', speed: 'full' }, 1, [say('helm', 'jumpDownImpulseOnly')]);
+          return partial({ type: 'maneuver', intent: 'retreat', target: present(s, 'cruiser') ? 'cruiser' : 'kestrel', speed: 'full', persistent: false }, 1, [say('helm', 'jumpDownImpulseOnly')]);
         return no(action, [say('helm', 'systemUnavailable', { system: 'jump drive', status: h.systems.jumpDrive.status })]);
       }
       if (action.mode === 'charge') return h.jump.charge >= 100 ? no(action, [say('helm', 'jumpReadyAlready')]) : ok(action, 0);
@@ -280,7 +280,17 @@ export function validate(s: WorldState, action: ProposedAction): Validation {
 
     case 'wait':
       return ok(action, 1);
+
+    case 'standing':
+    case 'restrict':
+    case 'learn':
+      return validateStanding(s, action);
   }
+}
+
+/** Standing orders, prohibitions and taught phrases (implemented in standing.ts). */
+function validateStanding(_s: WorldState, action: ProposedAction): Validation {
+  return no(action, [say('xo', 'cannotComply')]);
 }
 
 /** Helper for UIs/tests: the efficiency of a Halcyon system as a 0–100 percentage. */

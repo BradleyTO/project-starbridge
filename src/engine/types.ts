@@ -1,5 +1,7 @@
+import type { BaseAction, RestrictSubject, Trigger } from './schema';
+
 /**
- * Authoritative world-state types for Project Starbridge (schema version 3).
+ * Authoritative world-state types for Project Starbridge (schema version 4).
  *
  * Only deterministic engine code produces a new WorldState. Interpreters
  * (offline parser today, AI in Milestone 3) may only emit ProposedActions
@@ -99,7 +101,7 @@ export interface NavGoal {
 }
 
 export type Department = 'helm' | 'tactical' | 'ops' | 'science' | 'comms' | 'xo';
-export type OrderStatus = 'acknowledged' | 'underway' | 'completed' | 'failed' | 'impossible' | 'superseded';
+export type OrderStatus = 'acknowledged' | 'underway' | 'completed' | 'failed' | 'impossible' | 'superseded' | 'standing' | 'cancelled';
 export interface TrackedOrder {
   id: number;
   dept: Department;
@@ -112,6 +114,40 @@ export interface TrackedOrder {
   /** Still holding position/formation after completion. */
   maintaining: boolean;
   detail: string;
+  /** "No matter what": not completed by arrival and not displaced by automatic fallbacks. */
+  persistent?: boolean;
+}
+
+/** A conditional or sequenced order: its actions run (validated at that moment) when the trigger is met. */
+export interface StandingOrder {
+  id: number;
+  /** TrackedOrder shown in the orders strip. */
+  orderId: number;
+  trigger: Trigger;
+  actions: BaseAction[];
+  issuedTurn: number;
+  status: 'armed' | 'fired' | 'cancelled';
+  /** For orderDone triggers: the tracked order being waited on. */
+  waitsOn: number | null;
+}
+
+/** A standing prohibition ("do not power up weapons", "not until then"). */
+export interface Restriction {
+  id: number;
+  orderId: number;
+  subject: RestrictSubject;
+  until: Trigger | null;
+  issuedTurn: number;
+}
+
+/** Which timeline a WorldState belongs to. The engine never decides this; sessions stamp it. */
+export type Timeline = 'simulation' | 'canonical';
+export interface Provenance {
+  timeline: Timeline;
+  /** Canonical mission record or archive entry this run belongs to. */
+  missionId: string | null;
+  archiveId: string | null;
+  scenarioVersion: string;
 }
 
 export type Stance = 'neutral' | 'nonHostile' | 'assertive';
@@ -195,7 +231,8 @@ export interface VisualFx {
 
 
 export interface WorldState {
-  version: 3;
+  version: 4;
+  provenance: Provenance;
   scenarioId: string;
   seed: number;
   /** Current RNG state; advancing it is part of every deterministic transition. */
@@ -225,6 +262,14 @@ export interface WorldState {
   };
   /** Declared posture/intent ("we don't want to appear hostile"); biases helm and is perceivable by NPCs. */
   posture: { stance: Stance; since: number };
+  /** Conditional / sequenced standing orders and prohibitions. */
+  standing: StandingOrder[];
+  restrictions: Restriction[];
+  /**
+   * Read-only crew familiarity injected at session start (simulator drills per manoeuvre).
+   * It colours crew lines only; it is never a record of real events.
+   */
+  familiarity: { drilled: Record<string, number> };
   /** Scenario landmarks (e.g. the Concord border), km. */
   landmarks: Record<string, Vec2>;
   /** Pending clarifying question from the interpreter, if any. */

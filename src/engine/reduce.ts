@@ -180,7 +180,7 @@ export function applyAction(s: WorldState, action: ProposedAction, rng: Rng, hoo
       const threat: ShipId = s.ships.cruiser.detected && !s.ships.cruiser.destroyed && !s.flags.cruiserGone ? 'cruiser' : 'kestrel';
       s = { ...s, orders: { ...s.orders, jumpCharging: true } };
       s = addOrder(s, 'helm', 'Charge jump drive (withdraw)', 'underway').state;
-      const r = setHelmGoal(s, { type: 'maneuver', intent: 'retreat', target: threat, speed: 'full' }, true);
+      const r = setHelmGoal(s, { type: 'maneuver', intent: 'retreat', target: threat, speed: 'full', persistent: false }, true);
       return { state: r.state, reports: [say('helm', 'withdrawing', { charge: Math.round(h.jump.charge) })] };
     }
 
@@ -189,6 +189,11 @@ export function applyAction(s: WorldState, action: ProposedAction, rng: Rng, hoo
 
     case 'wait':
       return { state: s, reports: [say('xo', 'waiting')] };
+
+    case 'standing':
+    case 'restrict':
+    case 'learn':
+      return { state: s, reports };
   }
 }
 

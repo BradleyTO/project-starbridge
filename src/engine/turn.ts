@@ -185,6 +185,12 @@ function orderLabel(s: WorldState, a: ProposedAction): string | null {
       return a.mode === 'engage' ? 'Engage jump drive' : a.mode === 'charge' ? 'Charge jump drive' : 'Withdraw';
     case 'improvise':
       return `Improvise: ${a.method}`;
+    case 'standing':
+      return `Standing order`;
+    case 'restrict':
+      return `Hold: ${a.subject}`;
+    case 'learn':
+      return null;
   }
 }
 
