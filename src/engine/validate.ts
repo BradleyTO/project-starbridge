@@ -288,9 +288,12 @@ export function validate(s: WorldState, action: ProposedAction): Validation {
   }
 }
 
-/** Standing orders, prohibitions and taught phrases (implemented in standing.ts). */
-function validateStanding(_s: WorldState, action: ProposedAction): Validation {
-  return no(action, [say('xo', 'cannotComply')]);
+/** Standing orders, prohibitions and taught phrases (applied in standing.ts / turn.ts). */
+function validateStanding(s: WorldState, action: ProposedAction): Validation {
+  const trig = action.type === 'standing' ? action.trigger : action.type === 'restrict' ? action.until : undefined;
+  if (trig && trig.kind !== 'helmDone' && !present(s, trig.ship)) return no(action, [say('xo', 'standingNoShip', { ship: s.ships[trig.ship].name })]);
+  if (action.type === 'standing' && trig?.kind === 'helmDone' && !s.ships.halcyon.nav) return no(action, [say('xo', 'standingNoHelm')]);
+  return ok(action, 0);
 }
 
 /** Helper for UIs/tests: the efficiency of a Halcyon system as a 0–100 percentage. */

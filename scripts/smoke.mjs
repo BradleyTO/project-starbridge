@@ -1,4 +1,4 @@
-// Headless smoke test for the v0.3 UI (includes the v0.2 checks).
+// Headless smoke test: v0.4 (Simulation / Living Universe / Archive / credits / interpreter) plus the v0.2–v0.3 checks.
 // Usage: npm run build && npx vite preview --port 4173 &  then  node scripts/smoke.mjs [url]
 // Env: SHOTS_DIR (default ./smoke-shots)
 import { chromium } from 'playwright';
@@ -213,6 +213,181 @@ for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape',
   await page.screenshot({ path: `${SHOTS}/04-${name}.png`, fullPage: true });
   page.once('dialog', (d) => d.accept());
   await page.click('[data-testid=restart]');
+}
+
+
+// ============================================================== v0.4 =====
+// Fresh context = empty localStorage (a new captain).
+{
+  const ctx4 = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await ctx4.addInitScript(stubs);
+  const p4 = await ctx4.newPage();
+  p4.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  p4.on('pageerror', (e) => errors.push(String(e)));
+  const nar4 = () => p4.locator('[data-testid=narrative]').innerText();
+  const send4 = async (cmd) => {
+    await p4.fill('[data-testid=command-input]', cmd);
+    await p4.press('[data-testid=command-input]', 'Enter');
+    await p4.waitForTimeout(120);
+  };
+  const banner = () => p4.getAttribute('[data-testid=mode-banner]', 'data-mode');
+  const hub = async (tab) => {
+    if (!(await p4.locator('[data-testid=hub]').count())) await p4.click('[data-testid=open-hub]');
+    await p4.click(`[data-testid=hub-tab-${tab}]`);
+    await p4.waitForTimeout(120);
+  };
+  const closeHub = async () => { if (await p4.locator('[data-testid=hub]').count()) await p4.click('[data-testid=hub-close]'); await p4.waitForTimeout(100); };
+  const credits = async () => Number(await p4.getAttribute('[data-testid=credits]', 'data-remaining'));
+  const outcomeTitle = async () => ((await p4.locator('[data-testid=outcome]').count()) ? (await p4.innerText('[data-testid=outcome]')).split('\n')[0].trim() : '');
+  const playToOutcome = async (orders, max = 45) => {
+    for (const o of orders) { if (await p4.locator('[data-testid=outcome]').count()) break; await send4(o); }
+    for (let i = 0; i < max && !(await p4.locator('[data-testid=outcome]').count()); i++) await send4('wait');
+    return outcomeTitle();
+  };
+
+  // --- critical interpreter regressions, typed into the UI
+  await p4.goto(URL + (URL.includes('?') ? '&' : '?') + 'seed=42', { waitUntil: 'networkidle' });
+  await p4.click('[data-testid=skip-intro]');
+  check('v0.4: default load is a SIMULATION', (await banner()) === 'simulation', await p4.innerText('[data-testid=mode-banner]'));
+  let mark = (await nar4()).length;
+  await send4('Bring us in, activate shields, do not power up weapons, and hail the ship.');
+  let said = (await nar4()).slice(mark);
+  check('v0.4 (a): helm closes on the Kestrel', /Setting course for the Kestrel|course for the Kestrel/i.test(said), said.slice(0, 200));
+  check('v0.4 (a): shields raised', (await p4.innerText('[data-testid=shield-state]')) === 'RAISED');
+  check('v0.4 (a): weapons stay SAFE', (await p4.innerText('[data-testid=weapons-state]')).startsWith('SAFE'));
+  check('v0.4 (a): hold on weapons shown in orders strip', /weapons stay powered down/i.test(await p4.innerText('[data-testid=orders-strip]')));
+  check('v0.4 (a): comms opened to the Kestrel', /Kestrel/.test(await p4.innerText('[data-testid=comms]')));
+  for (let i = 0; i < 3; i++) await send4('wait');
+  check('v0.4 (a): weapons still SAFE three minutes later', (await p4.innerText('[data-testid=weapons-state]')).startsWith('SAFE'));
+
+  await p4.goto(URL + (URL.includes('?') ? '&' : '?') + 'seed=4', { waitUntil: 'networkidle' });
+  await p4.click('[data-testid=skip-intro]');
+  mark = (await nar4()).length;
+  await send4('No matter what, keep us between the Kestrel and the cruiser. If the Kestrel arms its weapons, raise our shields, but not until then.');
+  const strip = await p4.innerText('[data-testid=orders-strip]');
+  check('v0.4 (b): persistent interpose + standing order shown', /no matter what/i.test(strip) && /When Kestrel arms weapons/i.test(strip), strip.replace(/\n/g, ' | '));
+  check('v0.4 (b): shields NOT raised before the trigger', (await p4.innerText('[data-testid=shield-state]')) === 'LOWERED');
+  await send4('red alert');
+  check('v0.4 (b): red alert holds shields down per the order', (await p4.innerText('[data-testid=shield-state]')) === 'LOWERED');
+  let fired = false;
+  for (let i = 0; i < 15 && !fired && !(await p4.locator('[data-testid=outcome]').count()); i++) {
+    await send4('wait');
+    const k = await p4.innerText('[data-testid=contact-kestrel]');
+    const up = (await p4.innerText('[data-testid=shield-state]')) === 'RAISED';
+    if (up) { fired = /Point-defence ARMED/i.test(k); break; }
+  }
+  said = (await nar4()).slice(mark);
+  check('v0.4 (b): Kestrel arms → standing order raises shields (and not before)', fired && /Standing order: Kestrel arms weapons/.test(said));
+  check('v0.4 (b): player weapons never armed', (await p4.innerText('[data-testid=weapons-state]')).startsWith('SAFE'));
+  await p4.screenshot({ path: `${SHOTS}/v04-01-standing-order.png` });
+
+  // --- Living Universe: enable (dev), credits
+  await p4.goto(URL + (URL.includes('?') ? '&' : '?') + 'seed=3', { waitUntil: 'networkidle' });
+  await p4.click('[data-testid=skip-intro]');
+  await hub('universe');
+  await p4.click('[data-testid=lu-enable]');
+  await p4.waitForTimeout(150);
+  check('v0.4: 10 canonical starts shown', (await credits()) === 10 && (await p4.getAttribute('[data-testid=credits-remaining]', 'data-remaining')) === '10');
+  check('v0.4: three offer classes on the board', (await p4.locator('[data-class=directive]').count()) === 1 && (await p4.locator('[data-class=distress]').count()) === 1 && (await p4.locator('[data-class=voluntary]').count()) >= 1);
+  await p4.screenshot({ path: `${SHOTS}/v04-02-universe-board.png`, fullPage: true });
+  const distressId = (await p4.getAttribute('[data-class=distress]', 'data-testid')).replace('offer-', '');
+  await p4.click(`[data-testid=offer-${distressId}-ignore]`);
+  await p4.waitForTimeout(100);
+  check('v0.4: ignoring a distress call is free', (await credits()) === 10);
+
+  // --- canonical Kestrel mission
+  await p4.locator('[data-class=directive] [data-testid$=-start]').click();
+  await p4.waitForTimeout(250);
+  check('v0.4: starting a canonical mission costs 1', (await credits()) === 9);
+  check('v0.4: banner says CANONICAL', (await banner()) === 'canonical', await p4.innerText('[data-testid=mode-banner]'));
+  if (await p4.locator('[data-testid=skip-intro]').count()) await p4.click('[data-testid=skip-intro]');
+  const canonTitle = await playToOutcome(['keep us between the kestrel and the cruiser', 'wait', 'wait', 'wait', 'evacuate the crew', 'tell the prefect this is a humanitarian rescue']);
+  check('v0.4: canonical mission reaches an outcome', !!canonTitle, canonTitle);
+  check('v0.4: outcome marked as canonical history', /Recorded in canonical history/i.test(await p4.innerText('[data-testid=outcome]')));
+  check('v0.4: finishing is free', (await credits()) === 9);
+  await p4.screenshot({ path: `${SHOTS}/v04-03-canonical-outcome.png` });
+
+  // --- reload: canonical outcome persists; archive entry exists
+  await p4.reload({ waitUntil: 'networkidle' });
+  await hub('archive');
+  const outEl = p4.locator('[data-testid^=archive-outcome-]').first();
+  const missionId = (await outEl.getAttribute('data-testid')).replace('archive-outcome-', '');
+  const canonText = await outEl.innerText();
+  check('v0.4: canonical outcome persists after reload, in the Archive', canonText.toLowerCase().includes(canonTitle.toLowerCase()), canonText);
+  await p4.screenshot({ path: `${SHOTS}/v04-04-archive.png`, fullPage: true });
+
+  // --- replay as a simulation with different choices → a different simulated outcome
+  let simTitle = '';
+  const strategies = [['withdraw', 'wait', 'jump', 'jump', 'jump'], ['red alert', 'arm weapons', 'fire on the cruiser', 'fire on the cruiser', 'fire torpedoes at the cruiser'], ['wait']];
+  for (const strat of strategies) {
+    await hub('archive');
+    await p4.click(`[data-testid=archive-replay-${missionId}]`);
+    await p4.waitForTimeout(200);
+    if (await p4.locator('[data-testid=skip-intro]').count()) await p4.click('[data-testid=skip-intro]');
+    if (strat === strategies[0]) check('v0.4: archive replay runs as SIMULATION', (await banner()) === 'simulation');
+    simTitle = await playToOutcome(strat);
+    if (simTitle && simTitle.toLowerCase() !== canonTitle.toLowerCase()) break;
+  }
+  check('v0.4: different choices → different simulated outcome', !!simTitle && simTitle.toLowerCase() !== canonTitle.toLowerCase(), `canon "${canonTitle}" vs sim "${simTitle}"`);
+  check('v0.4: simulated outcome labelled as simulated', /Simulated outcome/i.test(await p4.innerText('[data-testid=outcome]')));
+  check('v0.4: simulations are free', (await credits()) === 9);
+  await p4.screenshot({ path: `${SHOTS}/v04-05-sim-replay-outcome.png` });
+  await hub('archive');
+  check('v0.4: canonical outcome unchanged after the simulation', (await p4.innerText(`[data-testid=archive-outcome-${missionId}]`)) === canonText);
+  check('v0.4: simulated run listed separately', (await p4.locator(`[data-testid=archive-entry-${missionId}] .sim-runs`).count()) === 1);
+
+  // --- ignored distress call → persistent consequence → evidence in a later canonical mission
+  await hub('universe');
+  let resolved = false;
+  for (let i = 0; i < 10 && !resolved; i++) {
+    const st = await p4.getAttribute(`[data-testid=closed-${distressId}-event]`, 'data-status');
+    resolved = st === 'resolved' || st === 'expired';
+    if (!resolved) { await p4.click('[data-testid=advance-time]'); await p4.waitForTimeout(80); }
+  }
+  const bulletin = resolved ? (await p4.locator('[data-testid^=bulletin-]').allInnerTexts()).find((t) => /Tamsin Grey|hauler/i.test(t)) ?? '' : '';
+  check('v0.4: ignored distress call reaches a consequence without the player', resolved && !!bulletin, bulletin);
+  await p4.screenshot({ path: `${SHOTS}/v04-06-distress-consequence.png`, fullPage: true });
+  await p4.locator('[data-testid^=offer-]:has-text("Reach patrol") [data-testid$=-start]').first().click();
+  await p4.waitForTimeout(250);
+  if (await p4.locator('[data-testid=skip-intro]').count()) await p4.click('[data-testid=skip-intro]');
+  check('v0.4: the next canonical mission opens with the bulletin as evidence', (await nar4()).includes(bulletin.slice(0, 40)) || (await p4.innerText('[data-testid=comms]')).includes(bulletin.slice(0, 40)));
+  check('v0.4: second canonical start costs 1 more', (await credits()) === 8);
+
+  // --- zero credits: no canonical starts, simulations still work, history readable
+  await hub('settings');
+  await p4.fill('[data-testid=dev-credit-limit]', '2');
+  await p4.waitForTimeout(100);
+  await hub('universe');
+  check('v0.4: at zero, canonical starts are disabled', (await credits()) === 0 && (await p4.locator('[data-testid$=-start]:not([disabled])').count()) === 0 && (await p4.locator('[data-testid=credits-exhausted]').count()) === 1);
+  check('v0.4: at zero, canonical time is paused (no in-universe penalty)', await p4.locator('[data-testid=advance-time]').isDisabled());
+  await p4.screenshot({ path: `${SHOTS}/v04-07-zero-credits.png`, fullPage: true });
+  await hub('record');
+  check('v0.4: at zero, canonical history readable', /Kestrel Incident/i.test(await p4.innerText('[data-testid=career]')));
+  await hub('archive');
+  await p4.click('[data-testid=archive-train-TRN-kestrel]');
+  await p4.waitForTimeout(200);
+  if (await p4.locator('[data-testid=skip-intro]').count()) await p4.click('[data-testid=skip-intro]');
+  await send4('scan the kestrel');
+  check('v0.4: at zero, simulations still run', (await banner()) === 'simulation' && /TURN 1/.test(await p4.innerText('[data-testid=mission-clock]')));
+  await hub('settings');
+  check('v0.4: credits are stated as not tamper-proof', /not tamper-proof/i.test(await p4.innerText('[data-testid=credits-disclaimer]')));
+  await p4.fill('[data-testid=dev-credit-limit]', '10');
+  await closeHub();
+
+  // --- mobile: hub, banner and credits usable on a phone
+  await p4.setViewportSize({ width: 390, height: 844 });
+  await p4.waitForTimeout(300);
+  check('v0.4 phone: mode banner visible', await p4.locator('[data-testid=mode-banner]').isVisible());
+  check('v0.4 phone: credits visible', await p4.locator('[data-testid=credits]').isVisible());
+  await hub('archive');
+  const ov = await p4.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  check('v0.4 phone: hub has no horizontal overflow', ov <= 0, `overflow ${ov}px`);
+  await p4.screenshot({ path: `${SHOTS}/v04-08-phone-archive.png`, fullPage: true });
+  await hub('universe');
+  await p4.screenshot({ path: `${SHOTS}/v04-09-phone-universe.png`, fullPage: true });
+  await hub('record');
+  await p4.screenshot({ path: `${SHOTS}/v04-10-phone-record.png`, fullPage: true });
+  await ctx4.close();
 }
 
 check('no console errors', errors.length === 0, errors.join(' | '));

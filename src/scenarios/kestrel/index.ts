@@ -25,6 +25,7 @@ function contactDetails(s: WorldState, id: ShipId): string[] {
     else if (knows(s, 'kestrel_status')) out.push(`${sh.souls} aboard`);
     if (s.flags.kestrelStable) out.push('Reactor stabilised');
     else if (knows(s, 'kestrel_status')) out.push(`Containment ${Math.round(sh.containment)}% · ~${turnsToBreach(s)} min to breach`);
+    if (sh.weapons.state !== 'safe') out.push('Point-defence ARMED');
     if (knows(s, 'compartment_exists')) out.push(knows(s, 'passenger_identity') ? `Aft compartment: ${s.characters.passenger.name}${s.flags.passengerAboard ? ' (now aboard Halcyon)' : ' in stasis'}` : 'Shielded aft compartment — contents unknown');
   }
   if (id === 'cruiser') {

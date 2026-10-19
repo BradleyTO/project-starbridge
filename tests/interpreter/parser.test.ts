@@ -111,7 +111,8 @@ const TABLE: [string, Record<string, unknown>[]][] = [
   ['Lower shields, then beam the crew aboard', [{ type: 'shields', raise: false }, { type: 'transport', payload: 'crew' }]],
   ['red alert, arm weapons and lock on the cruiser', [{ type: 'setAlert', level: 'red' }, { type: 'weapons', mode: 'arm' }, { type: 'weapons', mode: 'lock', target: 'cruiser' }]],
   ['scan the kestrel and hail the cruiser', [{ type: 'scan', target: 'kestrel' }, { type: 'communicate', target: 'cruiser' }]],
-  ['approach the kestrel, scan it and then evacuate the crew', [{ type: 'maneuver', target: 'kestrel' }, { type: 'scan', target: 'kestrel' }, { type: 'transport' }]],
+  // v0.4: "then" after a helm order waits for the helm order to complete.
+  ['approach the kestrel, scan it and then evacuate the crew', [{ type: 'maneuver', target: 'kestrel' }, { type: 'scan', target: 'kestrel' }, { type: 'standing', trigger: { kind: 'helmDone' }, actions: [{ type: 'transport' }] }]],
   ['tractor beam the kestrel and use it as a shield', [{ type: 'improvise', method: 'tractorShield' }]],
   ['hail the cruiser and tell them we are on a rescue mission', [{ type: 'communicate', target: 'cruiser' }]],
 ];

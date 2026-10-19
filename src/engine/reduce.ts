@@ -40,11 +40,15 @@ export function applyAction(s: WorldState, action: ProposedAction, rng: Rng, hoo
 
     case 'setAlert': {
       s = { ...s, alert: action.level };
-      if (action.level === 'red' && !h.shields.raised && efficiency(h, 'shields') > 0 && h.shields.strength > 0) {
+      const holdDown = s.restrictions.some((r) => r.subject === 'raiseShields');
+      const holdUp = s.restrictions.some((r) => r.subject === 'lowerShields');
+      if (action.level === 'red' && !h.shields.raised && holdDown) {
+        reports.push(say('tactical', 'redAlertShieldsHeld'));
+      } else if (action.level === 'red' && !h.shields.raised && efficiency(h, 'shields') > 0 && h.shields.strength > 0) {
         s = patchShip(s, 'halcyon', { shields: { ...h.shields, raised: true } });
         reports.push(say('tactical', 'redAlert'));
       } else if (action.level === 'green') {
-        s = patchShip(s, 'halcyon', { shields: { ...h.shields, raised: false }, weapons: { state: 'safe', target: null } });
+        s = patchShip(s, 'halcyon', { shields: { ...h.shields, raised: holdUp ? h.shields.raised : false }, weapons: { state: 'safe', target: null } });
         reports.push(say('xo', 'standDown'));
       } else reports.push(say('xo', 'alertSet', { level: action.level }));
       return { state: s, reports };
@@ -190,9 +194,11 @@ export function applyAction(s: WorldState, action: ProposedAction, rng: Rng, hoo
     case 'wait':
       return { state: s, reports: [say('xo', 'waiting')] };
 
+    case 'learn':
+      return { state: s, reports: [say('xo', 'learnAck', { phrase: action.phrase, meaning: action.meaning })] };
     case 'standing':
     case 'restrict':
-    case 'learn':
+      // Applied by the turn pipeline (standing.ts), which owns their order tracking.
       return { state: s, reports };
   }
 }
@@ -285,8 +291,9 @@ export function setHelmGoal(s: WorldState, action: Extract<ProposedAction, { typ
   const label = goalLabel(s, draft);
   const tmp = patchShip(s, 'halcyon', { nav: draft });
   const eta = roundEta(estimateEta(tmp, 'halcyon', draft));
-  const added = addOrder(s, 'helm', label, 'acknowledged', '', eta);
+  const added = addOrder(s, 'helm', action.persistent ? `${label} (no matter what)` : label, 'acknowledged', '', eta);
   s = patchShip(added.state, 'halcyon', { nav: { ...draft, orderId: added.id } });
+  if (action.persistent) s = updateOrder(s, added.id, { persistent: true });
   if (action.intent === 'evasive') s = setCounter(s, 'evasive_halcyon', s.turn + 1);
   const g = guidanceFor(s, 'halcyon', draft);
   const course = g.point ? headingOf(sub(g.point, h.position)) : g.heading ?? h.heading;
@@ -300,6 +307,7 @@ export function setHelmGoal(s: WorldState, action: Extract<ProposedAction, { typ
     course: String(Math.round(course) % 360).padStart(3, '0'),
   };
   if (!quiet) reports.push(say('helm', `helmAck_${action.intent}`, vars));
+  if (!quiet && action.persistent) reports.push(say('helm', 'helmPersistent'));
   // Simulator familiarity colours the crew's voice; it is never treated as a real event.
   const drills = s.familiarity?.drilled?.[action.intent] ?? 0;
   if (!quiet && drills >= 3 && !s.counters[`drillnote_${action.intent}`]) {

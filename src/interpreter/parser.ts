@@ -16,6 +16,7 @@
  */
 import type { Interpretation, ProposedActionInput, CommIntent, TradeOffer, ManeuverIntentT } from '../engine/schema';
 import { InterpretationSchema } from '../engine/schema';
+import { planConflict } from '../engine/standing';
 import type { Interpreter, InterpreterContext } from './types';
 import { wordsToDigits } from './numbers';
 import { SpellCorrector, vocabularyFrom } from './spell';
@@ -59,6 +60,12 @@ export function normaliseMarked(input: string): string {
   ];
   for (const f of filler) t = t.replace(new RegExp(`(^|[\\s,])${f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?=[\\s,.!?]|$)`, 'g'), '$1');
   t = t.replace(/\b(tell|give|show) me\b/g, 'report');
+  // Emphatic negations read as plain prohibitions.
+  t = t.replace(/\b(under no circumstances|on no account|at no point|in no event|by no means)\b,?\s*/g, ' do not ');
+  // "without raising shields" is a prohibition attached to the order before it.
+  const BASE: Record<string, string> = { raising: 'raise', 'putting up': 'put up', 'bringing up': 'bring up', arming: 'arm', 'powering up': 'power up', charging: 'charge', lowering: 'lower', dropping: 'drop', firing: 'fire', shooting: 'shoot' };
+  t = t.replace(/\bwithout (raising|putting up|bringing up|arming|powering up|charging|lowering|dropping|firing|shooting)\b/g, (_m, v: string) => `, don't ${BASE[v]}`);
+  t = t.replace(/\bcourse and speed\b/g, 'course');
   // Idioms that contain "and" but are one modifier.
   t = t.replace(/\b(nice and (slow|easy|gentle)|slow and steady|slow and easy|nice and steady)\b/g, 'slowly');
   // Coordinated subjects share one predicate: "weapons and shields down" → "weapons down and shields down".
@@ -148,7 +155,7 @@ function numberKm(c: string): number | null {
 // ------------------------------------------------------------ intents ---
 
 type Draft =
-  | { kind: 'action'; action: ProposedActionInput; needs?: 'contact' | 'commTarget' | 'system' | 'nav'; question?: string }
+  | { kind: 'action'; action: ProposedActionInput; needs?: 'contact' | 'commTarget' | 'system' | 'nav'; question?: string; extra?: ProposedActionInput[] }
   | { kind: 'none' };
 
 interface Rule {
@@ -245,8 +252,30 @@ const RULES: Rule[] = [
     }),
   },
   {
+    name: 'negArm',
+    test: /\b(don'?t|do not|never|no one|nobody)( \w+)? (arm|charge|ready|power up|bring up|activate|load|go to|target|lock|aim)\b.*\b(weapons?|beams|torpedoes|tubes|phasers|guns|lances?)\b|\b(weapons?|guns) (stay|remain|are to stay|are to remain) (cold|safe|down|offline|powered down|off)\b|\bno weapons\b|\b(don'?t|do not|never) (arm|power up) (them|it|anything)\b/,
+    // Weapons safe now, and a standing prohibition on arming them (red alert and standing orders respect it).
+    build: () => ({ kind: 'action', action: { type: 'weapons', mode: 'safe' }, extra: [{ type: 'restrict', subject: 'armWeapons' }] }),
+  },
+  {
+    name: 'negFire',
+    test: /\b(don'?t|do not|never|no one|nobody)( \w+)? (fire|shoot|open fire)\b|\bhold (your |our )?fire\b|\bno (firing|shooting)\b|\bweapons tight\b/,
+    // "Hold fire" also safes the weapons (v0.3 behaviour); "do not fire" alone leaves them as they are.
+    build: (c) => (/\bhold (your |our )?fire\b/.test(c) ? { kind: 'action', action: { type: 'weapons', mode: 'safe' }, extra: [{ type: 'restrict', subject: 'fireWeapons' }] } : { kind: 'action', action: { type: 'restrict', subject: 'fireWeapons' } }),
+  },
+  {
+    name: 'negRaise',
+    test: /\b(don'?t|do not|never)( \w+)? (raise|put up|bring up|activate|engage|turn on)\b.*\b(shields?|deflectors?)\b|\b(shields?|deflectors?) (stay|remain|are to stay) (down|lowered|off|offline)\b/,
+    build: (c) => ({ kind: 'action', action: { type: 'restrict', subject: 'raiseShields' }, extra: /\b(stay|remain)\b/.test(c) ? [{ type: 'shields', raise: false }] : [] }),
+  },
+  {
+    name: 'negLower',
+    test: /\b(don'?t|do not|never)( \w+)? (lower|drop|take down|turn off|disable)\b.*\b(shields?|deflectors?)\b|\b(shields?|deflectors?) (stay|remain|are to stay) (up|raised|on)\b/,
+    build: (c) => ({ kind: 'action', action: { type: 'restrict', subject: 'lowerShields' }, extra: /\b(stay|remain)\b/.test(c) ? [{ type: 'shields', raise: true }] : [] }),
+  },
+  {
     name: 'holdFire',
-    test: /\b(hold|cease|stop|don't|do not|never) (your )?(fire|firing|shooting)\b|\bcease ?fire\b/,
+    test: /\b(cease|stop) (your )?(fire|firing|shooting)\b|\bcease ?fire\b/,
     build: () => ({ kind: 'action', action: { type: 'weapons', mode: 'safe' } }),
   },
   {
@@ -291,7 +320,7 @@ const RULES: Rule[] = [
     name: 'shields',
     test: /\bshields?\b|\bdeflectors?\b/,
     build: (c) => {
-      if (/\b(power|boost|reinforce|divert|reroute|transfer|strengthen)\b/.test(c)) return { kind: 'none' };
+      if (/\b(power|boost|reinforce|divert|reroute|route|shunt|channel|transfer|strengthen)\b/.test(c)) return { kind: 'none' };
       if (/\b(lower(ed)?|drop(ped)?|down|disabled?|deactivated?|off(line)?|power(ed)? down|cut|kill)\b/.test(c)) return { kind: 'action', action: { type: 'shields', raise: false } };
       if (/\b(raised?|up|activated?|engaged?|enabled?|restored?|bring|on(line)?)\b/.test(c)) return { kind: 'action', action: { type: 'shields', raise: true } };
       return { kind: 'none' };
@@ -299,12 +328,12 @@ const RULES: Rule[] = [
   },
   {
     name: 'power',
-    test: /\bpower\b|\b(boost|reinforce|strengthen|overcharge|supercharge)\b/,
+    test: /\bpower\b|\b(boost|reinforce|strengthen|overcharge|supercharge)\b|\b(divert|reroute|route|shunt|channel) (everything|all|it all|whatever we have|what we have)\b/,
     build: (c) => {
       if (/\bpower (down|off|up)\b/.test(c)) return { kind: 'none' };
       const sys = systemsIn(c);
       const pct = /(\d+)\s*(%|percent)/.exec(c);
-      const amount = pct ? Math.min(150, Math.max(5, parseInt(pct[1], 10))) : /\b(all|full|maximum|max|every|emergency)\b/.test(c) ? 50 : 25;
+      const amount = pct ? Math.min(150, Math.max(5, parseInt(pct[1], 10))) : /\b(all|full|maximum|max|every|everything|emergency)\b/.test(c) ? 50 : 25;
       const fromIdx = c.search(/\bfrom\b/);
       let to: string | undefined;
       let from: string | undefined;
@@ -465,12 +494,12 @@ const RULES: Rule[] = [
   },
   {
     name: 'approach',
-    test: /\b(approach|close (in|on|with|the distance|to)|move (to|toward|towards|closer|in|us)|go (to|toward|towards)|head (to|for|toward|towards|over)|take us (in|to|closer|alongside|over)|bring us (in|alongside|closer|to)|set (a )?course|lay in a course|plot (a )?course|pull alongside|come alongside|alongside|get (us )?(closer|close|near|over)|move us|full impulse|full speed|maximum speed|max speed|ahead full|flank speed|engage engines|rendezvous|make for|proceed to|close range|draw (closer|near)|take us|bring us|get us (to|near|over))\b/,
+    test: /\b(approach|ahead (slow|half|full|flank|standard)|close (in|on|with|the distance|to)|move (to|toward|towards|closer|in|us)|go (to|toward|towards)|head (to|for|toward|towards|over)|take us (in|to|closer|alongside|over)|bring us (in|alongside|closer|to)|set (a )?course|lay in a course|plot (a )?course|pull alongside|come alongside|alongside|get (us )?(closer|close|near|over)|move us|full impulse|full speed|maximum speed|max speed|ahead full|flank speed|engage engines|rendezvous|make for|proceed to|close range|draw (closer|near)|take us|bring us|get us (to|near|over))\b/,
     build: (c) => navDraft('approach', c),
   },
   {
     name: 'scan',
-    test: /\b(scan|sensors?|analy[sz]e|examine|investigate|study|probe|sweep|look at|check (out|on)?|inspect|identify|survey|readings?|life signs|what('s| is) (in|inside|on|aboard))\b/,
+    test: /\bwhat (can )?(you )?report (about|on)\b|\bwhat do (we|you) (know|have) (about|on)\b|\bwhat('s| is| are) (the |that |this )?(\w+ )?(doing|up to)\b|\b(scan|sensors?|analy[sz]e|examine|investigate|study|probe|sweep|look at|check (out|on)?|inspect|identify|survey|readings?|life signs|what('s| is) (in|inside|on|aboard))\b/,
     build: (c) => {
       if (COMPARTMENT.test(c) && !/\b(our|my)\b/.test(c)) return { kind: 'action', action: { type: 'scan', target: 'compartment' } };
       if (/\b(sweep|long[- ]range|area|surroundings|the reach|around us|for (other|more) ships|horizon)\b/.test(c)) return { kind: 'action', action: { type: 'scan', target: 'area' } };
@@ -490,10 +519,16 @@ const RULES: Rule[] = [
   },
 ];
 
+/** Negators that must never be read past into a positive weapons order. */
+const NEGATED = /\b(not|never|don'?t|no|nobody|no one|nothing|neither|nor|without)\b/;
+const POSITIVE_WEAPONS = new Set(['fire', 'lock', 'arm']);
+
 function matchRule(clause: string, ctx: InterpreterContext): { rule: Rule; draft: Draft } | null {
   const c = clause.replace(DEPT_MARK, ' ').replace(/\s+/g, ' ').trim();
   for (const rule of RULES) {
     if (!rule.test.test(c)) continue;
+    // Safety: "no one arms anything" must not arm weapons; leave it unparsed instead (the crew asks).
+    if (POSITIVE_WEAPONS.has(rule.name) && NEGATED.test(c)) continue;
     const draft = rule.build(c, ctx);
     if (draft.kind === 'none') continue;
     return { rule, draft };
@@ -526,7 +561,7 @@ const PURPOSE = /\b(so (that )?(we|they|it|he)|to (look|appear|seem|show)|as a (
 const REPORTED_SPEECH = /^(that|we|we're|we are|i|i'm|our|they|they're|it|it's|this|you|you're|he|she|there|the (kestrel|crew|passenger|accords|treaty|fleet|battle group))\b/;
 
 /** Fragments that continue the previous clause rather than starting a new order. */
-const VERBLESS = /^(to|at|from|of|on|onto|in|into|with|toward|towards|the|our|her|their|its|his|a|an|all|both|every|each|some|full|half|slow|slowly|\d|km|maximum|max|too|as well|now|it|them|him|us|that|this|those|these|asap|quickly|fast|immediately|if|when|before|after|until|while|beam|torpedoes|weapons?|shields?|sensors|engines?|everyone|everybody)\b/;
+const VERBLESS = /^(to|at|from|of|on|onto|in|into|with|toward|towards|the|our|her|their|its|his|a|an|all|both|every|each|some|full|half|slow|slowly|best|top|\d+|km|maximum|max|too|as well|now|it|them|him|us|that|this|those|these|asap|quickly|fast|immediately|if|when|before|after|until|while|beam|torpedoes|weapons?|shields?|sensors|engines?|everyone|everybody)\b/;
 
 function clausesOf(sentence: string): string[] {
   return sentence
@@ -647,6 +682,13 @@ function resolveTargets(parsed: Parsed[], ctx: InterpreterContext): { actions: P
       if (!target) for (let j = i + 1; j < parsed.length; j++) if (parsed[j].explicit) { target = parsed[j].explicit; break; }
     }
     if (p.explicit || (pronoun && target)) carried = target;
+    // A singular reference ("it", "her", "the ship") with nothing to refer to: ask, never guess.
+    const unresolved = !!pronoun && p.refs.singular && !target && pairVisible && p.refs.refs.length === 0;
+    if (unresolved && d.needs && d.needs !== 'system' && !(d.needs === 'nav' && (a.intent === 'interpose' || NO_TARGET.includes(a.intent as ManeuverIntentT) || OPTIONAL_TARGET.includes(a.intent as ManeuverIntentT)))) {
+      const verb = d.needs === 'commTarget' ? 'Open a channel to' : d.needs === 'nav' ? verbFor(a.intent as ManeuverIntentT) : a.type === 'scan' ? 'Scan' : 'Target';
+      clarify = clarify ?? { question: `${verb} which contact, Captain — the Kestrel or the cruiser?`, options: OPTIONS_CONTACTS, clause: p.clause };
+      return;
+    }
 
     if (d.needs === 'system') {
       clarify = clarify ?? { question: d.question ?? 'Which system, Captain?', options: ['shields', 'weapons', 'engines', 'sensors'], clause: p.clause };
@@ -663,6 +705,8 @@ function resolveTargets(parsed: Parsed[], ctx: InterpreterContext): { actions: P
         return;
       }
       if (target === 'passenger' && !ctx.passengerKnown) target = null;
+      // "Bring us in … and hail the ship": the ship this order is about.
+      if (!target && /\bthe (ship|vessel|contact)\b/.test(p.clause) && (antecedent === 'kestrel' || antecedent === 'cruiser')) target = antecedent;
       if (!target) {
         if (['bluff', 'warn', 'legal', 'trade', 'appeal'].includes(intent) && ctx.visible.includes('cruiser')) target = 'cruiser';
         else if (intent === 'offerAsylum' && ctx.passengerKnown && ctx.passengerAwake) target = 'passenger';
@@ -691,6 +735,11 @@ function resolveTargets(parsed: Parsed[], ctx: InterpreterContext): { actions: P
       if (intent === 'interpose') {
         let pairRefs: Ref[] = refs.slice(0, 2);
         if (pairRefs.length < 2 && (pluralMeansPair || (refs.length === 0 && pairVisible))) pairRefs = ['kestrel', 'cruiser'];
+        // "Get between them and the freighter": the pronoun names the other ship.
+        if (pairRefs.length === 1 && (p.refs.plural || p.refs.singular)) {
+          const other = [antecedent, ctx.lastTarget].find((x): x is Contact => (x === 'kestrel' || x === 'cruiser') && x !== pairRefs[0] && ctx.visible.includes(x));
+          if (other) pairRefs = [pairRefs[0], other];
+        }
         if (pairRefs.length < 2) {
           const x = pairRefs[0] ?? null;
           if (!x) {
@@ -725,6 +774,10 @@ function resolveTargets(parsed: Parsed[], ctx: InterpreterContext): { actions: P
         clarify = clarify ?? { question: `${verbFor(intent)} which contact, Captain — the Kestrel or the cruiser?`, options: OPTIONS_CONTACTS, clause: p.clause };
         return;
       }
+      // "Approach the cruiser but stay at 20,000 km": a range order with no name refers to the contact just named.
+      if (!ref && ['standoff', 'approach', 'holdStation', 'orbit'].includes(intent) && (antecedent === 'kestrel' || antecedent === 'cruiser')) ref = antecedent;
+      // "Bring us in": in a distress call, in means toward the ship in distress.
+      if (!ref && intent === 'approach' && /\b(bring|take|move|go|close|head) (us )?in\b/.test(p.clause) && ctx.visible.includes('kestrel')) ref = 'kestrel';
       if (!ref && !OPTIONAL_TARGET.includes(intent)) ref = defaultNavTarget(intent, p.clause, ctx);
       if (!ref && !OPTIONAL_TARGET.includes(intent)) {
         clarify = clarify ?? { question: `${verbFor(intent)} which contact, Captain — the Kestrel or the cruiser?`, options: OPTIONS_CONTACTS, clause: p.clause };
@@ -792,7 +845,8 @@ function applyDept(p: Parsed): void {
   }
 }
 
-export function interpretSync(input: string, ctx: InterpreterContext): Interpretation {
+/** The v0.3 clause parser: one order set, no conditions or sequencing. */
+function interpretCore(input: string, ctx: InterpreterContext): Interpretation {
   const source = 'offline-parser';
   let text = normaliseMarked(input);
   if (!text.replace(DEPT_MARK, '').trim()) return { kind: 'unrecognised', unparsed: [input.trim()], notes: [], source };
@@ -819,7 +873,14 @@ export function interpretSync(input: string, ctx: InterpreterContext): Interpret
       p.draft = null;
     } else if (mm && mm.draft.kind === 'action') {
       p.draft = mm.draft;
-      if (posture && PURPOSE.test(clause)) p.extra = [{ type: 'posture', stance: posture }];
+      if (mm.draft.extra?.length) p.extra = [...mm.draft.extra];
+      if (posture && PURPOSE.test(clause)) p.extra = [...p.extra, { type: 'posture', stance: posture }];
+      // "Cut them off before they reach the freighter": the freighter is what we protect, not the target.
+      if (mm.rule.name === 'block' && /\bbefore (they|it|she|he|the \w+) /.test(clause)) {
+        const head = clause.replace(/\bbefore\b.*$/, '');
+        p.refs = refsIn(head);
+        p.explicit = explicitTarget(head, ctx);
+      }
     } else if (rationaleLed) p.note = clause;
     applyDept(p);
     return p;
@@ -846,9 +907,244 @@ export function interpretSync(input: string, ctx: InterpreterContext): Interpret
       : { kind: 'unrecognised', unparsed: unparsed.length ? unparsed : [input.trim()], notes, source };
   // Validate (and apply schema defaults) — interpreters never bypass the schema.
   if (result.kind !== 'unrecognised' && result.actions.length > 8) result.actions = result.actions.slice(0, 8);
+  return safe(result, input);
+}
+
+// ------------------------------------------------------------ structure ---
+//
+// v0.4: the whole command is read as a plan before anything happens. Each
+// sentence may be plain, conditional ("if/when/once …, …" / "… only if …"),
+// a prohibition with an exit ("don't fire unless fired upon"), or sequenced
+// ("…, then …" after a helm order). Persistence ("no matter what") and
+// "but not until then" modify the sentence they are in. Teaching ("when I say
+// X, I mean Y") is its own order. Anything unclear asks.
+
+type Trig = Extract<ProposedActionInput, { type: 'standing' }>['trigger'];
+type Act = ProposedActionInput;
+
+const TEACH = /^\s*(?:remember[:,]?\s*)?(?:when|whenever|if) i say\s+["'“‘]?(.+?)["'”’]?\s*,?\s+i mean\s+(.+?)[.!]?\s*$/i;
+const PERSIST = /\b(no matter what|whatever happens|at all costs|regardless of what happens|regardless|come what may|under any circumstances|whatever it takes|until i say otherwise|until further notice)\b/;
+const HOLD_POSITION = /\b(?:and )?(?:hold|keep|maintain) (?:that|this|the) (?:position|station)\b/;
+const NOT_UNTIL = /,?\s*(?:but |and )?(?:not|never) (?:until|before) (?:then|that( happens)?|it does|they do|she does)\b|,?\s*and not before\b/;
+const COND_LEAD = /^(?:only )?(if|when|whenever|once|as soon as|the moment|in case|should)\s+(.+?)\s*,\s*(.+)$/;
+const COND_TAIL = /^(.+?)\s+(only if|only when|if|when|whenever|once|as soon as|the moment|in case)\s+(.+)$/;
+const UNLESS = /^(.+?)\s+unless\s+(.+)$/;
+const THEN = /^(.+?)(?:\s*,\s*|\s+)(?:and\s+)?then\s+(.+)$/;
+const DEPT_WORD: Record<Dept, string> = { helm: 'helm, ', tactical: 'tactical, ', ops: 'ops, ', science: 'science, ', comms: 'comms, ', xo: '' };
+const unmark = (t: string) => t.replace(DEPT_MARK, (_m, d: Dept) => DEPT_WORD[d]).replace(/\s+/g, ' ').trim();
+
+function shipIn(c: string): Contact | null {
+  const k = KESTREL.exec(c);
+  const cr = CRUISER.exec(c);
+  if (k && cr) return k.index < cr.index ? 'kestrel' : 'cruiser';
+  return k ? 'kestrel' : cr ? 'cruiser' : null;
+}
+
+/** "the Kestrel arms its weapons" → a Trigger, or null when it is not something the crew can watch for. */
+export function parseTrigger(cond: string, antecedent: Contact | null): Trig | null {
+  const c = cond.replace(DEPT_MARK, ' ').replace(/\s+/g, ' ').trim();
+  if (/\b(we (arrive|get there|reach (her|it|them|the \w+|position)|are (there|in position|alongside|in range)|have arrived|get close)|we're (there|in position|alongside|in range)|we've (arrived|reached)|in position|on arrival|we are close enough|we're close enough|you get there|you arrive)\b/.test(c)) return { kind: 'helmDone' };
+  const named = shipIn(c);
+  const pron = /\b(they|them|she|her|it|its|their)\b/.test(c) ? antecedent : null;
+  const num = /\b(within|inside|closer than|under|less than|beyond|outside|more than|further than|farther than|past|over|closes? to|gets? to|comes? to)\s+(\d+(?:\.\d+)?)\s*(k\b|km|kilomet\w*|klicks?)?/.exec(c);
+  if (num) {
+    let n = parseFloat(num[2]);
+    if (num[3] === 'k' || (!num[3] && n < 1000)) n *= 1000;
+    const op = /^(beyond|outside|more than|further than|farther than|past|over)$/.test(num[1]) ? 'beyond' : 'within';
+    const ship = named ?? pron;
+    if (!ship) return null;
+    return { kind: 'range', ship, op, km: Math.round(n) };
+  }
+  if (/\b(locks?|locked|lock on|lock onto|lock on to|targets? us|gets? a (weapons )?lock|acquires? (a )?lock|paints us)\b/.test(c)) {
+    const ship = named ?? pron ?? 'cruiser';
+    return { kind: 'weapons', ship, state: 'locked' };
+  }
+  if (/\b(fires?|fired|shoots?|shot at|opens? fire|attacks?|takes? a shot|under fire|fired (up)?on|fire on us|shoot at us)\b/.test(c)) {
+    const ship = named ?? pron ?? 'cruiser';
+    return { kind: 'weapons', ship, state: 'fired' };
+  }
+  if (/\b(arms?|armed|powers? up|charges?|readies|readying|brings? up|activates?|goes? hot|run(s)? out)\b.*\b(weapons?|guns|point[- ]defen[cs]e|turrets?|cannons?|beams?)\b|\b(weapons?|guns|point[- ]defen[cs]e) (go |goes |are )?(hot|armed|online|powered|up|charged)\b|\barms? (itself|herself|themselves|up)\b|\bgets? armed\b/.test(c)) {
+    const ship = named ?? pron;
+    if (!ship) return null;
+    return { kind: 'weapons', ship, state: 'armed' };
+  }
+  return null;
+}
+
+/** Which prohibition keeps a conditional action from happening early ("but not until then"). */
+function holdFor(a: Act): Extract<ProposedActionInput, { type: 'restrict' }>['subject'] | null {
+  if (a.type === 'shields') return a.raise ? 'raiseShields' : 'lowerShields';
+  if (a.type === 'weapons') return a.mode === 'fire' ? 'fireWeapons' : a.mode === 'arm' || a.mode === 'lock' ? 'armWeapons' : null;
+  return null;
+}
+
+const STANDING_TYPES = new Set(['query', 'setAlert', 'shields', 'scan', 'communicate', 'maneuver', 'posture', 'power', 'weapons', 'tractor', 'transport', 'repair', 'jump', 'improvise', 'wait']);
+const lastContactOf = (actions: Act[], prev: Contact | null): Contact | null => {
+  let t = prev;
+  for (const a of actions) {
+    const x = (a as { target?: string }).target;
+    if (x === 'kestrel' || x === 'cruiser') t = x;
+  }
+  return t;
+};
+
+interface Piece {
+  actions: Act[];
+  unparsed: string[];
+  notes: string[];
+  clarify: Clar | null;
+}
+
+function piece(r: Interpretation): Piece {
+  return { actions: r.kind === 'unrecognised' ? [] : (r.actions as Act[]), unparsed: r.kind === 'unrecognised' ? r.unparsed : r.unparsed, notes: r.notes, clarify: r.kind === 'clarify' ? r.clarification : null };
+}
+
+function conditional(trigger: Trig, body: string, ctx: InterpreterContext, opts: { hold: boolean; clause: string }): Piece {
+  const r = piece(interpretCore(unmark(body), ctx));
+  if (r.clarify) return r;
+  const acts = r.actions.filter((a) => a.type !== 'posture' && a.type !== 'wait');
+  const bad = acts.filter((a) => !STANDING_TYPES.has(a.type));
+  if (!acts.length || bad.length || acts.length > 4) {
+    return { actions: [], unparsed: [], notes: [], clarify: { question: `I can't hold "${body}" as a standing order, Captain. What should we do when that happens?`, options: [], clause: opts.clause } };
+  }
+  const out: Act[] = [{ type: 'standing', trigger, actions: acts as never }];
+  if (opts.hold) for (const a of acts) {
+    const subject = holdFor(a);
+    if (subject) out.push({ type: 'restrict', subject, until: trigger });
+  }
+  return { actions: [...r.actions.filter((a) => a.type === 'posture'), ...out], unparsed: r.unparsed, notes: r.notes, clarify: null };
+}
+
+/** One sentence → a piece of the plan. */
+function sentencePiece(raw: string, ctx: InterpreterContext, prior: { contact: Contact | null; helmPending: boolean }): Piece {
+  let t = raw;
+  const persistent = PERSIST.test(t);
+  if (persistent) t = t.replace(PERSIST, ' ').replace(HOLD_POSITION, ' ');
+  const notUntil = NOT_UNTIL.test(t);
+  if (notUntil) t = t.replace(NOT_UNTIL, ' ');
+  t = t.replace(/\s+/g, ' ').replace(/^[,\s]+|[,\s]+$/g, '').replace(/\s+,/g, ',');
+  if (!t.replace(DEPT_MARK, '').trim()) return { actions: [], unparsed: [], notes: [], clarify: null };
+  const sub: InterpreterContext = { ...ctx, lastTarget: prior.contact ?? ctx.lastTarget };
+  const bare = t.replace(DEPT_MARK, ' ').replace(/\s+/g, ' ').trim();
+
+  // Conditional, condition first: "If the Kestrel arms its weapons, raise our shields".
+  const lead = COND_LEAD.exec(bare);
+  if (lead) {
+    const trig = parseTrigger(lead[2], prior.contact);
+    if (!trig) return { actions: [], unparsed: [], notes: [], clarify: { question: `I'm not sure what to watch for in "${lead[1]} ${lead[2]}", Captain. Can you put it another way?`, options: [], clause: raw } };
+    return conditional(trig, lead[3], sub, { hold: notUntil || /^only\b/.test(bare), clause: raw });
+  }
+  // Prohibition with an exit: "Don't fire unless fired upon".
+  const unless = UNLESS.exec(bare);
+  if (unless) {
+    const trig = parseTrigger(unless[2], prior.contact);
+    const body = piece(interpretCore(unmark(unless[1]), sub));
+    const restricts = body.actions.filter((a) => a.type === 'restrict');
+    if (trig && restricts.length && !body.clarify) return { ...body, actions: body.actions.filter((a) => a.type !== 'weapons' || (a as { mode: string }).mode !== 'safe').map((a) => (a.type === 'restrict' ? { ...a, until: trig } : a)) };
+    return { actions: [], unparsed: [], notes: [], clarify: { question: `I can't make "${unless[1]}" conditional on "${unless[2]}", Captain. Should we do it now, or hold?`, options: [], clause: raw } };
+  }
+  // Conditional, condition last: "Raise shields only if the Kestrel arms its weapons".
+  const tail = COND_TAIL.exec(bare);
+  if (tail && !/\b(tell|warn|say|inform|threaten|explain|assure|promise|remind)\b/.test(tail[1])) {
+    const trig = parseTrigger(tail[3], prior.contact);
+    if (trig) return conditional(trig, tail[1], sub, { hold: notUntil || /^only /.test(tail[2]), clause: raw });
+  }
+  // Sequencing after a helm order: "Close on the Kestrel, then beam the crew aboard".
+  const seq = THEN.exec(bare);
+  const startsThen = /^then\s+/.test(bare);
+  if ((seq || startsThen) && !notUntil) {
+    const headText = startsThen ? '' : seq![1];
+    const tailText = startsThen ? bare.replace(/^then\s+/, '') : seq![2];
+    const head = headText ? piece(interpretCore(unmark(headText), sub)) : { actions: [], unparsed: [], notes: [], clarify: null };
+    const helm = head.actions.some((a) => a.type === 'maneuver') || (startsThen && prior.helmPending);
+    if (helm && !head.clarify) {
+      const after = conditional({ kind: 'helmDone' }, tailText, { ...sub, lastTarget: lastContactOf(head.actions, sub.lastTarget as Contact | null) }, { hold: false, clause: raw });
+      return { actions: [...head.actions, ...after.actions], unparsed: [...head.unparsed, ...after.unparsed], notes: [...head.notes, ...after.notes], clarify: after.clarify };
+    }
+  }
+  const r = piece(interpretCore(unmark(t), sub));
+  if (persistent) {
+    const extra: Act[] = [];
+    r.actions = r.actions.map((a) => (a.type === 'maneuver' ? { ...a, persistent: true } : a));
+    for (const a of r.actions) {
+      // "Keep the shields down no matter what" is a standing prohibition, not just a state.
+      if (a.type === 'shields') extra.push({ type: 'restrict', subject: a.raise ? 'lowerShields' : 'raiseShields' });
+      if (a.type === 'weapons' && a.mode === 'safe') extra.push({ type: 'restrict', subject: 'armWeapons' });
+    }
+    for (const x of extra) if (!r.actions.some((a) => a.type === 'restrict' && (a as { subject: string }).subject === (x as { subject: string }).subject)) r.actions.push(x);
+  }
+  return r;
+}
+
+export function interpretSync(input: string, ctx: InterpreterContext): Interpretation {
+  const source = 'offline-parser';
+  const teach = TEACH.exec(input.trim());
+  if (teach) {
+    const phrase = teach[1].toLowerCase().replace(/[^a-z0-9' -]/g, '').trim();
+    const meaning = teach[2].trim();
+    if (phrase.length >= 2 && meaning.length >= 2) return { kind: 'actions', actions: [{ type: 'learn', phrase, meaning }] as never, unparsed: [], notes: [], source };
+  }
+  // Answering a clarifying question goes straight to the clause parser (it knows the pending clause).
+  if (ctx.pending) return interpretCore(input, ctx);
+  const text = normaliseMarked(input);
+  const sentences = text.split(/\s*[.;]+\s*/).map((x) => x.trim()).filter(Boolean);
+  const structured = (x: string) => {
+    const b = x.replace(DEPT_MARK, ' ').trim();
+    return PERSIST.test(b) || NOT_UNTIL.test(b) || COND_LEAD.test(b) || UNLESS.test(b) || /^then\s/.test(b) || THEN.test(b) || (COND_TAIL.test(b) && !!parseTrigger(COND_TAIL.exec(b)![3], null));
+  };
+  if (!sentences.some(structured)) return interpretCore(input, ctx);
+
+  // Plain sentences keep being parsed together (cross-sentence references, reported speech).
+  const groups: { text: string; structured: boolean }[] = [];
+  for (const x of sentences) {
+    const st = structured(x);
+    const last = groups[groups.length - 1];
+    if (last && !st && !last.structured) last.text = `${last.text}. ${x}`;
+    else groups.push({ text: x, structured: st });
+  }
+  const all: Piece = { actions: [], unparsed: [], notes: [], clarify: null };
+  let contact: Contact | null = (ctx.lastTarget as Contact | null) ?? null;
+  let helmPending = false;
+  for (const g of groups) {
+    const p = g.structured ? sentencePiece(g.text, ctx, { contact, helmPending }) : piece(interpretCore(unmark(g.text), { ...ctx, lastTarget: contact ?? ctx.lastTarget }));
+    all.actions.push(...p.actions);
+    all.unparsed.push(...p.unparsed);
+    all.notes.push(...p.notes);
+    all.clarify = all.clarify ?? p.clarify;
+    contact = lastContactOf(p.actions, contact);
+    if (p.actions.some((a) => a.type === 'maneuver')) helmPending = true;
+  }
+  return finish(all, input, source);
+}
+
+/** Plan-level safety and schema validation for a combined interpretation. */
+function finish(all: Piece, input: string, source: 'offline-parser'): Interpretation {
+  const seen = new Set<string>();
+  const actions = all.actions.filter((a) => {
+    if (a.type !== 'posture') return true;
+    const k = JSON.stringify(a);
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+  const result: Interpretation = all.clarify
+    ? { kind: 'clarify', clarification: all.clarify, actions: actions as never, unparsed: all.unparsed, notes: all.notes, source }
+    : actions.length
+      ? { kind: 'actions', actions: actions.slice(0, 8) as never, unparsed: all.unparsed, notes: all.notes, source }
+      : { kind: 'unrecognised', unparsed: all.unparsed.length ? all.unparsed : [input.trim()], notes: all.notes, source };
+  return safe(result, input);
+}
+
+/** Validate against the schema, and refuse contradictory plans (ask instead). */
+function safe(result: Interpretation, input: string): Interpretation {
+  const source = 'offline-parser';
   const checked = InterpretationSchema.safeParse(result);
   if (!checked.success) return { kind: 'unrecognised', unparsed: [input.trim()], notes: [], source };
-  return checked.data;
+  const r = checked.data;
+  if (r.kind === 'unrecognised') return r;
+  const q = planConflict(r.actions);
+  if (q) return { kind: 'clarify', clarification: { question: q, options: [], clause: input.trim() }, actions: [], unparsed: r.unparsed, notes: r.notes, source };
+  return r;
 }
 
 // ------------------------------------------------------------- spelling ---

@@ -38,7 +38,7 @@ export function isActive(o: TrackedOrder): boolean {
 
 /** Orders worth showing: active or maintaining, plus anything resolved this turn. */
 export function visibleOrders(s: WorldState): TrackedOrder[] {
-  return s.orders.list.filter((o) => isActive(o) || o.maintaining || o.updatedTurn >= s.turn - 1);
+  return s.orders.list.filter((o) => isActive(o) || o.status === 'standing' || o.maintaining || o.updatedTurn >= s.turn - 1);
 }
 
 export function refName(s: WorldState, ref: NavRef | null): string {

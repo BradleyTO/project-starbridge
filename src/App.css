@@ -250,3 +250,8 @@
 .settings .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 4px 0; }
 .settings input[type=number], .universe select, .settings select { background: #11151f; color: var(--ink); border: 1px solid #2a4b74; border-radius: 8px; padding: 4px 6px; min-height: 32px; }
 .universe.locked { background: #11151f; border-radius: 12px; padding: 10px 14px; border-left: 4px solid #c98a2b; }
+
+/* v0.4 standing orders and prohibitions */
+.order-standing { border-style: dashed; border-color: #6b7fd7; }
+.order-standing .order-status { color: #a5b4fc; }
+.order-cancelled .order-status { color: #94a3b8; }

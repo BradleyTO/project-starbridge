@@ -5,6 +5,7 @@
  *   outcome → narration (reports + state diff) → new WorldState.
  */
 import type { Interpretation, ProposedAction } from './schema';
+import { addRestriction, addStanding, checkStanding, describeTrigger, liftFor, planConflict, planOrder, SUBJECT_LABEL } from './standing';
 import { ProposedActionSchema } from './schema';
 import type { Report } from './report';
 import { say, sys } from './report';
@@ -75,17 +76,33 @@ export function processOrders(
   const rng = createRng(s.rng);
   let timePasses = false;
 
-  // Declared posture is applied first so it can colour the other orders in the same breath.
+  // The WHOLE command becomes a validated plan before anything changes: every action must pass
+  // the schema, and contradictory parts mean nothing runs (the crew asks instead).
   const raw0 = interp.kind === 'unrecognised' ? [] : interp.actions;
-  const actions = [...raw0.filter((a) => a.type === 'posture'), ...raw0.filter((a) => a.type !== 'posture')];
+  const plan: ProposedAction[] = [];
+  for (const raw of raw0) {
+    const parsed = ProposedActionSchema.safeParse(raw);
+    if (parsed.success) plan.push(parsed.data);
+    else reports.push(sys('invalidAction'));
+  }
+  const conflict = planConflict(plan);
+  if (conflict) {
+    reports.push(say('xo', 'clarify', { question: conflict }));
+    s = { ...s, clarification: { question: conflict, options: [], clause: text.trim() } };
+    return { state: commitLogs(s, reports, narrator), results };
+  }
+  // Posture first (it colours the other orders), then prohibitions, then the rest in order.
+  const actions = planOrder(plan);
   if (interp.kind === 'unrecognised') reports.push(say('xo', 'notUnderstood', { text: interp.unparsed.join(' / ') || text }));
   else if (interp.unparsed.length) reports.push(say('xo', 'partlyUnderstood', { text: interp.unparsed.join(' / ') }));
 
-  for (const raw of actions) {
-    const parsed = ProposedActionSchema.safeParse(raw);
-    if (!parsed.success) {
-      reports.push(sys('invalidAction'));
-      continue;
+  for (const action of actions) {
+    const parsed = { data: action };
+    // An explicit order from the captain lifts an earlier prohibition it overrides.
+    if (action.type !== 'restrict' && action.type !== 'standing') {
+      const lift = liftFor(s, action);
+      s = lift.state;
+      reports.push(...lift.reports);
     }
     const v = validate(s, parsed.data);
     reports.push(...v.reasons);
@@ -99,6 +116,12 @@ export function processOrders(
       if (label) s = addOrder(s, deptOf(parsed.data), label, 'completed', 'already in effect').state;
       continue;
     }
+    if (v.action.type === 'standing' || v.action.type === 'restrict') {
+      const added = v.action.type === 'standing' ? addStanding(s, v.action, label ?? 'Standing order') : addRestriction(s, v.action, label ?? 'Hold');
+      s = added.state;
+      reports.push(...added.reports);
+      continue;
+    }
     const applied = applyAction(s, v.action, rng, scenario.hooks);
     s = applied.state;
     reports.push(...applied.reports);
@@ -107,6 +130,11 @@ export function processOrders(
     if (v.timeCost) timePasses = true;
     if (s.flags.jumped || s.ships.halcyon.destroyed) break;
   }
+
+  // Conditions already true fire now (e.g. "if the Kestrel arms" when she already has).
+  const now = checkStanding(s, rng, scenario.hooks);
+  s = now.state;
+  reports.push(...now.reports);
 
   s = { ...s, lastTarget: lastTargetOf(actions, s.lastTarget) };
   const lastComm = [...results].reverse().find((r) => r.action.type === 'communicate' && r.status !== 'rejected');
@@ -186,9 +214,9 @@ function orderLabel(s: WorldState, a: ProposedAction): string | null {
     case 'improvise':
       return `Improvise: ${a.method}`;
     case 'standing':
-      return `Standing order`;
+      return `When ${describeTrigger(s, a.trigger)}: ${a.actions.map((x) => orderLabel(s, x) ?? x.type).join(', ')}`;
     case 'restrict':
-      return `Hold: ${a.subject}`;
+      return `Hold: ${SUBJECT_LABEL[a.subject]}${a.until ? ` until ${describeTrigger(s, a.until)}` : ''}`;
     case 'learn':
       return null;
   }
@@ -239,5 +267,7 @@ export function advanceTurn(s: WorldState, rng: Rng, scenario: ScenarioModule): 
   }
 
   const sim = scenario.simulate(s, rng);
-  return { state: sim.state, reports: [...reports, ...sim.reports] };
+  // Standing orders and conditional prohibitions react to what just happened.
+  const st = checkStanding(sim.state, rng, scenario.hooks);
+  return { state: st.state, reports: [...reports, ...sim.reports, ...st.reports] };
 }

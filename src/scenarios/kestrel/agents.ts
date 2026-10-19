@@ -12,7 +12,7 @@ import type { ManeuverIntent, NavGoal, NavRef, PendingEvent, ShipId, WorldState 
 import { resolveAttack, destroyShip } from '../../engine/combat';
 import { BEAM_RANGE, TRACTOR_RANGE, range } from '../../engine/rules';
 import { dot, len, sub, unit } from '../../engine/kinematics';
-import { addTension, knows, patchCharacter, patchShip, revealFact, schedule, setFlag, setMemory } from '../../engine/state';
+import { addTension, knows, patchCharacter, patchShip, revealFact, schedule, setCounter, setFlag, setMemory } from '../../engine/state';
 import { containmentRate, turnsToBreach } from './hooks';
 
 const RETREAT_AT = { hardliner: 25, pragmatic: 40, cautious: 60 } as const;
@@ -276,6 +276,7 @@ function cruiserFires(s: WorldState, target: ShipId, rng: Rng, r: Report[]): Wor
   if (tsActive && (actual === 'halcyon' || s.counters.tractorShieldCoversKestrel)) protectedBy = 'tractorShield';
   else if (actual === 'kestrel' && (s.counters.shieldExtendUntil ?? -1) >= s.turn) protectedBy = 'shieldExtend';
   s = setFlag(s, 'cruiserFired');
+  s = setCounter(s, 'firedTurn_cruiser', s.turn);
   s = addTension(s, 10);
   const res = resolveAttack(s, 'cruiser', actual, 'beams', rng, { protectedBy });
   s = res.state;
@@ -298,6 +299,7 @@ function ardenAgent(s: WorldState, _rng: Rng, r: Report[]): WorldState {
     s = setMemory(s, 'arden', 'panic', 1);
     r.push(comms('arden', 'ardenPanic'));
   }
+  s = ardenPointDefence(s, r);
   if (s.characters.arden.trust >= 30 && !s.flags.compartmentOpen && knows(s, 'compartment_exists')) {
     s = setFlag(s, 'compartmentOpen');
     r.push(comms('arden', 'ardenCodes'));
@@ -308,6 +310,33 @@ function ardenAgent(s: WorldState, _rng: Rng, r: Report[]): WorldState {
     s = setFlag(s, 'compartmentOpen');
     r.push(comms('arden', 'ardenVolunteers', { name: s.characters.passenger.name, kind: s.variant.passenger }));
   }
+  return s;
+}
+
+/**
+ * Arden's nerve: the Kestrel carries a single point-defence mount. He powers it up
+ * (no draw on the RNG; the threshold comes from the scenario seed) when someone
+ * locks on to his ship, or when the cruiser closes inside his nerve range. A
+ * Concord ship physically between him and the cruiser halves that range.
+ */
+export function kestrelNerveKm(s: WorldState): number {
+  return 12000 + (Math.abs(s.seed) % 19) * 1000;
+}
+
+function ardenPointDefence(s: WorldState, r: Report[]): WorldState {
+  const k = s.ships.kestrel;
+  if (k.destroyed || k.weapons.state !== 'safe' || s.characters.arden.ship !== 'kestrel') return s;
+  const h = s.ships.halcyon;
+  const cr = s.ships.cruiser;
+  const cruiserHere = !cr.destroyed && !s.flags.cruiserGone && cr.detected;
+  const lockedByHalcyon = (h.weapons.state === 'locked' && h.weapons.target === 'kestrel');
+  const lockedByCruiser = cruiserHere && cr.weapons.state === 'locked' && cr.weapons.target === 'kestrel';
+  const nerve = s.flags.interposing ? kestrelNerveKm(s) / 2 : kestrelNerveKm(s);
+  const tooClose = cruiserHere && range(s, 'kestrel', 'cruiser') <= nerve;
+  if (!lockedByHalcyon && !lockedByCruiser && !tooClose) return s;
+  const target: ShipId = lockedByHalcyon && !lockedByCruiser ? 'halcyon' : 'cruiser';
+  s = patchShip(s, 'kestrel', { weapons: { state: 'armed', target } });
+  r.push(comms('arden', target === 'halcyon' ? 'ardenArmsAgainstHalcyon' : 'ardenArms'));
   return s;
 }
 

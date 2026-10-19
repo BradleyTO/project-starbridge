@@ -3,7 +3,8 @@ import type { TrackedOrder } from '../../engine/types';
 const DEPT: Record<TrackedOrder['dept'], string> = { helm: 'HELM', tactical: 'TAC', ops: 'OPS', science: 'SCI', comms: 'COMMS', xo: 'XO' };
 
 function statusText(o: TrackedOrder): string {
-  if (o.status === 'completed' && o.maintaining) return 'maintaining';
+  if (o.status === 'completed' && o.maintaining) return o.persistent ? 'maintaining · no matter what' : 'maintaining';
+  if (o.status === 'standing') return 'standing · waiting';
   if (o.status === 'underway' && o.etaSeconds) return `underway · ETA ${o.etaSeconds < 90 ? `${o.etaSeconds}s` : `${Math.round(o.etaSeconds / 6) / 10}m`}`;
   if (o.status === 'acknowledged' && o.etaSeconds) return `acknowledged · ETA ${o.etaSeconds}s`;
   return o.status;

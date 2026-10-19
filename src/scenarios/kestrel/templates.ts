@@ -13,6 +13,9 @@ type V = Record<string, string | number>;
 const n = (v: V, k: string) => Number(v[k] ?? 0);
 
 const T: Record<string, TemplateFn> = {
+  // ---- v0.4: the Kestrel's point-defence
+  ardenArms: () => "We're powering our point-defence. It won't scratch that cruiser, but I'm not sitting here with my hands in my lap.",
+  ardenArmsAgainstHalcyon: () => "You've got a lock on us? Then we're powering our point-defence. Explain yourselves, Halcyon.",
   // ---- intro / narrative
   intro0: () => 'The CSV Halcyon drops out of her jump corridor at the edge of the Calloway Reach, a band of space claimed by both the Concord and the Tessarine Directorate. Nothing should be out here.',
   intro1: () => 'Captain, automated distress beacon dead ahead. Civilian freighter, transponder reads KESTREL, adrift at about 38,000 kilometres.',
