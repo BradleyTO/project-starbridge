@@ -23,7 +23,7 @@ export function play(s: WorldState, cmds: string[], check = true): WorldState {
 
 /** Apply typed ProposedActions directly (bypassing the parser). */
 export function act(s: WorldState, ...actions: ProposedActionInput[]): WorldState {
-  return processOrders(s, '(test)', { kind: 'actions', actions: actions as never, unparsed: [], source: 'test' }, K).state;
+  return processOrders(s, '(test)', { kind: 'actions', actions: actions as never, unparsed: [], notes: [], source: 'test' }, K).state;
 }
 
 export function textSince(s: WorldState, fromId = 0): string {

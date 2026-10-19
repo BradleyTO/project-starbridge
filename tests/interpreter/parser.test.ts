@@ -33,18 +33,18 @@ const TABLE: [string, Record<string, unknown>[]][] = [
   ['go to yellow alert', [{ type: 'setAlert', level: 'yellow' }]],
   ['stand down to green', [{ type: 'setAlert', level: 'green' }]],
   // helm
-  ['approach the kestrel', [{ type: 'move', mode: 'approach', target: 'kestrel' }]],
-  ['full speed to the kestrel', [{ type: 'move', mode: 'approach', target: 'kestrel' }]],
-  ['Mr. Adeyemi, take us alongside the freighter', [{ type: 'move', mode: 'approach', target: 'kestrel' }]],
-  ['set a course for the cruiser', [{ type: 'move', mode: 'approach', target: 'cruiser' }]],
-  ['take us to 10,000 km from the kestrel', [{ type: 'move', mode: 'range', target: 'kestrel', rangeKm: 10000 }]],
-  ['hold at 20k km from the cruiser', [{ type: 'move', mode: 'range', target: 'cruiser', rangeKm: 20000 }]],
-  ['bring us within four thousand kilometres of the kestrel', [{ type: 'move', mode: 'range', target: 'kestrel', rangeKm: 4000 }]],
-  ['put us between the cruiser and the kestrel', [{ type: 'move', mode: 'interpose' }]],
+  ['approach the kestrel', [{ type: 'maneuver', intent: 'approach', target: 'kestrel' }]],
+  ['full speed to the kestrel', [{ type: 'maneuver', intent: 'approach', target: 'kestrel' }]],
+  ['Mr. Adeyemi, take us alongside the freighter', [{ type: 'maneuver', intent: 'approach', target: 'kestrel' }]],
+  ['set a course for the cruiser', [{ type: 'maneuver', intent: 'approach', target: 'cruiser' }]],
+  ['take us to 10,000 km from the kestrel', [{ type: 'maneuver', intent: 'approach', target: 'kestrel', rangeKm: 10000 }]],
+  ['hold at 20k km from the cruiser', [{ type: 'maneuver', intent: 'standoff', target: 'cruiser', rangeKm: 20000 }]],
+  ['bring us within four thousand kilometres of the kestrel', [{ type: 'maneuver', intent: 'approach', target: 'kestrel', rangeKm: 4000 }]],
+  ['put us between the cruiser and the kestrel', [{ type: 'maneuver', intent: 'interpose', target: 'cruiser', second: 'kestrel' }]],
   ['get us out of here', [{ type: 'jump', mode: 'withdraw' }]],
-  ['evasive manoeuvres', [{ type: 'move', mode: 'evasive' }]],
-  ['all stop', [{ type: 'move', mode: 'hold' }]],
-  ['back off from the cruiser', [{ type: 'move', mode: 'away', target: 'cruiser' }]],
+  ['evasive manoeuvres', [{ type: 'maneuver', intent: 'evasive' }]],
+  ['all stop', [{ type: 'maneuver', intent: 'allStop' }]],
+  ['back off from the cruiser', [{ type: 'maneuver', intent: 'retreat', target: 'cruiser' }]],
   // jump
   ['charge the jump drive', [{ type: 'jump', mode: 'charge' }]],
   ['engage the jump drive', [{ type: 'jump', mode: 'engage' }]],
@@ -111,7 +111,7 @@ const TABLE: [string, Record<string, unknown>[]][] = [
   ['Lower shields, then beam the crew aboard', [{ type: 'shields', raise: false }, { type: 'transport', payload: 'crew' }]],
   ['red alert, arm weapons and lock on the cruiser', [{ type: 'setAlert', level: 'red' }, { type: 'weapons', mode: 'arm' }, { type: 'weapons', mode: 'lock', target: 'cruiser' }]],
   ['scan the kestrel and hail the cruiser', [{ type: 'scan', target: 'kestrel' }, { type: 'communicate', target: 'cruiser' }]],
-  ['approach the kestrel, scan it and then evacuate the crew', [{ type: 'move', target: 'kestrel' }, { type: 'scan', target: 'kestrel' }, { type: 'transport' }]],
+  ['approach the kestrel, scan it and then evacuate the crew', [{ type: 'maneuver', target: 'kestrel' }, { type: 'scan', target: 'kestrel' }, { type: 'transport' }]],
   ['tractor beam the kestrel and use it as a shield', [{ type: 'improvise', method: 'tractorShield' }]],
   ['hail the cruiser and tell them we are on a rescue mission', [{ type: 'communicate', target: 'cruiser' }]],
 ];
@@ -178,9 +178,9 @@ describe('targets and context', () => {
       expect(r.actions[0]).toMatchObject({ type: 'shields', raise: true });
     }
   });
-  it('caps a sentence at six actions', () => {
-    const r = parse('scan the kestrel, scan the cruiser, raise shields, arm weapons, red alert, hail the cruiser, charge the jump drive, wait');
+  it('caps a sentence at eight actions', () => {
+    const r = parse('scan the kestrel, scan the cruiser, raise shields, arm weapons, red alert, hail the cruiser, charge the jump drive, evasive manoeuvres, all stop, wait');
     expect(r.kind).toBe('actions');
-    if (r.kind === 'actions') expect(r.actions.length).toBeLessThanOrEqual(6);
+    if (r.kind === 'actions') expect(r.actions.length).toBeLessThanOrEqual(8);
   });
 });

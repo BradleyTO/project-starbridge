@@ -5,7 +5,7 @@
 import { describe, expect, it } from 'vitest';
 import { createRng } from '../../src/engine/rng';
 import { submit } from '../../src/engine/game';
-import { checkInvariants } from '../../src/engine/invariants';
+import { checkInvariants, checkTransition } from '../../src/engine/invariants';
 import { K, start } from '../helpers';
 
 const VOCAB = [
@@ -16,6 +16,9 @@ const VOCAB = [
   'raise shields', 'lower shields', 'red alert', 'yellow alert', 'stand down', 'arm weapons', 'lock on the cruiser', 'fire', 'fire torpedoes', 'fire torpedoes at their weak point', 'hold fire',
   'divert power to shields', 'divert 50% power from tractor to sensors', 'boost engines', 'evacuate the crew', 'beam the passenger aboard', 'send a rescue team', 'send a medical team', 'beam the cargo over',
   'stabilise the kestrel reactor', 'repair the shields', 'repair the engines', 'tractor the kestrel', 'release the tractor beam', 'use the tractor beam as a shield', 'vent plasma',
+  'get us in between the two ships', 'intercept the cruiser', 'escort the freighter', 'follow the cruiser at 20000 km', 'block the cruiser', 'stay out of their weapons range',
+  'orbit the kestrel', 'hold station on the kestrel', 'come about to face the cruiser', 'run for the border', 'retreat from the cruiser', 'we do not want to appear hostile', 'hail them both on screen',
+  'interpose in front of the cruiser', 'close to transporter range of the kestrel', 'slowly approach the cruiser',
   'eject the kestrel core', 'extend our shields around the kestrel', 'make a sensor ghost', 'charge the jump drive', 'jump', 'withdraw', 'wait', 'status', 'options', 'scan', 'approach', 'purple elephant',
 ];
 
@@ -27,8 +30,9 @@ describe('fuzz: invariants hold for random order sequences', () => {
       let s = start(run + 1);
       for (let i = 0; i < 30 && !s.outcome; i++) {
         const cmd = s.clarification ? rng.pick(s.clarification.options) : rng.pick(VOCAB);
+        const prev = s;
         s = submit(K, s, cmd);
-        const v = checkInvariants(s);
+        const v = [...checkInvariants(s), ...checkTransition(prev, s)];
         if (v.length) throw new Error(`seed ${run + 1}, order ${i} "${cmd}": ${v.join('; ')}`);
       }
       endings.set(s.outcome?.id ?? 'ongoing', (endings.get(s.outcome?.id ?? 'ongoing') ?? 0) + 1);

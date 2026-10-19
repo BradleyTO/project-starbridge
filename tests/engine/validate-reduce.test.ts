@@ -63,7 +63,7 @@ describe('validator', () => {
     const noWeapons = patchSystem(s0, 'halcyon', 'weapons', { health: 0 });
     expect(v(noWeapons, { type: 'weapons', mode: 'arm' }).status).toBe('rejected');
     const noEngines = patchSystem(s0, 'halcyon', 'engines', { health: 0 });
-    expect(v(noEngines, { type: 'move', mode: 'approach', target: 'kestrel' }).status).toBe('rejected');
+    expect(v(noEngines, { type: 'maneuver', intent: 'approach', target: 'kestrel', speed: 'full' }).status).toBe('rejected');
   });
 
   it('turns an uncharged jump into a withdrawal', () => {
@@ -112,13 +112,15 @@ describe('reducer (via processOrders)', () => {
   });
 
   it('a helm order persists across turns until arrival', () => {
-    let s = act(start(42), { type: 'move', mode: 'approach', target: 'kestrel' });
+    let s = act(start(42), { type: 'maneuver', intent: 'approach', target: 'kestrel' });
     const d1 = range(s, 'halcyon', 'kestrel');
     s = act(s, { type: 'wait' });
     expect(range(s, 'halcyon', 'kestrel')).toBeLessThan(d1);
     for (let i = 0; i < 4; i++) s = act(s, { type: 'wait' });
-    expect(range(s, 'halcyon', 'kestrel')).toBeLessThanOrEqual(1600);
-    expect(s.orders.helm).toBeNull();
+    expect(range(s, 'halcyon', 'kestrel')).toBeLessThanOrEqual(2200);
+    const order = s.orders.list.find((o) => o.label.startsWith('Approach'));
+    expect(order?.status).toBe('completed');
+    expect(order?.maintaining).toBe(true);
   });
 
   it('evacuation empties the Kestrel and marks it evacuated (not distressed)', () => {
