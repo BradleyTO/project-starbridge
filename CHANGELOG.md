@@ -2,6 +2,53 @@
 
 All notable changes to Project Starbridge are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.0] — 2026-10-19 — Simulation Mode, Living Universe foundation & Mission Archive
+
+No AI is used in this milestone. Everything below is deterministic and offline, and runs in the browser.
+
+### Added
+- **Two modes with isolated timelines** (`src/universe/`):
+  - **Simulation** (the default page load): training runs and archive replays. Simulations can be repeated without limit, are free and never change canon.
+  - **Canonical** (Living Universe): mission outcomes are permanent history.
+  - Separate stores (`starbridge.canon.v1`, `sim.v1`, `familiarity.v1`, `credits.v1`, `entitlements.v1`). `CanonStore.commit` is the only write path to canon; it needs a branded `CanonicalContext`, which only a `CanonicalSession` holds. Canonical reads are deep-frozen.
+  - The mode banner and mission title always show which timeline you are in.
+- **Mission Archive.** Every canonical mission is archived with its original outcome. It can be replayed as a simulation with the original conditions or as a new variation. Simulated runs are listed separately, and the canonical outcome is never altered.
+- **Familiarity** (terminology you teach, preferences, drills) carries across modes but never touches canon. Crew drill lines say whether the practice was real or simulated.
+- **Daily canonical credits.** There are 10 new canonical starts per local day. Only a *new* canonical start costs a credit (charged once per mission, and only after the commit succeeds). Viewing, declining or ignoring offers, saving, resuming, finishing and every simulation are free. At zero credits, canonical starts are disabled and canonical time pauses, so there is no in-universe penalty, but simulations and the archive keep working. **The credits are local and not tamper-proof.** Server-side enforcement is future work. There are no real payments; the entitlement toggles are dev-only.
+- **World events and consequences** (`world.ts`, `models.ts`):
+  - three offer classes: *mandatory directive* (question / refuse / disobey → disciplinary review), *distress call* (ignore), *voluntary assignment* (decline, no penalty)
+  - seeded event models play out when you are absent: the ore hauler *Tamsin Grey* can be lost, rescued by another ship or self-repaired, and the escort can hit an ion squall
+  - the results are published as **sector bulletins** and reach later canonical missions as evidence in the log
+  - disciplinary reviews are deterministic findings from evidence fixed when the review opens
+- **Crew memory.** Hull damage, crew deaths and injuries, trust, experience and faction standings carry over between canonical missions. Relief officers replace lost crew. Simulated casualties do not carry over.
+- **Hub panels:** Living Universe (offers, bulletins, recent decisions, continue patrol), Mission Archive, Captain's Record and Settings (dev).
+- **Interpreter and engine: standing orders and restrictions** (`src/engine/standing.ts`):
+  - conditional standing orders ("If the Kestrel arms its weapons, raise our shields") fire when their trigger is met: a ship arms, locks or fires, a range is reached, or the helm order completes
+  - restrictions ("do not power up weapons", "but not until then", "unless…") hold, show in the orders strip and are lifted only by an explicit order
+  - persistent manoeuvres ("No matter what, keep us between…")
+  - "then" after a helm order waits for that order to complete
+  - plans with contradictory actions are not applied: the crew asks instead
+  - negation safety: a clause containing a negator can never match fire, lock or arm; "under no circumstances / on no account" are normalised as negation; an unresolved "it" asks which contact
+  - red alert respects a held-down shields order
+- **Kestrel point-defence.** Captain Arden arms the Kestrel when he is locked on or the cruiser comes too close (a seeded range, halved while you interpose). This makes armed-ship triggers testable.
+- **Tests:**
+  - `tests/universe/*` (isolation, archive, credits, world events)
+  - `tests/v04/regression.test.ts`, covering the two brief-critical orders before and after their triggers
+  - held-out sets `tests/eval/heldout-v04*.ts`
+  - `scripts/smoke.mjs` v0.4 section: canonical → archive → different simulated outcome → canon unchanged, credits, ignored-distress consequence, zero credits, phone layout
+
+### Changed
+- Save format v4 (`starbridge.save.v4`; v0.3 saves migrate).
+- "Then" sequencing: `transport` after a helm order is now a standing order that waits for the helm to arrive (`tests/interpreter/parser.test.ts` item 114 updated).
+- "Hold fire" keeps weapons safe *and* adds a restriction on firing.
+- **Untargeted fire no longer defaults to the cruiser.** "Fire", "open fire" and "keep firing" use the current weapons lock. "Return fire" means the warship. With no lock and both ships in view, the crew asks which contact. Three parser-table items moved into an `untargeted fire` block that covers both cases.
+- A pronoun after a shields clause ("raise them again") refers to the shields, so contradictory plans are caught and asked about.
+
+### Interpreter evaluation (honest numbers)
+- v0.3 held-out set (42): **40/42** (was 33/42).
+- v0.4 held-out set (32, committed before the v0.4 parser work): baseline **12/32, 11 unsafe**, now 32/32. This set was visible during tuning, so 32/32 is **not** a clean held-out measure.
+- v0.4b fresh set (20, written after the work and never tuned against): first result **12/20, 3 unsafe** (`RESULTS-v04b-first.md`, immutable). Safety fixes were then made for exactly those three ("Under no circumstances arm the weapons" armed them; a bare "Fire" fired on the cruiser; "Lower shields and raise them again" only lowered). The set now scores **15/20, 0 unsafe**. Because the fixes were made after seeing the set, the current figure is contaminated. The five remaining failures are all misses or extra questions, never wrong actions; they are listed in `RESULTS-v04b.md` and were deliberately not tuned.
+
 ## [0.3.0] — 2026-10-19 — Intent interpretation & spatial simulation
 
 Prompted by a user-testing order the offline engine could not handle: *"Get us inbetween the two ships. Keep the weapons down and shields down. We don't want to appear hostile. And hail them on screen."* No scripted mission content was added. The order is handled by reusable systems.

@@ -33,3 +33,6 @@ dist-ssr
 test-results
 playwright-report
 smoke-shots
+
+# local probes (never committed)
+tests/_scratch/

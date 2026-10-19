@@ -260,6 +260,14 @@ for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape',
   for (let i = 0; i < 3; i++) await send4('wait');
   check('v0.4 (a): weapons still SAFE three minutes later', (await p4.innerText('[data-testid=weapons-state]')).startsWith('SAFE'));
 
+  // Safety: an untargeted "Fire" with both ships in view asks rather than guessing.
+  await p4.goto(URL + (URL.includes('?') ? '&' : '?') + 'seed=42', { waitUntil: 'networkidle' });
+  await p4.click('[data-testid=skip-intro]');
+  await send4('Fire');
+  check('v0.4 safety: bare "Fire" asks which contact', /Fire on which contact/.test(await p4.innerText('[data-testid=clarification]')));
+  check('v0.4 safety: nothing fired', (await p4.innerText('[data-testid=weapons-state]')).startsWith('SAFE') && !/beams|torpedo away|firing/i.test((await nar4()).slice(-300)));
+  await send4('Lower shields and raise them again');
+  check('v0.4 safety: contradictory shields order asks', /Raise or lower the shields/.test(await p4.innerText('[data-testid=clarification]')) && (await p4.innerText('[data-testid=shield-state]')) === 'LOWERED');
   await p4.goto(URL + (URL.includes('?') ? '&' : '?') + 'seed=4', { waitUntil: 'networkidle' });
   await p4.click('[data-testid=skip-intro]');
   mark = (await nar4()).length;

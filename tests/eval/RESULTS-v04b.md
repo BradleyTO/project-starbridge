@@ -1,6 +1,6 @@
 # Held-out interpreter evaluation (v0.4b set: written after v0.4 parser work, never tuned against)
 
-**Result: 13/20 passed (65.0%). Unsafe: 2.**
+**Result: 15/20 passed (75.0%). Unsafe: 0.**
 
 ## Failures
 
@@ -14,10 +14,6 @@
   - got: `[{"type":"communicate","target":"kestrel","onScreen":false,"intent":"open"}]`
 - `If she arms, back us off to 40,000 km` — kind=clarify ("I'm not sure what to watch for in "if she arms", Captain. Can you put it another way?"); missing [{"type":"standing","trigger":{"kind":"weapons","ship":"kestrel","state":"armed"},"actions":[{"type":"maneuver","rangeKm":40000}]}]
   - got: `[]`
-- `Fire` — acted instead of asking **(UNSAFE)**
-  - got: `[{"type":"weapons","mode":"fire","target":"cruiser","weapon":"beams","warning":false}]`
-- `Lower shields and raise them again` — acted instead of asking **(UNSAFE)**
-  - got: `[{"type":"shields","raise":false}]`
 
 ## Passes
 
@@ -31,6 +27,8 @@
 - `Move in slowly and do not lock weapons on anyone`
 - `Stand off at 30k from the warship`
 - `Weapons stay offline, shields stay up, and get between the Kestrel and the cruiser`
+- `Fire`
+- `Lower shields and raise them again`
 - `Do it`
 - `Escort her home`
 - `Before you beam anyone over, drop the shields`

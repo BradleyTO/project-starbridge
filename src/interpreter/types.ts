@@ -19,6 +19,8 @@ export interface InterpreterContext {
   passengerNames: string[];
   /** Most damaged repairable Halcyon system, if any. */
   mostDamaged: string | null;
+  /** The Halcyon's current weapons lock, if any (an untargeted "fire" uses it). */
+  weaponsTarget?: 'kestrel' | 'cruiser' | null;
 }
 
 export interface Interpreter {
@@ -43,5 +45,6 @@ export function contextFrom(s: WorldState): InterpreterContext {
     passengerAwake: p.status === 'active' || p.status === 'injured',
     passengerNames: known ? p.name.toLowerCase().replace(/^dr\.?\s*/, '').split(/\s+/).filter((w) => w.length > 2) : [],
     mostDamaged: damaged[0]?.[0] ?? null,
+    weaponsTarget: s.ships.halcyon.weapons.target === 'kestrel' || s.ships.halcyon.weapons.target === 'cruiser' ? s.ships.halcyon.weapons.target : null,
   };
 }

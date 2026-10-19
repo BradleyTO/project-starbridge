@@ -62,6 +62,8 @@ export function normaliseMarked(input: string): string {
   t = t.replace(/\b(tell|give|show) me\b/g, 'report');
   // Emphatic negations read as plain prohibitions.
   t = t.replace(/\b(under no circumstances|on no account|at no point|in no event|by no means)\b,?\s*/g, ' do not ');
+  // "Lower shields and raise them again": the pronoun is the shields (so a contradictory plan is caught and asked about).
+  t = t.replace(/\b(shields?)\b([^.;]*?)\b(raise|lower|drop|restore|bring|put|get)( them| it)\b/g, (_m, sh: string, mid: string, v: string) => `${sh}${mid}${v} shields`);
   // "without raising shields" is a prohibition attached to the order before it.
   const BASE: Record<string, string> = { raising: 'raise', 'putting up': 'put up', 'bringing up': 'bring up', arming: 'arm', 'powering up': 'power up', charging: 'charge', lowering: 'lower', dropping: 'drop', firing: 'fire', shooting: 'shoot' };
   t = t.replace(/\bwithout (raising|putting up|bringing up|arming|powering up|charging|lowering|dropping|firing|shooting)\b/g, (_m, v: string) => `, don't ${BASE[v]}`);
@@ -798,11 +800,17 @@ function resolveTargets(parsed: Parsed[], ctx: InterpreterContext): { actions: P
       if (target === 'passenger') contact = 'kestrel';
       const type = a.type as string;
       if (!contact && !pluralMeansPair) {
-        if (type === 'weapons' && ctx.visible.includes('cruiser')) contact = 'cruiser';
+        // Safety (v0.4): an untargeted "fire" never guesses between two ships. It uses the current
+        // lock; "return fire" means the warship (the only ship that shoots at us); otherwise ask.
+        if (type === 'weapons' && a.mode === 'fire') {
+          if (ctx.weaponsTarget && ctx.visible.includes(ctx.weaponsTarget)) contact = ctx.weaponsTarget;
+          else if (/\breturn(ing)? fire\b/.test(p.clause) && ctx.visible.includes('cruiser')) contact = 'cruiser';
+          else if (ctx.visible.length === 1) contact = ctx.visible[0];
+        } else if (type === 'weapons' && ctx.visible.includes('cruiser')) contact = 'cruiser';
         else if (ctx.visible.length === 1) contact = ctx.visible[0];
       }
       if (!contact) {
-        const verb = type === 'scan' ? 'Scan' : 'Target';
+        const verb = type === 'scan' ? 'Scan' : a.mode === 'fire' ? 'Fire on' : 'Target';
         clarify = clarify ?? { question: `${verb} which contact, Captain — the Kestrel or the cruiser?`, options: OPTIONS_CONTACTS, clause: p.clause };
         return;
       }

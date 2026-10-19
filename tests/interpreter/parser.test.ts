@@ -60,9 +60,6 @@ const TABLE: [string, Record<string, unknown>[]][] = [
   ['lock phasers on the cruiser', [{ type: 'weapons', mode: 'lock', target: 'cruiser' }]],
   ['target their engines', [{ type: 'weapons', mode: 'lock', target: 'cruiser' }]],
   ['fire torpedoes at the cruiser', [{ type: 'weapons', mode: 'fire', target: 'cruiser', weapon: 'torpedoes' }]],
-  ['open fire', [{ type: 'weapons', mode: 'fire', target: 'cruiser' }]],
-  ['keep firing', [{ type: 'weapons', mode: 'fire' }]],
-  ['fire a warning shot across their bow', [{ type: 'weapons', mode: 'fire', warning: true }]],
   ['hold fire', [{ type: 'weapons', mode: 'safe' }]],
   ['stand down weapons', [{ type: 'weapons', mode: 'safe' }]],
   // tractor / transport / repair
@@ -125,6 +122,34 @@ describe('offline interpreter phrasing table', () => {
   });
 
   it('has at least 80 phrasings', () => expect(TABLE.length).toBeGreaterThanOrEqual(80));
+});
+
+// v0.4 safety: an untargeted "fire" uses the current lock; with no lock and both ships in view it asks.
+describe('untargeted fire', () => {
+  const locked: InterpreterContext = { ...ctx, weaponsTarget: 'cruiser' };
+  it.each([
+    ['open fire', { type: 'weapons', mode: 'fire', target: 'cruiser' }],
+    ['keep firing', { type: 'weapons', mode: 'fire', target: 'cruiser' }],
+    ['fire a warning shot across their bow', { type: 'weapons', mode: 'fire', warning: true, target: 'cruiser' }],
+  ])('%s → fires on the locked target', (phrase, expected) => {
+    const r = interpretSync(phrase, locked);
+    expect(r.kind === 'actions' ? r.actions[0] : r).toMatchObject(expected);
+  });
+  it.each(['open fire', 'keep firing', 'fire a warning shot across their bow', 'Fire', 'fire torpedoes'])('%s with no lock → asks which contact', (phrase) => {
+    const r = interpretSync(phrase, ctx);
+    expect(r.kind).toBe('clarify');
+    expect(r.kind === 'clarify' && r.clarification.options).toEqual(['the Kestrel', 'the cruiser']);
+  });
+  it('"return fire" means the warship', () => {
+    const r = interpretSync('return fire', ctx);
+    expect(r.kind === 'actions' && r.actions[0]).toMatchObject({ type: 'weapons', mode: 'fire', target: 'cruiser' });
+  });
+  it('contradictory shield orders with a pronoun ask instead of half-executing', () => {
+    for (const o of ['Lower shields and raise them again', 'drop shields and bring them back up', 'raise shields and lower them']) {
+      const r = interpretSync(o, ctx);
+      expect(r.kind, o).toBe('clarify');
+    }
+  });
 });
 
 describe('normalisation', () => {
