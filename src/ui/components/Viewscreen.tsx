@@ -131,7 +131,10 @@ interface FxLive extends VisualFx {
   start: number;
 }
 
-/** Signed bearing (−180..180) mapped across the forward view. */
+/** Relative bearing as the crew would call it. */
+const relText = (rel: number) => (Math.abs(rel) <= 5 ? 'DEAD AHEAD' : Math.abs(rel) > 120 ? `ASTERN ${rel > 0 ? 'STBD' : 'PORT'}` : `${Math.abs(rel)}° ${rel > 0 ? 'STBD' : 'PORT'}`);
+
+/** Signed bearing (−180..180, relative to our heading) mapped across the forward view. */
 const signed = (b: number) => (b > 180 ? b - 360 : b);
 
 export function Viewscreen({ state, contacts }: { state: WorldState; contacts: ContactView[] }) {
@@ -200,12 +203,12 @@ export function Viewscreen({ state, contacts }: { state: WorldState; contacts: C
 
       if (c && !c.destroyed) {
         const size = Math.max(10, 14 + 150 * Math.pow(1 - Math.min(c.range, 220000) / 220000, 2.2)) * (w / 900);
-        pos.cruiser = { x: bx(c.bearing), y: h * 0.3 };
+        pos.cruiser = { x: bx(c.relBearing), y: h * 0.3 };
         drawCruiser(ctx, pos.cruiser.x, pos.cruiser.y, size, t, c.disposition === 'hostile');
       }
       if (k && !k.destroyed) {
         const size = (24 + 150 * (1 - Math.min(k.range, 40000) / 40000)) * (w / 900);
-        pos.kestrel = { x: bx(k.bearing), y: h * 0.6 };
+        pos.kestrel = { x: bx(k.relBearing), y: h * 0.6 };
         const tractorOn = s.ships.halcyon.tractor.target === 'kestrel';
         if (tractorOn) {
           const g = ctx.createLinearGradient(w / 2, h, pos.kestrel.x, pos.kestrel.y);
@@ -292,8 +295,8 @@ export function Viewscreen({ state, contacts }: { state: WorldState; contacts: C
         <span className={`vs-alert alert-${state.alert}`}>{state.alert.toUpperCase()} ALERT</span>
       </div>
       <div className="vs-labels">
-        {k && <span>{k.name.toUpperCase()} · {k.destroyed ? 'DESTROYED' : `${Math.round(k.range).toLocaleString('en-US')} KM`}</span>}
-        {c && <span className={c.disposition === 'hostile' ? 'hostile' : ''}>{c.name.toUpperCase()} · {c.destroyed ? 'DESTROYED' : `${Math.round(c.range).toLocaleString('en-US')} KM`}</span>}
+        {k && <span>{k.name.toUpperCase()} · {k.destroyed ? 'DESTROYED' : `${Math.round(k.range).toLocaleString('en-US')} KM · ${relText(k.relBearing)}`}</span>}
+        {c && <span className={c.disposition === 'hostile' ? 'hostile' : ''}>{c.name.toUpperCase()} · {c.destroyed ? 'DESTROYED' : `${Math.round(c.range).toLocaleString('en-US')} KM · ${relText(c.relBearing)}`}</span>}
       </div>
     </section>
   );

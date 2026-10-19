@@ -7,7 +7,8 @@ import { formatMissionClock } from './engine/state';
 import { kestrelScenario as scenario } from './scenarios/kestrel';
 import { OfflineInterpreter } from './interpreter/parser';
 import { contextFrom } from './interpreter/types';
-import { contactsView } from './ui/view';
+import { contactsView, helmView, ordersView } from './ui/view';
+import { OrdersStrip } from './ui/components/OrdersStrip';
 import { Viewscreen } from './ui/components/Viewscreen';
 import { ShipStatus } from './ui/components/ShipStatus';
 import { Objectives } from './ui/components/Objectives';
@@ -19,7 +20,7 @@ import './App.css';
 
 const BEAT_MS = 3500;
 const VOICE_KEY = 'starbridge.voice';
-const APP_VERSION = '0.2.0';
+const APP_VERSION = '0.3.0';
 const interpreter = new OfflineInterpreter();
 
 type Msg =
@@ -74,6 +75,8 @@ export default function App() {
   const lastSpoken = useRef(state.nextLogId - 1);
   const introRunning = state.intro < scenario.intro.length;
   const contacts = useMemo(() => contactsView(state, scenario), [state]);
+  const helm = useMemo(() => helmView(state), [state]);
+  const orders = useMemo(() => ordersView(state), [state]);
   const suggestions = useMemo(() => scenario.suggestions(state), [state]);
 
   // Opening exposition beats on a timer until the intro completes (or is skipped).
@@ -209,6 +212,7 @@ export default function App() {
             </div>
           )}
           <NarrativePanel log={state.log} />
+          <OrdersStrip orders={orders} />
           <CommandInput
             key={session}
             onCommand={onCommand}
@@ -219,12 +223,12 @@ export default function App() {
           />
         </div>
         <aside className="col-right">
-          <Tactical contacts={contacts} shieldsRaised={state.ships.halcyon.shields.raised} />
+          <Tactical contacts={contacts} helm={helm} shieldsRaised={state.ships.halcyon.shields.raised} />
           <CommsLog log={state.log} />
         </aside>
       </main>
       <footer className="footer">
-        Project Starbridge v{APP_VERSION} · Milestone 2: deterministic simulation · Original fiction and artwork · Typed orders always available; voice where supported.
+        Project Starbridge v{APP_VERSION} · v0.3: intent interpretation & spatial simulation · Original fiction and artwork · Typed orders always available; voice where supported.
       </footer>
     </div>
   );

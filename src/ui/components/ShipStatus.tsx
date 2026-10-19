@@ -29,6 +29,11 @@ export function ShipStatus({ ship, torpedoes, targetName }: { ship: Ship; torped
           <div className="ship-reg">{ship.classification} · Concord Exploration Service</div>
         </div>
       </div>
+      <div className="nav-readout" data-testid="nav-readout">
+        <span>HDG <b>{String(Math.round(ship.heading) % 360).padStart(3, '0')}</b></span>
+        <span>SPD <b>{Math.round(Math.hypot(ship.velocity.x, ship.velocity.y))}</b> km/s</span>
+        <span>POS <b>{Math.round(ship.position.x / 1000)}k, {Math.round(ship.position.y / 1000)}k</b></span>
+      </div>
       <Bar label="Hull" value={ship.hull} testId="hull" />
       <Bar label="Shields" value={ship.shields.strength} />
       <Bar label="Jump chg" value={ship.jump.charge} warn={0} />

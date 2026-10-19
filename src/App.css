@@ -175,3 +175,27 @@
 .outcome-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .outcome-good { border-color: #8be28b; }
 .outcome-bad { border-color: var(--red); }
+
+/* ---- v0.3: orders strip, tactical tools, nav readout */
+.orders-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 6px 8px; margin: 6px 0; border: 1px solid #263248; border-radius: 8px; background: #0b111d; font-size: 0.72rem; }
+.orders-title { color: #7d93b8; letter-spacing: 0.12em; font-weight: 700; margin-right: 4px; }
+.orders-empty { font-size: 0.72rem; }
+.order { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; border-radius: 12px; border: 1px solid #3a4560; background: #121a2a; }
+.order-dept { color: #7d93b8; font-weight: 700; letter-spacing: 0.06em; }
+.order-label { color: #e6edf7; }
+.order-status { font-variant-numeric: tabular-nums; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.66rem; }
+.order-acknowledged .order-status, .order-underway .order-status { color: #ffd166; }
+.order-underway { border-color: #8a6d1f; }
+.order-completed .order-status { color: #4ade80; }
+.order-maintaining { border-color: #2f7d4f; }
+.order-failed .order-status, .order-impossible .order-status { color: #ff6b6b; }
+.order-failed, .order-impossible { border-color: #7a2d2d; }
+.order-superseded { opacity: 0.6; }
+.order-superseded .order-status { color: #9aa4b2; }
+.tactical-tools { display: flex; align-items: center; gap: 6px; font-size: 0.68rem; margin-bottom: 4px; }
+.tactical-tools .muted { margin-right: auto; }
+.tactical-tools .chip { min-height: 24px; padding: 2px 8px; font-size: 0.66rem; }
+.chip.on { border-color: var(--amber-2); background: #2a2414; }
+.contact-motion { color: #9fb3d1; }
+.nav-readout { display: flex; gap: 10px; font-size: 0.74rem; color: #c9d6ea; margin: 4px 0 8px; font-variant-numeric: tabular-nums; }
+.nav-readout b { color: var(--amber-2); font-weight: 600; }
