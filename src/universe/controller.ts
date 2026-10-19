@@ -7,7 +7,8 @@ import type { ScenarioModule } from '../engine/scenario';
 import type { TurnResult } from '../engine/turn';
 import type { Timeline, WorldState } from '../engine/types';
 import { buildArchive, TRAINING, type ArchiveEntry } from './archive';
-import type { DeepReadonly } from './freeze';
+import { clone, type DeepReadonly } from './freeze';
+import { EVENT_CHOICES, simulateEvent } from './models';
 import type { UniverseRepository } from './repository';
 import { replaySnapshot, replayVariation, startTraining, type SimulationSession } from './sessions';
 import type { CanonicalState, CreditLedger, Entitlements, FamiliarityMemory, MissionOffer, ResetPolicy, SimRunRecord } from './types';
@@ -95,6 +96,23 @@ export class Universe {
     if (!scenarioId) throw new Error(`Cannot vary ${archiveId}`);
     const runId = this.newRun(archiveId, seed, 'variation');
     return replayVariation(this.scenario(scenarioId), archiveId, seed, runId, this.familiarity().training.drilled);
+  }
+
+  /**
+   * Replay an archived EVENT mission in the simulator with a different choice.
+   * Uses a clone of the original parameters; the result goes to simulation history only.
+   */
+  simulateEventMission(missionId: string, choice: string): SimRunRecord {
+    const m = this.canon()?.missions[missionId];
+    if (!m || m.mission.kind !== 'event' || !m.snapshot.eventParams) throw new Error(`No archived event mission ${missionId}`);
+    const st = simulateEvent(m.mission.model, clone(m.snapshot.eventParams), choice);
+    const label = EVENT_CHOICES[m.mission.model]?.find((c) => c.id === choice)?.label ?? choice;
+    const runId = this.newRun(missionId, m.snapshot.seed, 'original');
+    const outcome = { id: st.kind, title: `${label}: ${st.kind.replace('-', ' ')}`, summary: st.text, success: st.kind === 'rescued-halcyon' || st.kind === 'rescued-other' || st.kind === 'self-repaired', turn: 0 };
+    let run: SimRunRecord | undefined;
+    this.repo.sims.update((v) => ({ ...v, runs: v.runs.map((r) => (r.id === runId ? (run = { ...r, outcome }) : r)) }));
+    this.repo.familiarity.update((f) => ({ ...f, training: { ...f.training, simRuns: f.training.simRuns + 1, outcomes: { ...f.training.outcomes, [st.kind]: (f.training.outcomes[st.kind] ?? 0) + 1 } } }));
+    return run!;
   }
 
   // ---------------------------------------------------------- entitlements --

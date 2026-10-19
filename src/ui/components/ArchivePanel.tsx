@@ -1,10 +1,13 @@
+import { useState } from 'react';
 import type { ArchiveEntry } from '../../universe/archive';
+import { EVENT_CHOICES } from '../../universe/models';
+import type { SimRunRecord } from '../../universe/types';
 
 export interface ArchiveActions {
   onTrain(id: string): void;
   onReplayOriginal(id: string): void;
   onVariation(id: string): void;
-  onReplayEvent?(id: string): void;
+  onReplayEvent?(id: string, choice: string): SimRunRecord;
   onResume?(id: string): void;
 }
 
@@ -43,10 +46,9 @@ export function ArchivePanel({ entries, actions }: { entries: ArchiveEntry[]; ac
                   <button className="btn save" onClick={() => actions.onReplayOriginal(e.id)} data-testid={`archive-replay-${e.id}`}>Replay original conditions</button>
                   <button className="btn ghost" onClick={() => actions.onVariation(e.id)} data-testid={`archive-vary-${e.id}`}>New variation</button>
                 </>
-              ) : (
-                actions.onReplayEvent && <button className="btn save" onClick={() => actions.onReplayEvent?.(e.id)} data-testid={`archive-replay-${e.id}`}>Replay in simulator</button>
-              )}
+              ) : null}
             </div>
+            {e.replay === 'event' && e.status === 'completed' && actions.onReplayEvent && <EventReplay entry={e} run={actions.onReplayEvent} />}
             <SimRuns entry={e} />
           </li>
         ))}
@@ -85,5 +87,28 @@ function SimRuns({ entry }: { entry: ArchiveEntry }) {
         ))}
       </ul>
     </details>
+  );
+}
+
+/** Event missions replay through their model: same original parameters, a different choice. */
+function EventReplay({ entry, run }: { entry: ArchiveEntry; run: (id: string, choice: string) => SimRunRecord }) {
+  const [last, setLast] = useState<SimRunRecord | null>(null);
+  const choices = EVENT_CHOICES[entry.scenarioId] ?? [];
+  return (
+    <div className="event-replay" data-testid={`archive-event-${entry.id}`}>
+      <span className="muted small">Replay the original situation in the simulator with a different choice:</span>
+      <div className="archive-actions">
+        {choices.map((c) => (
+          <button key={c.id} className="btn ghost" onClick={() => setLast(run(entry.id, c.id))} data-testid={`archive-event-${entry.id}-${c.id}`}>
+            {c.label}
+          </button>
+        ))}
+      </div>
+      {last?.outcome && (
+        <p className="sim-result" data-testid={`archive-event-result-${entry.id}`}>
+          <span className="tag sim">SIMULATED</span> {last.outcome.summary}
+        </p>
+      )}
+    </div>
   );
 }

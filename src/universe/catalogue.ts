@@ -4,17 +4,11 @@
  * server or AI author can emit the same MissionOffer records.
  */
 import { addEvent, nextId, provenance } from './canon';
+import { hashSeed } from './hash';
+import { escortParams, haulerParams } from './models';
 import type { CanonicalState, MissionOffer, OfferClass, WorldEvent } from './types';
 
-/** Deterministic 31-bit hash of a seed and a label (no RNG state consumed). */
-export function hashSeed(seed: number, label: string): number {
-  let h = (seed ^ 0x9e3779b9) >>> 0;
-  for (let i = 0; i < label.length; i++) h = Math.imul(h ^ label.charCodeAt(i), 0x01000193) >>> 0;
-  h ^= h >>> 15;
-  h = Math.imul(h, 0x2c1b3c6d) >>> 0;
-  h ^= h >>> 12;
-  return (h >>> 0) % 1_000_000;
-}
+export { hashSeed };
 
 export const KESTREL = 'kestrel-incident';
 export const MODEL_HAULER = 'hauler-distress';
@@ -50,6 +44,11 @@ function issue(c: CanonicalState, d: OfferDraft, appVersion: string): MissionOff
     responses: [],
     provenance: provenance(appVersion, 'catalogue'),
   };
+  // Event models are parameterised once, at issue time, from the seed and the world as it is now.
+  if (d.mission.kind === 'event') {
+    const params = d.mission.model === MODEL_HAULER ? haulerParams(offer.seed, c.clock, c.tension) : escortParams(offer.seed, c.clock);
+    offer.model = { params: { ...params }, applied: [] };
+  }
   c.offers.push(offer);
   return offer;
 }

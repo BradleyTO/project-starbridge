@@ -114,6 +114,16 @@ export function UniversePanel({ universe, actions }: { universe: Universe; actio
           Continue patrol (+6 h)
         </button>
       </div>
+      {c.events.some((e) => e.classification === 'bulletin') && (
+        <>
+          <h3>Sector bulletins</h3>
+          <ul className="event-list small" data-testid="bulletins">
+            {c.events.filter((e) => e.classification === 'bulletin').slice(-4).reverse().map((e) => (
+              <li key={e.id} className="event" data-testid={`bulletin-${e.id}`}>{e.summary}</li>
+            ))}
+          </ul>
+        </>
+      )}
       {closed.length > 0 && (
         <>
           <h3>Recent decisions</h3>
@@ -122,6 +132,15 @@ export function UniversePanel({ universe, actions }: { universe: Universe; actio
               <li key={o.id} className="event" data-testid={`closed-${o.id}`}>
                 <strong>{o.title}</strong>: {o.status}
                 {o.responses.length ? ` (${o.responses.map((r) => r.response).join(', ')})` : ''}
+                {(() => {
+                  const ev = c.events.find((e) => e.id === o.eventId);
+                  const last = ev?.consequences[ev.consequences.length - 1];
+                  return ev ? (
+                    <div className="muted" data-testid={`closed-${o.id}-event`} data-status={ev.status}>
+                      Event {ev.status}{last ? `: ${last}` : ''}
+                    </div>
+                  ) : null;
+                })()}
               </li>
             ))}
           </ul>

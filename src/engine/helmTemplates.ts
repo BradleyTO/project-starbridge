@@ -23,6 +23,8 @@ const T: Record<string, TemplateFn> = {
   helmAck_evasive: () => 'Evasive pattern, Captain — harder to hit, harder to aim.',
   // ---- progress
   helmUnderway: (v) => `Underway. Heading ${v.course}, ${v.speed} km/s.`,
+  helmDrilledReal: (v) => `We've run this manoeuvre ${v.n} times in the simulator, Captain. This time it's for real.`,
+  helmDrilledSim: (v) => `Same drill as before, Captain; that's ${v.n} times in the simulator now.`,
   helmSuperseded: (v) => `Belaying the previous order (${v.label}).`,
   helmLost: (v) => `Lost the reference for "${v.label}" — all stop until you give me a new course.`,
   helmEnginesLost: () => "Impulse is down, Captain! We're drifting — I can't hold the course.",

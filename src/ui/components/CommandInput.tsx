@@ -7,11 +7,13 @@ interface Props {
   onCommand: (text: string) => void;
   suggestions: string[];
   disabled?: boolean;
+  /** Shown when disabled (the run has ended). */
+  endedHint?: string;
   busy?: boolean;
   clarification?: { question: string; options: string[] } | null;
 }
 
-export function CommandInput({ onCommand, suggestions, disabled, busy, clarification }: Props) {
+export function CommandInput({ onCommand, suggestions, disabled, busy, clarification, endedHint = 'Simulation ended — restart or load' }: Props) {
   const [text, setText] = useState('');
   const [listening, setListening] = useState(false);
   const [micNote, setMicNote] = useState('');
@@ -60,7 +62,7 @@ export function CommandInput({ onCommand, suggestions, disabled, busy, clarifica
           data-testid="command-input"
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder={disabled ? 'Simulation ended — restart or load' : 'Give any order, e.g. "Lower shields and beam the crew over"'}
+          placeholder={disabled ? endedHint : 'Give any order, e.g. "Lower shields and beam the crew over"'}
           autoComplete="off"
           spellCheck={false}
         />

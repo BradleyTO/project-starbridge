@@ -61,8 +61,15 @@ export interface MissionOffer {
   status: 'open' | 'accepted' | 'declined' | 'ignored' | 'refused' | 'questioned' | 'lapsed';
   /** Free-text-free record of what the captain did (for the event log). */
   responses: { at: CanonMinutes; response: string; detail?: string }[];
+  /**
+   * How the situation unfolds over canonical time with or without the Halcyon:
+   * seeded parameters fixed at issue time, plus which stages have already happened.
+   */
+  model?: { params: ModelParams; applied: string[] };
   provenance: Provenance;
 }
+
+export type ModelParams = Record<string, number | string | boolean>;
 
 /** Initial conditions captured when a canonical mission starts: enough to replay it exactly. */
 export interface MissionSnapshot {
@@ -75,7 +82,7 @@ export interface MissionSnapshot {
   /** Full initial WorldState (bridge missions); deep-frozen in memory. */
   initial: WorldState | null;
   /** Event-model initial parameters (event missions). */
-  eventParams: Record<string, number | string> | null;
+  eventParams: ModelParams | null;
 }
 
 export interface CanonicalMissionRecord {
@@ -191,6 +198,8 @@ export interface CanonicalState {
   events: WorldEvent[];
   crew: Record<string, CrewExperience>;
   discipline: DisciplinaryCase[];
+  /** News that reaches the Halcyon: delivered into the next canonical mission's log as evidence. */
+  news: { eventId: string; text: string; deliveredTo: string | null }[];
   provenance: Provenance;
 }
 

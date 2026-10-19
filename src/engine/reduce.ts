@@ -300,5 +300,11 @@ export function setHelmGoal(s: WorldState, action: Extract<ProposedAction, { typ
     course: String(Math.round(course) % 360).padStart(3, '0'),
   };
   if (!quiet) reports.push(say('helm', `helmAck_${action.intent}`, vars));
+  // Simulator familiarity colours the crew's voice; it is never treated as a real event.
+  const drills = s.familiarity?.drilled?.[action.intent] ?? 0;
+  if (!quiet && drills >= 3 && !s.counters[`drillnote_${action.intent}`]) {
+    s = setCounter(s, `drillnote_${action.intent}`, 1);
+    reports.push(say('helm', s.provenance.timeline === 'canonical' ? 'helmDrilledReal' : 'helmDrilledSim', { n: drills }));
+  }
   return { state: s, reports };
 }

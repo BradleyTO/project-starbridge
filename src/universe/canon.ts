@@ -8,7 +8,7 @@ import type { WorldState } from '../engine/types';
 import { clone, deepFreeze, type DeepReadonly } from './freeze';
 import type { CanonicalSession } from './sessions';
 import { stamp, withFamiliarity } from './sessions';
-import type { CanonicalMissionRecord, CanonicalState, MissionKind, OfferClass, Provenance, WorldEvent } from './types';
+import type { CanonicalMissionRecord, CanonicalState, MissionKind, ModelParams, OfferClass, Provenance, WorldEvent } from './types';
 import { UNIVERSE_SCHEMA_VERSION } from './types';
 
 export const CONTENT_VERSION = 'reach-1';
@@ -35,6 +35,7 @@ export function newCanon(opts: { profileId: string; seed: number; appVersion: st
     events: [],
     crew: {},
     discipline: [],
+    news: [],
     provenance: provenance(opts.appVersion, 'player'),
   };
 }
@@ -110,7 +111,7 @@ export function beginBridgeMission(c: CanonicalState, b: BeginBridge): { canon: 
 }
 
 /** Event-model missions (resolved by a deterministic model rather than played on the bridge). */
-export function beginEventMission(c: CanonicalState, b: { offerId: string; title: string; classification: OfferClass; model: string; seed: number; params: Record<string, number | string>; startedAtIso: string; appVersion: string; eventId: string }): string {
+export function beginEventMission(c: CanonicalState, b: { offerId: string; title: string; classification: OfferClass; model: string; seed: number; params: ModelParams; startedAtIso: string; appVersion: string; eventId: string }): string {
   const missionId = nextId(c, 'MSN');
   const mission: MissionKind = { kind: 'event', model: b.model };
   c.missions[missionId] = {

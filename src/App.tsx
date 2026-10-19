@@ -20,6 +20,7 @@ import { cancelSpeech, speak, speechSynthesisSupported } from './ui/speech';
 import { useUniverse } from './ui/useUniverse';
 import { ModeBanner } from './ui/components/ModeBanner';
 import { Hub, type HubTab } from './ui/components/Hub';
+import { RecordPanel } from './ui/components/RecordPanel';
 import { ArchivePanel } from './ui/components/ArchivePanel';
 import { UniversePanel } from './ui/components/UniversePanel';
 import { SettingsPanel } from './ui/components/SettingsPanel';
@@ -195,6 +196,10 @@ export default function App() {
       const seed = randomSeed();
       enter(universe.replayVariation(id, seed), titleFor(id), `Simulation: new variation, seed ${seed}.`);
     },
+    onReplayEvent: (id: string, choice: string) => {
+      // No touch(): the archive keeps showing this simulated result; history refreshes on next open.
+      return universe.simulateEventMission(id, choice);
+    },
   };
   const universeActions = {
     onEnable: () => {
@@ -327,7 +332,7 @@ export default function App() {
         <Hub tab={hubTab} onTab={setHubTab} onClose={() => setHubTab(null)} tabs={['universe', 'archive', 'record', 'settings']}>
           {hubTab === 'universe' && <UniversePanel key={rev} universe={universe} actions={universeActions} />}
           {hubTab === 'archive' && <ArchivePanel key={rev} entries={universe.archive()} actions={{ ...archiveActions, onResume: universeActions.onResume }} />}
-          {hubTab === 'record' && <p className="muted">The captain's canonical record appears here once you have served in the Living Universe.</p>}
+          {hubTab === 'record' && <RecordPanel key={rev} canon={universe.canon()} familiarity={universe.familiarity()} />}
           {hubTab === 'settings' && <SettingsPanel key={rev} universe={universe} onChange={(msg) => { touch(); flash(msg); }} />}
         </Hub>
       )}
@@ -363,6 +368,7 @@ export default function App() {
           <OrdersStrip orders={orders} />
           <CommandInput
             key={session}
+            endedHint={canonical ? 'Canonical mission ended — open the Hub to continue' : 'Simulation ended — restart or load'}
             onCommand={onCommand}
             suggestions={suggestions}
             disabled={!!state.outcome}
