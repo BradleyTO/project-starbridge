@@ -1,29 +1,55 @@
 /**
  * OfflineInterpreter — deterministic natural-language parser (no AI).
  *
- * Pipeline: normalise (politeness, filler, addressees, number words) →
- * split into clauses ("and", "then", commas; reported speech stays attached) →
- * classify each clause with ordered pattern rules → resolve targets
- * (explicit, pronoun → last target, inherited from neighbouring clauses,
- * sensible defaults) → ask a clarifying question when still ambiguous.
- * Output is validated against the ProposedAction zod schema.
+ * Pipeline: spelling tolerance (typos, run-togethers, fuzzy matching) →
+ * normalise (politeness, filler, addressees → department hints, number words) →
+ * split into sentences and clauses ("and", "then", commas; reported speech stays
+ * attached) → classify each clause: declared posture/rationale ("we don't want to
+ * appear hostile"), else ordered pattern rules → resolve references (explicit
+ * names, "the two ships"/"both"/"them" after a plural antecedent → the pair,
+ * pronouns → last target, the border landmark, sensible defaults) → ask a
+ * specific clarifying question when still ambiguous, executing the parts that
+ * were understood. Output is validated against the ProposedAction zod schema.
+ *
+ * Anything that maps to no action and is not rationale is returned in
+ * `unparsed`: the hook for a future AI fallback interpreter.
  */
-import type { Interpretation, ProposedActionInput, CommIntent, TradeOffer } from '../engine/schema';
+import type { Interpretation, ProposedActionInput, CommIntent, TradeOffer, ManeuverIntentT } from '../engine/schema';
 import { InterpretationSchema } from '../engine/schema';
 import type { Interpreter, InterpreterContext } from './types';
 import { wordsToDigits } from './numbers';
+import { SpellCorrector, vocabularyFrom } from './spell';
 
 type Contact = 'kestrel' | 'cruiser';
 type TargetRef = Contact | 'passenger' | null;
+type Ref = Contact | 'border';
+type Dept = 'helm' | 'tactical' | 'ops' | 'science' | 'comms' | 'xo';
 
 // ------------------------------------------------------------ normalise ---
 
 const ADDRESSEES = '(computer|number one|helm|tactical|sensors|science|comms|communications|ops|engineering|chief|chief okafor|okafor|commander|commander marrow|marrow|lieutenant|lieutenant varga|varga|lieutenant szabo|szabo|ensign|ensign adeyemi|adeyemi|mr\\.? \\w+|ms\\.? \\w+|mrs\\.? \\w+|rask|everyone|bridge|doctor|doc|osei)';
 
-export function normalise(input: string): string {
-  let t = ` ${input.toLowerCase().replace(/[’‘]/g, "'").replace(/[“”]/g, '"')} `;
+const DEPT_OF: [RegExp, Dept][] = [
+  [/^(helm|ensign|ensign adeyemi|adeyemi|navigation|nav|conn)$/, 'helm'],
+  [/^(tactical|rask|lieutenant rask|mr\.? rask|weapons)$/, 'tactical'],
+  [/^(ops|engineering|chief|chief okafor|okafor)$/, 'ops'],
+  [/^(sensors|science|lieutenant varga|varga|ms\.? varga)$/, 'science'],
+  [/^(comms|communications|lieutenant szabo|szabo|ms\.? szabo)$/, 'comms'],
+];
+
+function deptFor(name: string): Dept {
+  for (const [re, d] of DEPT_OF) if (re.test(name.trim())) return d;
+  return 'xo';
+}
+
+const DEPT_MARK = /⟨(helm|tactical|ops|science|comms|xo)⟩/g;
+
+/** Normalised text; department addressees are kept as ⟨dept⟩ markers (stripped by `normalise`). */
+export function normaliseMarked(input: string): string {
+  let t = ` ${input.toLowerCase().replace(/[’‘]/g, "'").replace(/[“”]/g, '"').replace(/[—–]/g, ', ')} `;
+  t = SPELL().correct(t, protectedNames);
   t = wordsToDigits(t);
-  t = t.replace(new RegExp(`(^|[.!?;]\\s*)${ADDRESSEES}\\s*[,:]`, 'g'), '$1 ');
+  t = t.replace(new RegExp(`(^\\s*|[.!?;]\\s*)${ADDRESSEES}\\s*[,:]`, 'g'), (_m, pre: string, name: string) => `${pre} ⟨${deptFor(name)}⟩ `);
   t = t.replace(new RegExp(`\\b(tell|ask|have|get|order|instruct)\\s+${ADDRESSEES}\\s+(to\\s+)?`, 'g'), ' ');
   const filler = [
     'please', 'kindly', 'could you', 'would you', 'can you', 'will you', "i'd like you to", 'i would like you to', 'i want you to', 'i need you to',
@@ -33,16 +59,30 @@ export function normalise(input: string): string {
   ];
   for (const f of filler) t = t.replace(new RegExp(`(^|[\\s,])${f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?=[\\s,.!?]|$)`, 'g'), '$1');
   t = t.replace(/\b(tell|give|show) me\b/g, 'report');
+  // Idioms that contain "and" but are one modifier.
+  t = t.replace(/\b(nice and (slow|easy|gentle)|slow and steady|slow and easy|nice and steady)\b/g, 'slowly');
+  // Coordinated subjects share one predicate: "weapons and shields down" → "weapons down and shields down".
+  t = t.replace(/\b(?:(the|our) )?(weapons|shields|deflectors|guns) and (?:(?:the|our) )?(weapons|shields|deflectors|guns) (down|up|off|offline|online|lowered|raised|safe|cold|hot|ready)\b/g, '$2 $4 and $3 $4');
+  // "keep weapons and shields down" (verb before the pair)
+  t = t.replace(/\b(keep|leave|put|have|get) (?:(the|our) )?(weapons|shields) and (?:(the|our) )?(weapons|shields) (down|up|offline|online|lowered|raised|safe|cold)\b/g, '$1 $3 $6 and $5 $6');
   t = t.replace(/[!?]+/g, '.').replace(/\s+/g, ' ').trim();
   return t.replace(/^[,.\s]+|[,.\s]+$/g, '');
 }
 
+export function normalise(input: string): string {
+  return normaliseMarked(input).replace(DEPT_MARK, ' ').replace(/\s+/g, ' ').trim().replace(/^[,.\s]+/, '');
+}
+
 // --------------------------------------------------------------- lexicon ---
 
-const KESTREL = /\b(kestrel|freighter|civilian( ship| vessel)?|disabled (ship|vessel)|derelict|arden|stricken (ship|vessel)|distressed (ship|vessel))\b/;
-const CRUISER = /\b(cruiser|warship|war ship|directorate|tessarine|ashen|covenant|vane|prefect|enemy|hostile|attacker|second contact|other ship|that ship)\b/;
+const KESTREL = /\b(kestrel|freighter|civilian( ship| vessel)?|disabled (ship|vessel)|derelict|arden|stricken (ship|vessel)|distressed (ship|vessel)|transport ship|cargo ship|merchant( ship)?)\b/;
+const CRUISER = /\b(cruiser|warship|war ship|directorate|tessarine|ashen|covenant|vane|prefect|enemy|hostile (ship|vessel|contact)|the hostile|attacker|second contact|other ship|that ship|battleship|man o' war)\b/;
+const BORDER = /\b(border|concord space|our space|friendly space|home space|safe space|our side|the line|our territory)\b/;
+/** "the two ships", "both", "2 ships", "those vessels", "each other". */
+const PAIR = /\b(the |those |these |both )?(2|both) (ships|vessels|contacts|of them|craft)\b|\bboth (of them|ships|vessels|contacts)\b|\bthem both\b|\beach other\b|\b(those|these|the) (ships|vessels|contacts)\b|\bboth\b/;
+const PLURAL_PRONOUN = /\b(them|they|their|those)\b/;
+const SINGULAR_PRONOUN = /\b(her|she|it|its|him|he|that one|this one)\b/;
 const PASSENGER = /\b(passenger|defector|stowaway|fugitive|stasis|pod|refugee|prisoner|scientist|journalist)\b/;
-const PRONOUN = /\b(them|they|their|her|she|it|its|him|he)\b/;
 const COMPARTMENT = /\b(compartment|cargo hold|hold|aft section|hidden|shielded|stasis|pod|passenger)\b/;
 
 const SYSTEMS: [string, RegExp][] = [
@@ -92,17 +132,23 @@ function contactOf(c: string, ctx: InterpreterContext): Contact | null {
 }
 
 function numberKm(c: string): number | null {
-  const m = /(\d+(?:\.\d+)?)\s*(km|kilomet(?:er|re)s?|klicks?|kay)?\b/.exec(c);
-  if (!m) return null;
-  let n = parseFloat(m[1]);
-  if (!m[2] && n < 100) n *= 1000; // "take us to 5" → 5,000 km
-  return Math.round(n);
+  const re = /(\d+(?:\.\d+)?)\s*(km|kilomet(?:er|re)s?|klicks?|kay)?\b(?!\s*(ships?|vessels?|contacts?|of (them|us|the)|minutes?|seconds?|secs?|mins?|%|percent|people|crew|souls|degrees?|torpedo(es)?|times?|turns?))/g;
+  for (let m = re.exec(c); m; m = re.exec(c)) {
+    let n = parseFloat(m[1]);
+    if (!m[2] && n < 100) {
+      // A bare small number is a distance only in "to 5" / "at 5" ("take us to 5" → 5,000 km).
+      if (!/\b(to|at|within|of)\s*$/.test(c.slice(0, m.index))) continue;
+      n *= 1000;
+    }
+    return Math.round(n);
+  }
+  return null;
 }
 
 // ------------------------------------------------------------ intents ---
 
 type Draft =
-  | { kind: 'action'; action: ProposedActionInput; needs?: 'contact' | 'commTarget' | 'system'; question?: string }
+  | { kind: 'action'; action: ProposedActionInput; needs?: 'contact' | 'commTarget' | 'system' | 'nav'; question?: string }
   | { kind: 'none' };
 
 interface Rule {
@@ -111,7 +157,7 @@ interface Rule {
   build: (c: string, ctx: InterpreterContext) => Draft;
 }
 
-const SPEECH = /\b(hail|contact|call|signal|open (a )?(channel|comms|frequency|hailing frequencies|line)|on screen|tell|inform|say|explain|warn|threaten|assure|reassure|ask|request|demand|offer|propose|trade|exchange|negotiate|bluff|lie to|plead|appeal|respond|reply|talk|speak|answer|broadcast|transmit|message|remind|convince|persuade|hand over|grant|promise)\b/;
+const SPEECH = /\b(hail|hailing|contact (?=the |them|her|him|it\b|vane|arden|prefect|captain|both|every)|get (?:the |that )?\w+ on (?:the )?(?:line|screen)|call|signal|open (a )?(channel|comms|frequency|hailing frequencies|line)|on screen|on (?:the )?(?:main )?(?:viewer|viewscreen)|onscreen|tell|inform|say|explain|warn|threaten|assure|reassure|ask|request|demand|offer|propose|trade|exchange|negotiate|bluff|lie to|plead|appeal|respond|reply|talk|speak|answer|broadcast|transmit|message|remind|convince|persuade|hand over|grant|promise)\b/;
 
 function commIntent(c: string): { intent: CommIntent; offer?: TradeOffer; topic?: 'cargo' | 'passenger' | 'intentions' | 'crew' | 'general' } {
   if (/\b(asylum|sanctuary|safe haven|refuge|protection)\b/.test(c)) return { intent: 'offerAsylum' };
@@ -128,15 +174,56 @@ function commIntent(c: string): { intent: CommIntent; offer?: TradeOffer; topic?
   if (/\b(reinforcements?|battle ?group|fleet|backup|back-up|squadron|more ships|other ships|warships? (are )?(coming|inbound)|on (its|their|the) way|en route|right behind us|arriving|cavalry)\b/.test(c)) return { intent: 'bluff' };
   if (/\b(sibling|brother|sister|family|ivet|honou?r|personal|appeal|plead)\b/.test(c)) return { intent: 'appeal' };
   if (/\b(treaty|accords?|law|legal|illegal|neutral|rights|convention|jurisdiction|evidence|proof|crimes?|labou?r colon(y|ies)|colonies|recordings?)\b/.test(c)) return { intent: 'legal' };
+  if (/\b(no harm|peaceful|not (a threat|hostile|here to fight)|no hostile|friendly|calm down|mean no|our intentions|stand easy|apologi[sz]e|sorry)\b/.test(c)) return { intent: 'reassure' };
   if (/\b(warn|threat|threaten|back off|stand down|leave|withdraw|retreat|or (else|we will|we'll)|will fire|open fire|destroy you|last warning|turn back|go away|get out|stay away|keep away|don't come)\b/.test(c)) return { intent: 'warn' };
   if (/\b(humanitarian|rescue|mercy|lives|civilians?|dying|help|save|injured|evacuat\w*|crew|people)\b/.test(c)) return { intent: 'humanitarian' };
-  if (/\b(no harm|peaceful|not (a threat|hostile|here to fight)|no hostile|friendly|calm down|mean no|our intentions|stand easy|apologi[sz]e|sorry)\b/.test(c)) return { intent: 'reassure' };
   if (/\b(ask|what|why|who|where|how|intentions?|want|explain yourself|identify|cargo|compartment|hold)\b/.test(c)) {
     const topic = /\b(cargo|hold|compartment|hauling|carrying)\b/.test(c) ? 'cargo' : PASSENGER.test(c) ? 'passenger' : /\b(intentions?|want|why|purpose)\b/.test(c) ? 'intentions' : /\bcrew\b/.test(c) ? 'crew' : 'general';
     return { intent: 'ask', topic };
   }
   return { intent: 'open' };
 }
+
+const ON_SCREEN = /\b(on (the )?(main )?(screen|viewer|viewscreen)|onscreen|on visual)\b/;
+const ALL_TARGETS = /\b(everyone|everybody|all (ships|vessels|contacts|parties|of them|channels)|both (ships|vessels|of them|parties)?|them both|broadcast|every ship|all frequencies)\b/;
+
+// --------------------------------------------------------- spatial terms ---
+
+const SPEED_SLOW = /\b(slow(ly)?|gently|carefully|cautiously|quarter impulse|one quarter|dead slow|easy|take it easy|nice and slow)\b/;
+const SPEED_HALF = /\bhalf (impulse|speed|power ahead)\b|\bahead half\b/;
+
+function speedOf(c: string): 'slow' | 'half' | 'full' {
+  return SPEED_SLOW.test(c) ? 'slow' : SPEED_HALF.test(c) ? 'half' : 'full';
+}
+
+/** Named ranges ("transporter range", "out of weapons range") and explicit numbers. */
+function rangeOf(c: string): number | null {
+  const out = /\b(out of|outside|beyond|clear of|away from)\b/.test(c);
+  if (/\btransporter range|transport range|beaming range\b/.test(c)) return out ? 8000 : 4000;
+  if (/\btractor (beam )?range\b/.test(c)) return out ? 9000 : 5000;
+  if (/\b(beam|weapons?|firing|phaser|gun|their|its|her) range\b/.test(c)) return out ? 45000 : 35000;
+  if (/\btorpedo range\b/.test(c)) return out ? 125000 : 100000;
+  if (/\bsensor range\b/.test(c)) return out ? 270000 : 150000;
+  return numberKm(c);
+}
+
+/** References in order of appearance; plural words become the pair. */
+function refsIn(c: string): { refs: Ref[]; pair: boolean; plural: boolean; singular: boolean } {
+  const hits: [Ref, number][] = [];
+  const k = KESTREL.exec(c);
+  const cr = CRUISER.exec(c);
+  const b = BORDER.exec(c);
+  if (k) hits.push(['kestrel', k.index]);
+  if (cr) hits.push(['cruiser', cr.index]);
+  if (b) hits.push(['border', b.index]);
+  hits.sort((x, y) => x[1] - y[1]);
+  return { refs: hits.map((h) => h[0]), pair: PAIR.test(c), plural: PLURAL_PRONOUN.test(c), singular: SINGULAR_PRONOUN.test(c) };
+}
+
+const navDraft = (intent: ManeuverIntentT, c: string, extra: Record<string, unknown> = {}): Draft => {
+  const r = rangeOf(c);
+  return { kind: 'action', action: { type: 'maneuver', intent, speed: speedOf(c), ...(r !== null ? { rangeKm: r } : {}), ...extra } as ProposedActionInput, needs: 'nav' };
+};
 
 const RULES: Rule[] = [
   {
@@ -191,8 +278,8 @@ const RULES: Rule[] = [
     name: 'communicate',
     test: SPEECH,
     build: (c) => {
-      const ci = commIntent(c);
-      return { kind: 'action', action: { type: 'communicate', target: 'cruiser', ...ci }, needs: 'commTarget' };
+      const ci = commIntent(c.replace(ON_SCREEN, ' '));
+      return { kind: 'action', action: { type: 'communicate', target: 'cruiser', onScreen: ON_SCREEN.test(c), ...ci }, needs: 'commTarget' };
     },
   },
   {
@@ -205,8 +292,8 @@ const RULES: Rule[] = [
     test: /\bshields?\b|\bdeflectors?\b/,
     build: (c) => {
       if (/\b(power|boost|reinforce|divert|reroute|transfer|strengthen)\b/.test(c)) return { kind: 'none' };
-      if (/\b(lower|drop|down|disable|deactivate|off|power down|cut|kill)\b/.test(c)) return { kind: 'action', action: { type: 'shields', raise: false } };
-      if (/\b(raise|up|activate|engage|enable|restore|bring|on)\b/.test(c)) return { kind: 'action', action: { type: 'shields', raise: true } };
+      if (/\b(lower(ed)?|drop(ped)?|down|disabled?|deactivated?|off(line)?|power(ed)? down|cut|kill)\b/.test(c)) return { kind: 'action', action: { type: 'shields', raise: false } };
+      if (/\b(raised?|up|activated?|engaged?|enabled?|restored?|bring|on(line)?)\b/.test(c)) return { kind: 'action', action: { type: 'shields', raise: true } };
       return { kind: 'none' };
     },
   },
@@ -232,7 +319,7 @@ const RULES: Rule[] = [
   },
   {
     name: 'weaponsSafe',
-    test: /\b(safe|disarm|power down|stand down|secure|lower|deactivate|holster)\b.*\b(weapons?|beams|torpedoes|guns)\b|\bweapons (safe|cold|down|offline)\b/,
+    test: /\b(safe|disarm|power down|stand down|secure|lower|deactivate|holster)\b.*\b(weapons?|beams|torpedoes|guns)\b|\bweapons (safe|cold|down|offline)\b|\b(don'?t|do not|never|no one) (arm|charge|ready|target|lock|aim|power up)\b|\bguns (cold|down|safe)\b/,
     build: () => ({ kind: 'action', action: { type: 'weapons', mode: 'safe' } }),
   },
   {
@@ -302,39 +389,84 @@ const RULES: Rule[] = [
     build: () => ({ kind: 'action', action: { type: 'jump', mode: 'engage' } }),
   },
   {
+    name: 'flee',
+    test: /\b(run|flee|head|make|break|bolt|retreat|fall back|withdraw|go|get|race|sprint|burn|dash|escape|set (a )?course)\b.*\b(border|concord space|our space|friendly space|home space|safe space|our side|our territory)\b|\b(run|make a run|break|dash) for (the border|it\b(?=.*border))/,
+    build: (c) => navDraft('flee', c),
+  },
+  {
     name: 'withdraw',
-    test: /\b(withdraw|retreat|leave|get (us )?out( of here)?|fall back|disengage|bug out|run for it|flee|exit the reach|head home|go home|break off|abandon)\b/,
+    test: /\b(withdraw|leave|get (us )?out( of here)?|disengage|bug out|run for it|flee|exit the reach|head home|go home|break off|abandon)\b/,
     build: () => ({ kind: 'action', action: { type: 'jump', mode: 'withdraw' } }),
   },
   {
     name: 'interpose',
-    test: /\b(between|interpose|in the way|in harm's way|block (their|the|her) (line of fire|shot|path)|put us in front|shield (the kestrel|her|them) with (our|the) (ship|hull))\b/,
-    build: () => ({ kind: 'action', action: { type: 'move', mode: 'interpose' } }),
+    test: /\b(between|interpose|in the way|in harm's way|in the line of fire|in front of|put us in front|shield (the kestrel|the freighter|her|them) with (our|the) (ship|hull)|block (their|the|her|its) (line of fire|shot|guns|firing line))\b/,
+    build: (c) => (/\bbetween (us|ourselves|the halcyon) and\b/.test(c) && !/\b(get|put|move|place|position|slide|bring)\b/.test(c) ? { kind: 'none' } : navDraft('interpose', c)),
+  },
+  {
+    name: 'block',
+    test: /\b(block|bar|obstruct|cut across|get in (the |their |her |its )?(path|way)|in (its|her|their|the|his) (path|way)|in the (cruiser|warship|freighter|kestrel)'?s? path|path of|cut (them|her|it|him) off|head (them|her|it|him) off|deny (them|her|it) (the|access|passage))\b/,
+    build: (c) => navDraft('block', c),
+  },
+  {
+    name: 'intercept',
+    test: /\b(intercept|pursue|pursuit|chase|run (them|her|it) down|catch (up with|up to)?|go after|hunt|close and engage|run down)\b/,
+    build: (c) => navDraft('intercept', c),
+  },
+  {
+    name: 'follow',
+    test: /\b(follow|shadow|tail|trail|stay (on|with) (them|her|it|the)|keep pace|match (their |her |its )?(course|speed|velocity|heading)|fall in behind|stay behind|behind (them|her|it|the))\b/,
+    build: (c) => navDraft('follow', c),
+  },
+  {
+    name: 'escort',
+    test: /\b(escort|accompany|stay (alongside|beside|close to|next to|with the)|ride shotgun|convoy|formation (with|on)|fly (alongside|with)|cover (the )?(kestrel|freighter|her))\b/,
+    build: (c) => navDraft('escort', c),
+  },
+  {
+    name: 'orbit',
+    test: /\b(orbit|circle|circle around|loop around|go around)\b/,
+    build: (c) => navDraft('orbit', c),
+  },
+  {
+    name: 'face',
+    test: /\b(come about|bring (us |her |the ship )?about|turn (us |the ship |her )?(around|about|to face|toward|towards)|face|point (our|the) (bow|nose|ship)|swing (us |her )?around|bring (our |the )?bow|reverse (course|heading)|turn back)\b/,
+    build: (c) => navDraft('face', c),
   },
   {
     name: 'evasive',
-    test: /\b(evasive|evade|dodge|jink|zig\w*)\b/,
-    build: () => ({ kind: 'action', action: { type: 'move', mode: 'evasive' } }),
+    test: /\b(evasive|evade|dodge|jink|zig\w*|break (left|right))\b/,
+    build: (c) => navDraft('evasive', c),
   },
   {
-    name: 'hold',
-    test: /\b(all stop|full stop|hold (our |this )?position|station[- ]keeping|stop (the ship|engines|here|moving)|halt|stay (here|put))\b/,
-    build: () => ({ kind: 'action', action: { type: 'move', mode: 'hold' } }),
+    name: 'holdStation',
+    test: /\b(hold|keep|maintain) station\b|\bstation[- ]?keep(ing)?\b|\bhold (our |this |your )?position\b|\bstay (here|put|where we are)\b|\bkeep (our|this) position\b/,
+    build: (c) => navDraft('holdStation', c),
   },
   {
-    name: 'away',
-    test: /\b(back off|back away|pull back|open the range|increase (the )?(distance|range)|move away|get away from|keep (our|a) distance|distance ourselves)\b/,
-    build: () => ({ kind: 'action', action: { type: 'move', mode: 'away', target: 'cruiser' }, needs: 'contact' }),
+    name: 'allStop',
+    test: /\b(all stop|full stop|stop (the ship|engines|here|moving|us|the engines)|halt|dead stop|come to a (stop|halt)|cut (the )?engines|stop where we are)\b/,
+    build: (c) => navDraft('allStop', c),
+  },
+  {
+    name: 'retreat',
+    test: /\b(retreat|fall back|back off|back away|pull back|pull away|open the range|increase (the )?(distance|range)|move away|get away from|distance ourselves|back us (off|away|up)|put (some )?distance|open (up )?(some )?distance)\b/,
+    build: (c) => navDraft('retreat', c),
+  },
+  {
+    name: 'standoff',
+    test: /\b(keep|maintain|hold|stay|remain|sit)\b.*\b(distance|range|\d{3,}|\d+\s*(km|kilomet|klick)|clear of)\b|\bstay out of\b|\bkeep (our|a|your|some) distance\b|\bstand off\b|\bstandoff\b/,
+    build: (c) => navDraft('standoff', c),
   },
   {
     name: 'moveRange',
-    test: /\b(take|bring|move|close|hold|keep|go|head|set|maintain|approach|range|get|stay|position)\b.*(\d{3,}|\d+\s*(km|kilomet|klick))/,
-    build: (c) => ({ kind: 'action', action: { type: 'move', mode: 'range', target: 'kestrel', rangeKm: numberKm(c) ?? 10000 }, needs: 'contact' }),
+    test: /\b(take|bring|move|close|go|head|set|approach|range|get|position|put)\b.*(\d{3,}|\d+\s*(km|kilomet|klick)|(transporter|transport|tractor|beam|weapons?|torpedo|firing) range)/,
+    build: (c) => navDraft('approach', c),
   },
   {
     name: 'approach',
-    test: /\b(approach|close (in|on|with|the distance|to)|intercept|move (to|toward|towards|closer|in)|go (to|toward|towards)|head (to|for|toward|towards)|take us (in|to|closer|alongside)|bring us (in|alongside|closer|to)|set (a )?course|pull alongside|come alongside|alongside|get (us )?closer|get close|move us|full impulse|full speed|maximum speed|max speed|ahead full|flank speed|engage engines|rendezvous|make for|proceed to)\b/,
-    build: () => ({ kind: 'action', action: { type: 'move', mode: 'approach', target: 'kestrel' }, needs: 'contact' }),
+    test: /\b(approach|close (in|on|with|the distance|to)|move (to|toward|towards|closer|in|us)|go (to|toward|towards)|head (to|for|toward|towards|over)|take us (in|to|closer|alongside|over)|bring us (in|alongside|closer|to)|set (a )?course|lay in a course|plot (a )?course|pull alongside|come alongside|alongside|get (us )?(closer|close|near|over)|move us|full impulse|full speed|maximum speed|max speed|ahead full|flank speed|engage engines|rendezvous|make for|proceed to|close range|draw (closer|near)|take us|bring us|get us (to|near|over))\b/,
+    build: (c) => navDraft('approach', c),
   },
   {
     name: 'scan',
@@ -359,71 +491,177 @@ const RULES: Rule[] = [
 ];
 
 function matchRule(clause: string, ctx: InterpreterContext): { rule: Rule; draft: Draft } | null {
+  const c = clause.replace(DEPT_MARK, ' ').replace(/\s+/g, ' ').trim();
   for (const rule of RULES) {
-    if (!rule.test.test(clause)) continue;
-    const draft = rule.build(clause, ctx);
+    if (!rule.test.test(c)) continue;
+    const draft = rule.build(c, ctx);
     if (draft.kind === 'none') continue;
     return { rule, draft };
   }
   return null;
 }
 
+// ------------------------------------------------------ posture/rationale ---
+
+const NEGATED_HOSTILITY =
+  /\b((?:don|doesn|didn|aren|isn|won|wasn|weren|shouldn|mustn)'?t|do not|does not|are not|is not|never|not|no|without)\b.*\b(hostile|threatening|aggressive|provocative|a threat|threat|fight|fighting|trouble|escalat\w*|confrontation|attacking|war|hostilit\w*|spook|alarm|scare|provoke|antagoni[sz]e|look like we're attacking|intimidat\w*|harm)\b/;
+const PEACEFUL = /\b(nonhostile|non-?threatening|peaceful(ly)?|in peace|friendly|harmless|de-?escalat\w*|keep (things|it|this|everything) (calm|cool|civil|quiet|peaceful|friendly|low[- ]key)|low[- ]key|unthreatening|non-?aggressive|nothing (aggressive|hostile|provocative|threatening)|easy does it|show (them|him) we('re| are) (peaceful|friendly|harmless))\b/;
+const ASSERTIVE = /\b(mean business|show of force|look (threatening|dangerous|tough|strong|aggressive|menacing)|intimidat\w*|make (them|him) (nervous|think twice|sweat)|aggressive posture|assertive|show (them|him) our teeth)\b/;
+/** Clauses that explain or justify rather than order. */
+const RATIONALE_LEAD = /\b(comes? first|is (the|our) (priority|goal)|matters? most|first priority|above all|top priority)\b|^(we|we're|we are|i|i'm|our|the (goal|idea|point|aim|priority|plan)|that way|so|because|since|as|in order|remember|this is|it's|they|they're|nobody|no one)\b/;
+
+function postureOf(c: string): 'nonHostile' | 'assertive' | null {
+  const t = c.replace(DEPT_MARK, ' ');
+  if (NEGATED_HOSTILITY.test(t) && !/\b(don'?t|do not|never)\b.*\b(back down|hold back|let them)\b/.test(t)) return 'nonHostile';
+  if (ASSERTIVE.test(t)) return 'assertive';
+  if (PEACEFUL.test(t)) return 'nonHostile';
+  return null;
+}
+
+/** Purpose sub-clauses attached to an order: "lower shields so we look friendly". */
+const PURPOSE = /\b(so (that )?(we|they|it|he)|to (look|appear|seem|show)|as a (sign|gesture)|so as not to|to avoid)\b/;
+
 // --------------------------------------------------------------- clauses ---
 
 const REPORTED_SPEECH = /^(that|we|we're|we are|i|i'm|our|they|they're|it|it's|this|you|you're|he|she|there|the (kestrel|crew|passenger|accords|treaty|fleet|battle group))\b/;
 
-export function splitClauses(text: string, ctx: InterpreterContext): string[] {
-  const raw = text.split(/\s*(?:[,;.]+\s*(?:and\s+|then\s+)?|\s+and then\s+|\s+then\s+|\s+after that\s+|\s+and also\s+|\s+also\s+|\s+and\s+)\s*/).map((x) => x.trim()).filter(Boolean);
-  const out: string[] = [];
+/** Fragments that continue the previous clause rather than starting a new order. */
+const VERBLESS = /^(to|at|from|of|on|onto|in|into|with|toward|towards|the|our|her|their|its|his|a|an|all|both|every|each|some|full|half|slow|slowly|\d|km|maximum|max|too|as well|now|it|them|him|us|that|this|those|these|asap|quickly|fast|immediately|if|when|before|after|until|while|beam|torpedoes|weapons?|shields?|sensors|engines?|everyone|everybody)\b/;
+
+function clausesOf(sentence: string): string[] {
+  return sentence
+    .split(/\s*(?:,+\s*(?:and\s+|then\s+|but\s+)?|\s+with\s+(?=(?:our |the |its )?(?:shields|weapons|deflectors|guns)\b)|\s+and then\s+|\s+then\s+|\s+after that\s+|\s+and also\s+|\s+also\s+|\s+and\s+|\s+but\s+|\s+while\s+(?=[a-z]+ (?:the |our |us |them))|\s+plus\s+)\s*/)
+    .map((x) => x.replace(/^(and|then|also|but|plus)\s+/, '').trim())
+    .filter(Boolean);
+}
+
+/** Split into clauses, remembering which sentence each came from. */
+function splitMarked(text: string, ctx: InterpreterContext): { clause: string; sentence: number }[] {
+  const sentences = text.split(/\s*[.;]+\s*/).map((x) => x.trim()).filter(Boolean);
+  const out: { clause: string; sentence: number }[] = [];
   let speech = false;
-  for (const frag of raw) {
-    const prev = out[out.length - 1];
-    const m = matchRule(frag, ctx);
-    const continuation = /^(use (it|her|them|that|the beam)|so (that|we|they|it)|to (cover|protect|shield|hide|block|mask))\b/.test(frag);
-    if (prev !== undefined && (!m || continuation || (speech && REPORTED_SPEECH.test(frag) && m.rule.name !== 'communicate'))) {
-      out[out.length - 1] = `${prev} and ${frag}`;
-      continue;
-    }
-    out.push(frag);
-    speech = !!m && m.rule.name === 'communicate';
-  }
+  sentences.forEach((sentence, si) => {
+    clausesOf(sentence).forEach((frag, fi) => {
+      const prev = out[out.length - 1];
+      const mm = matchRule(frag, ctx);
+      const posture = postureOf(frag);
+      const rationale = posture !== null || (!mm && RATIONALE_LEAD.test(frag.replace(DEPT_MARK, '').trim()));
+      const continuation = /^(use (it|her|them|that|the beam)|so (that )?(we|they|it) (can|could)|to (cover|protect|shield|hide|block|mask))\b/.test(frag);
+      const newSentence = fi === 0;
+      const reported = speech && REPORTED_SPEECH.test(frag) && (!mm || mm.rule.name !== 'communicate');
+      let merge = false;
+      if (prev !== undefined) {
+        if (reported && !(newSentence && rationale)) merge = true; // "tell them we mean no harm"
+        else if (continuation && !newSentence) merge = true;
+        else if (!mm && !rationale && !newSentence && VERBLESS.test(frag)) merge = true; // verbless fragment: "…to 5,000 km"
+        else if (/^(on|onto) (the )?(main )?(screen|viewer)$/.test(frag)) merge = true;
+      }
+      if (merge && prev) {
+        prev.clause = `${prev.clause} and ${frag}`;
+        return;
+      }
+      out.push({ clause: frag, sentence: si });
+      speech = !!mm && mm.rule.name === 'communicate';
+    });
+  });
   return out;
+}
+
+export function splitClauses(text: string, ctx: InterpreterContext): string[] {
+  return splitMarked(text, ctx).map((x) => x.clause.replace(DEPT_MARK, ' ').replace(/\s+/g, ' ').trim());
 }
 
 // --------------------------------------------------------------- resolve ---
 
 interface Parsed {
   clause: string;
+  sentence: number;
+  dept: Dept | null;
   draft: Extract<Draft, { kind: 'action' }> | null;
+  extra: ProposedActionInput[];
+  note: string | null;
   explicit: TargetRef;
-  pronoun: boolean;
+  refs: ReturnType<typeof refsIn>;
 }
 
 const OPTIONS_CONTACTS = ['the Kestrel', 'the cruiser'];
+const REF_LABEL: Record<Ref, string> = { kestrel: 'the Kestrel', cruiser: 'the cruiser', border: 'the border' };
+type Clar = { question: string; options: string[]; clause: string };
 
-function resolveTargets(parsed: Parsed[], ctx: InterpreterContext): { actions: ProposedActionInput[]; clarify: { question: string; options: string[]; clause: string } | null } {
+/** Maneuvers that need a target, and the default when none is given. */
+function defaultNavTarget(intent: ManeuverIntentT, c: string, ctx: InterpreterContext): Ref | null {
+  const vis = ctx.visible;
+  const hostile = vis.includes('cruiser') ? 'cruiser' : null;
+  switch (intent) {
+    case 'retreat':
+    case 'block':
+    case 'intercept':
+    case 'follow':
+      return hostile ?? (vis.length === 1 ? vis[0] : null);
+    case 'standoff':
+      if (/\b(weapons?|beam|firing|torpedo) range\b|\bout of range\b/.test(c) && hostile) return hostile;
+      return vis.length === 1 ? vis[0] : null;
+    case 'escort':
+      return vis.includes('kestrel') ? 'kestrel' : null;
+    default:
+      return vis.length === 1 ? vis[0] : null;
+  }
+}
+
+const NO_TARGET: ManeuverIntentT[] = ['allStop', 'evasive', 'flee'];
+const OPTIONAL_TARGET: ManeuverIntentT[] = ['holdStation', 'face'];
+
+function resolveTargets(parsed: Parsed[], ctx: InterpreterContext): { actions: ProposedActionInput[]; clarify: Clar | null } {
   const actions: ProposedActionInput[] = [];
-  let clarify: { question: string; options: string[]; clause: string } | null = null;
+  let clarify: Clar | null = null;
   let carried: TargetRef = null;
+  /** Most recent antecedent in this input: a single contact or the pair. */
+  let antecedent: Contact | 'pair' | null = null;
+  const pairVisible = ctx.visible.includes('kestrel') && ctx.visible.includes('cruiser');
 
   parsed.forEach((p, i) => {
-    if (!p.draft) return;
+    const shipRefs = p.refs.refs.filter((r): r is Contact => r !== 'border');
+    // Does a plural word in this clause refer to the pair?
+    const pluralMeansPair = pairVisible && (p.refs.pair || (p.refs.plural && shipRefs.length === 0 && antecedent === 'pair'));
+    const updateAntecedent = () => {
+      if (shipRefs.length >= 2 || (pairVisible && p.refs.pair)) antecedent = 'pair';
+      else if (shipRefs.length === 1) antecedent = shipRefs[0];
+    };
+
+    if (p.note || !p.draft) {
+      updateAntecedent();
+      for (const x of p.extra) actions.push(x);
+      return;
+    }
     const d = p.draft;
     const a = { ...d.action } as Record<string, unknown>;
     let target: TargetRef = p.explicit;
-    if (!target && p.pronoun) target = d.needs === 'commTarget' ? (ctx.lastCommTarget ?? ctx.lastTarget) : ctx.lastTarget;
-    if (!target && d.needs) {
+    const pronoun = !p.explicit && (p.refs.plural || p.refs.singular);
+    if (!target && pronoun && !pluralMeansPair) {
+      if (p.refs.singular && typeof antecedent === 'string' && antecedent !== 'pair') target = antecedent;
+      else if (p.refs.plural && antecedent && antecedent !== 'pair') target = antecedent;
+      else target = d.needs === 'commTarget' ? (ctx.lastCommTarget ?? ctx.lastTarget) : ctx.lastTarget;
+    }
+    if (!target && d.needs && d.needs !== 'nav' && !pluralMeansPair) {
       target = carried;
       if (!target) for (let j = i + 1; j < parsed.length; j++) if (parsed[j].explicit) { target = parsed[j].explicit; break; }
     }
-    if (p.explicit || (p.pronoun && target)) carried = target;
+    if (p.explicit || (pronoun && target)) carried = target;
 
     if (d.needs === 'system') {
       clarify = clarify ?? { question: d.question ?? 'Which system, Captain?', options: ['shields', 'weapons', 'engines', 'sensors'], clause: p.clause };
+      updateAntecedent();
       return;
     }
     if (d.needs === 'commTarget') {
       const intent = a.intent as CommIntent;
+      const untargeted = !p.explicit && !pronoun && antecedent === 'pair' && intent === 'open';
+      if (pluralMeansPair || untargeted || (ALL_TARGETS.test(p.clause) && !p.explicit)) {
+        a.target = 'all';
+        antecedent = 'pair';
+        actions.push(a as ProposedActionInput);
+        return;
+      }
       if (target === 'passenger' && !ctx.passengerKnown) target = null;
       if (!target) {
         if (['bluff', 'warn', 'legal', 'trade', 'appeal'].includes(intent) && ctx.visible.includes('cruiser')) target = 'cruiser';
@@ -432,7 +670,7 @@ function resolveTargets(parsed: Parsed[], ctx: InterpreterContext): { actions: P
         else if (/\b(cargo|compartment|hold)\b/.test(p.clause) && ctx.visible.includes('kestrel')) target = 'kestrel';
       }
       if (!target) {
-        clarify = clarify ?? { question: 'Open a channel to which vessel, Captain — the Kestrel or the cruiser?', options: OPTIONS_CONTACTS, clause: p.clause };
+        clarify = clarify ?? { question: 'Open a channel to which vessel, Captain — the Kestrel, the cruiser, or both?', options: [...OPTIONS_CONTACTS, 'both ships'], clause: p.clause };
         return;
       }
       a.target = target;
@@ -441,6 +679,64 @@ function resolveTargets(parsed: Parsed[], ctx: InterpreterContext): { actions: P
       // Offering the passenger is addressed to whoever wants them: the Prefect.
       if (intent === 'trade' && a.offer === 'passenger' && a.target === 'passenger') a.target = 'cruiser';
       carried = target;
+      if (target !== 'passenger') antecedent = target;
+      actions.push(a as ProposedActionInput);
+      return;
+    }
+    if (d.needs === 'nav') {
+      const intent = a.intent as ManeuverIntentT;
+      const refs: Ref[] = [...p.refs.refs];
+      if (target === 'kestrel' || target === 'cruiser') if (!refs.includes(target)) refs.push(target);
+      if (target === 'passenger' && !refs.includes('kestrel')) refs.push('kestrel');
+      if (intent === 'interpose') {
+        let pairRefs: Ref[] = refs.slice(0, 2);
+        if (pairRefs.length < 2 && (pluralMeansPair || (refs.length === 0 && pairVisible))) pairRefs = ['kestrel', 'cruiser'];
+        if (pairRefs.length < 2) {
+          const x = pairRefs[0] ?? null;
+          if (!x) {
+            clarify = clarify ?? { question: 'Between which two, Captain?', options: ['the Kestrel and the cruiser'], clause: p.clause };
+            return;
+          }
+          const others = (['kestrel', 'cruiser', 'border'] as Ref[]).filter((r) => r !== x && (r === 'border' || ctx.visible.includes(r)));
+          const opts = others.map((o) => `${REF_LABEL[x]} and ${o === 'border' ? 'the border' : REF_LABEL[o]}`);
+          clarify = clarify ?? { question: `Interpose between ${opts.join(', or between ')}?`.replace(/^Interpose between the/, 'Interpose between the'), options: opts, clause: p.clause };
+          return;
+        }
+        // The border is a landmark; keep a ship as the primary reference.
+        if (pairRefs[0] === 'border') pairRefs = [pairRefs[1], pairRefs[0]];
+        a.target = pairRefs[0];
+        a.second = pairRefs[1];
+        antecedent = pairRefs.includes('border') ? (pairRefs[0] as Contact) : 'pair';
+        actions.push(a as ProposedActionInput);
+        return;
+      }
+      if (NO_TARGET.includes(intent)) {
+        if (intent === 'evasive' && refs[0] && refs[0] !== 'border') a.target = refs[0];
+        actions.push(a as ProposedActionInput);
+        return;
+      }
+      let ref: Ref | null = refs.find((r) => r !== 'border') ?? (refs.includes('border') ? 'border' : null);
+      if (ref === 'border' && intent !== 'face') {
+        actions.push({ type: 'maneuver', intent: 'flee', speed: a.speed as 'full' } as ProposedActionInput);
+        return;
+      }
+      if (!ref && pluralMeansPair) {
+        // "close on them" with both in view: ambiguous.
+        clarify = clarify ?? { question: `${verbFor(intent)} which contact, Captain — the Kestrel or the cruiser?`, options: OPTIONS_CONTACTS, clause: p.clause };
+        return;
+      }
+      if (!ref && !OPTIONAL_TARGET.includes(intent)) ref = defaultNavTarget(intent, p.clause, ctx);
+      if (!ref && !OPTIONAL_TARGET.includes(intent)) {
+        clarify = clarify ?? { question: `${verbFor(intent)} which contact, Captain — the Kestrel or the cruiser?`, options: OPTIONS_CONTACTS, clause: p.clause };
+        return;
+      }
+      if (ref) {
+        a.target = ref;
+        if (ref !== 'border') {
+          carried = ref;
+          antecedent = ref;
+        }
+      }
       actions.push(a as ProposedActionInput);
       return;
     }
@@ -448,58 +744,127 @@ function resolveTargets(parsed: Parsed[], ctx: InterpreterContext): { actions: P
       let contact: Contact | null = target === 'kestrel' || target === 'cruiser' ? target : null;
       if (target === 'passenger') contact = 'kestrel';
       const type = a.type as string;
-      const mode = a.mode as string | undefined;
-      if (!contact) {
+      if (!contact && !pluralMeansPair) {
         if (type === 'weapons' && ctx.visible.includes('cruiser')) contact = 'cruiser';
-        else if (type === 'move' && mode === 'away' && ctx.visible.includes('cruiser')) contact = 'cruiser';
-        else if (type === 'move' && mode === 'range' && ctx.visible.length === 1) contact = ctx.visible[0];
         else if (ctx.visible.length === 1) contact = ctx.visible[0];
       }
       if (!contact) {
-        const verb = type === 'scan' ? 'Scan' : type === 'move' ? 'Which contact — approach' : 'Target';
+        const verb = type === 'scan' ? 'Scan' : 'Target';
         clarify = clarify ?? { question: `${verb} which contact, Captain — the Kestrel or the cruiser?`, options: OPTIONS_CONTACTS, clause: p.clause };
         return;
       }
       a.target = contact;
       carried = contact;
-    }
+      antecedent = contact;
+    } else updateAntecedent();
     actions.push(a as ProposedActionInput);
+    for (const x of p.extra) actions.push(x);
   });
   return { actions, clarify };
 }
 
+function verbFor(intent: ManeuverIntentT): string {
+  return (
+    {
+      approach: 'Approach',
+      standoff: 'Hold range from',
+      intercept: 'Intercept',
+      follow: 'Shadow',
+      escort: 'Escort',
+      block: 'Block',
+      retreat: 'Retreat from',
+      orbit: 'Orbit',
+      face: 'Face',
+      holdStation: 'Hold station on',
+    } as Partial<Record<ManeuverIntentT, string>>
+  )[intent] ?? 'Which contact —';
+}
+
+/** Department-specific readings of ambiguous verbs. */
+function applyDept(p: Parsed): void {
+  if (!p.draft || !p.dept) return;
+  const act = p.draft.action as Record<string, unknown>;
+  if (p.dept === 'tactical' && act.type === 'setAlert' && act.level === 'green' && /\bstand down\b/.test(p.clause)) {
+    p.draft = { kind: 'action', action: { type: 'weapons', mode: 'safe' } };
+  }
+  if (p.dept === 'helm' && act.type === 'wait' && /\b(hold|steady)\b/.test(p.clause)) {
+    p.draft = { kind: 'action', action: { type: 'maneuver', intent: 'holdStation', speed: 'full' }, needs: 'nav' };
+  }
+}
+
 export function interpretSync(input: string, ctx: InterpreterContext): Interpretation {
   const source = 'offline-parser';
-  let text = normalise(input);
-  if (!text) return { kind: 'unrecognised', unparsed: [input.trim()], source };
+  let text = normaliseMarked(input);
+  if (!text.replace(DEPT_MARK, '').trim()) return { kind: 'unrecognised', unparsed: [input.trim()], notes: [], source };
 
-  // Answering a clarifying question? ("the cruiser", "shields", "Kestrel")
-  if (ctx.pending && !matchRule(text, ctx)) text = `${ctx.pending.clause} ${text}`;
+  // Answering a clarifying question? ("the cruiser", "shields", "the Kestrel and the cruiser")
+  if (ctx.pending && !matchRule(text, ctx) && !postureOf(text)) text = `${ctx.pending.clause} ${text}`;
 
-  const clauses = splitClauses(text, ctx);
-  const parsed: Parsed[] = clauses.map((clause) => {
-    const m = matchRule(clause, ctx);
-    return {
-      clause,
-      draft: m && m.draft.kind === 'action' ? m.draft : null,
-      explicit: explicitTarget(clause, ctx),
-      pronoun: PRONOUN.test(clause) && !explicitTarget(clause, ctx),
-    };
+  let dept: Dept | null = null;
+  let lastSentence = -1;
+  const parsed: Parsed[] = splitMarked(text, ctx).map(({ clause: raw, sentence }) => {
+    if (sentence !== lastSentence) dept = null;
+    lastSentence = sentence;
+    const marks = [...raw.matchAll(DEPT_MARK)];
+    if (marks.length) dept = marks[marks.length - 1][1] as Dept;
+    const clause = raw.replace(DEPT_MARK, ' ').replace(/\s+/g, ' ').trim();
+    const mm = matchRule(clause, ctx);
+    const posture = SPEECH.test(clause) ? null : postureOf(clause);
+    const rationaleLed = RATIONALE_LEAD.test(clause);
+    const p: Parsed = { clause, sentence, dept, draft: null, extra: [], note: null, explicit: explicitTarget(clause, ctx), refs: refsIn(clause) };
+    if (posture && (!mm || rationaleLed || mm.rule.name === 'wait' || mm.rule.name === 'options' || mm.rule.name === 'fire')) {
+      p.draft = { kind: 'action', action: { type: 'posture', stance: posture } };
+      p.note = clause;
+      p.extra = [p.draft.action];
+      p.draft = null;
+    } else if (mm && mm.draft.kind === 'action') {
+      p.draft = mm.draft;
+      if (posture && PURPOSE.test(clause)) p.extra = [{ type: 'posture', stance: posture }];
+    } else if (rationaleLed) p.note = clause;
+    applyDept(p);
+    return p;
   });
-  const unparsed = parsed.filter((p) => !p.draft).map((p) => p.clause);
+  const unparsed = parsed.filter((p) => !p.draft && !p.note).map((p) => p.clause);
+  const notes = parsed.filter((p) => p.note && !p.extra.length).map((p) => p.note as string);
   const { actions, clarify } = resolveTargets(parsed, ctx);
   void contactOf;
 
+  // One posture per order set is enough.
+  const seen = new Set<string>();
+  const deduped = actions.filter((a) => {
+    if ((a as { type: string }).type !== 'posture') return true;
+    const k = JSON.stringify(a);
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+
   const result: Interpretation = clarify
-    ? { kind: 'clarify', clarification: clarify, actions: actions as never, unparsed, source }
-    : actions.length
-      ? { kind: 'actions', actions: actions as never, unparsed, source }
-      : { kind: 'unrecognised', unparsed: unparsed.length ? unparsed : [input.trim()], source };
+    ? { kind: 'clarify', clarification: clarify, actions: deduped as never, unparsed, notes, source }
+    : deduped.length
+      ? { kind: 'actions', actions: deduped as never, unparsed, notes, source }
+      : { kind: 'unrecognised', unparsed: unparsed.length ? unparsed : [input.trim()], notes, source };
   // Validate (and apply schema defaults) — interpreters never bypass the schema.
-  if (result.kind !== 'unrecognised' && result.actions.length > 6) result.actions = result.actions.slice(0, 6);
+  if (result.kind !== 'unrecognised' && result.actions.length > 8) result.actions = result.actions.slice(0, 8);
   const checked = InterpretationSchema.safeParse(result);
-  if (!checked.success) return { kind: 'unrecognised', unparsed: [input.trim()], source };
+  if (!checked.success) return { kind: 'unrecognised', unparsed: [input.trim()], notes: [], source };
   return checked.data;
+}
+
+// ------------------------------------------------------------- spelling ---
+
+let protectedNames = new Set<string>(['arden', 'vane', 'venn', 'maras', 'ivet', 'lysa', 'teo', 'szabo', 'varga', 'rask', 'okafor', 'adeyemi', 'marrow', 'osei', 'halcyon', 'tessarine', 'calloway']);
+let spell: SpellCorrector | null = null;
+function SPELL(): SpellCorrector {
+  if (!spell) {
+    const sources: (RegExp | string)[] = [KESTREL, CRUISER, PASSENGER, BORDER, PAIR, COMPARTMENT, SPEECH, ON_SCREEN, ALL_TARGETS, SPEED_SLOW, SPEED_HALF, NEGATED_HOSTILITY, PEACEFUL, ASSERTIVE, ADDRESSEES, ...SYSTEMS.map((x) => x[1]), ...RULES.map((r) => r.test), 'shields weapons transporter tractor channel freighter cruiser kestrel position between hostile hail aggressive threatening'];
+    spell = new SpellCorrector(vocabularyFrom(sources));
+  }
+  return spell;
+}
+/** Exposed for tests: protect extra proper nouns from correction. */
+export function protectWords(words: string[]): void {
+  protectedNames = new Set([...protectedNames, ...words]);
 }
 
 export class OfflineInterpreter implements Interpreter {
