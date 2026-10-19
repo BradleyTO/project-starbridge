@@ -47,6 +47,8 @@ export interface MissionOffer {
   /** Who is asking: a civilian vessel, Fleet Command, a colony administrator… */
   authority: 'civilian' | 'fleet-command' | 'local-government';
   title: string;
+  /** Name the mission goes by once begun (archive, banner, career). */
+  missionTitle: string;
   briefing: string;
   mission: MissionKind;
   /** Seed for the mission's simulation (bridge seed or event-model seed). */

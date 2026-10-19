@@ -109,6 +109,6 @@ export function detectOutcome(s: WorldState): Outcome | null {
   if (s.flags.reinforcementsArrived && !vane.agreement && !c.destroyed && !s.flags.cruiserGone)
     return mk('overwhelmed', 'Overwhelmed', 'Directorate reinforcements arrived while the crisis was unresolved. The Halcyon was escorted out of the Reach under guard.', false);
 
-  if (s.turn >= MAX_TURNS) return mk('stalemate', 'Stalemate', 'Thirty minutes passed without resolution; the exercise was ended by Fleet Training Command.', false);
+  if (s.turn >= MAX_TURNS) return mk('stalemate', 'Stalemate', s.provenance.timeline === 'canonical' ? 'Thirty minutes passed without resolution; Fleet Command ordered the Halcyon to stand off.' : 'Thirty minutes passed without resolution; the exercise was ended by Fleet Training Command.', false);
   return null;
 }

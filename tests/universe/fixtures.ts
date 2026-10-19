@@ -19,3 +19,11 @@ export function playOut(s: WorldState, orders: string[]): WorldState {
   }
   return s;
 }
+
+/** Play the orders, then keep waiting until the run reaches an outcome. */
+export function playToEnd(s: WorldState, orders: string[], maxWaits = 40): WorldState {
+  s = playOut(s, orders);
+  for (let i = 0; i < maxWaits && !s.outcome; i++) s = submit(K, s, 'wait');
+  if (!s.outcome) throw new Error('run did not end');
+  return s;
+}

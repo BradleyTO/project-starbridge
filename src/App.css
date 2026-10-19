@@ -239,3 +239,14 @@
   .hub { border-radius: 0; border-left-width: 6px; min-height: 100vh; }
   .mode-banner span { font-size: 0.72rem; }
 }
+.universe-status { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; }
+.credits-line strong { color: var(--amber); font-size: 1rem; }
+.credits-line.empty strong { color: var(--red); }
+.notice { background: #1d1606; border: 1px solid #6b5420; border-radius: 10px; padding: 6px 10px; color: #ffe0a8; }
+.fleet-reply { color: #ffd9a0; font-style: italic; margin: 4px 0; }
+.offer-directive { border-left-color: var(--red); }
+.offer-distress { border-left-color: var(--rose); }
+.offer-voluntary { border-left-color: var(--mint); }
+.settings .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 4px 0; }
+.settings input[type=number], .universe select, .settings select { background: #11151f; color: var(--ink); border: 1px solid #2a4b74; border-radius: 8px; padding: 4px 6px; min-height: 32px; }
+.universe.locked { background: #11151f; border-radius: 12px; padding: 10px 14px; border-left: 4px solid #c98a2b; }

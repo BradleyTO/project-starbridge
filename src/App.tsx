@@ -21,9 +21,11 @@ import { useUniverse } from './ui/useUniverse';
 import { ModeBanner } from './ui/components/ModeBanner';
 import { Hub, type HubTab } from './ui/components/Hub';
 import { ArchivePanel } from './ui/components/ArchivePanel';
+import { UniversePanel } from './ui/components/UniversePanel';
+import { SettingsPanel } from './ui/components/SettingsPanel';
 import { TRAINING } from './universe/archive';
 import { expandAliases } from './universe/familiarity';
-import type { BridgeSession } from './universe/sessions';
+import type { BridgeSession, CanonicalSession } from './universe/sessions';
 import './App.css';
 
 const BEAT_MS = 3500;
@@ -38,6 +40,10 @@ type Msg = { type: 'beat' } | { type: 'skipIntro' } | { type: 'replace'; state: 
 export type SessionMeta =
   | { timeline: 'simulation'; archiveId: string; runId: string; conditions: 'training' | 'original' | 'variation'; title: string }
   | { timeline: 'canonical'; missionId: string; archiveId: string; title: string };
+
+function canonicalOf(m: Extract<SessionMeta, { timeline: 'canonical' }>, state: WorldState): CanonicalSession {
+  return { timeline: 'canonical', missionId: m.missionId, archiveId: m.archiveId, scenarioId: state.scenarioId, state };
+}
 
 function metaOf(sess: BridgeSession, title: string): SessionMeta {
   return sess.timeline === 'canonical'
@@ -138,27 +144,31 @@ export default function App() {
         const fam = universe.familiarity();
         const expanded = expandAliases(text, fam.aliases).text;
         const interp: Interpretation = await interpreter.interpret(expanded, contextFrom(stateRef.current));
-        const res = processOrders(stateRef.current, text, interp, scenario);
+        const before = stateRef.current;
+        const res = processOrders(before, text, interp, scenario);
         dispatch({ type: 'replace', state: res.state });
         stateRef.current = res.state;
         const m = metaRef.current;
         universe.noteCommand(m.timeline, text, res.results);
+        // Canonical progress is committed after every order (saving is free).
+        if (m.timeline === 'canonical' && !res.state.outcome) universe.saveCanonical(canonicalOf(m, res.state));
+        // A finished run is filed: simulations in simulation history, canonical missions through the commit gate.
+        if (res.state.outcome && !before.outcome) {
+          if (m.timeline === 'simulation') universe.finishSimulation({ timeline: 'simulation', runId: m.runId, archiveId: m.archiveId, conditions: m.conditions, scenarioId: res.state.scenarioId, state: res.state }, res.state);
+          else {
+            universe.finishCanonical(canonicalOf(m, res.state));
+            flash(`Canonical record updated: ${res.state.outcome.title}.`);
+          }
+          touch();
+        }
       } finally {
         setBusy(false);
       }
     },
-    [universe],
+    [universe, flash, touch],
   );
 
-  // A finished simulation is filed in simulation history (never canon).
-  const filed = useRef<string | null>(null);
-  useEffect(() => {
-    if (!state.outcome || meta.timeline !== 'simulation') return;
-    if (filed.current === meta.runId) return;
-    filed.current = meta.runId;
-    universe.finishSimulation({ timeline: 'simulation', runId: meta.runId, archiveId: meta.archiveId, conditions: meta.conditions, scenarioId: state.scenarioId, state }, state);
-    touch();
-  }, [state, meta, universe, touch]);
+
 
   const reset = (next: WorldState, msg: string) => {
     cancelSpeech();
@@ -186,6 +196,39 @@ export default function App() {
       enter(universe.replayVariation(id, seed), titleFor(id), `Simulation: new variation, seed ${seed}.`);
     },
   };
+  const universeActions = {
+    onEnable: () => {
+      universe.setLivingUniverse(true);
+      universe.ensureCanon();
+      touch();
+      flash('Living Universe enabled (development toggle).');
+    },
+    onStart: (offerId: string) => {
+      const r = universe.startCanonical(offerId);
+      if (!r.ok) return flash(r.reason === 'no-credits' ? 'No new canonical missions left today. Simulations are unlimited.' : 'That offer is not available.');
+      const m = universe.canon()!.missions[r.missionId];
+      if (r.session) enter(r.session, m.title, `Canonical mission begun: ${m.title}.`);
+      else {
+        touch();
+        flash(`${m.title}: ${m.outcome?.title ?? 'under way'}.`);
+      }
+    },
+    onRespond: (offerId: string, response: 'decline' | 'ignore' | 'question' | 'refuse' | 'disobey', reason?: string) => {
+      universe.respond(offerId, response, reason);
+      touch();
+      flash(`Logged: ${response}. No credit used.`);
+    },
+    onResume: (missionId: string) => enter(universe.resumeCanonical(missionId), universe.canon()!.missions[missionId].title, 'Canonical mission resumed. No credit used.'),
+    onAdvance: (hours: number) => {
+      const r = universe.advanceTime(hours);
+      touch();
+      flash(r.ok ? `${hours} hours of canonical time pass.` : 'Canonical time is paused until the allowance resets.');
+    },
+  };
+  const canonical = meta.timeline === 'canonical';
+  const luOn = universe.entitlements().livingUniverse;
+  const left = luOn ? universe.creditsRemaining() : 0;
+  void rev;
   /** Same conditions again (training seed, original snapshot or the same variation seed). */
   const rerun = (seed: number | string): BridgeSession => {
     const m = metaRef.current;
@@ -194,6 +237,11 @@ export default function App() {
     return universe.startTraining(TRAINING_ID, seed);
   };
   const onSave = () => {
+    if (meta.timeline === 'canonical') {
+      universe.saveCanonical(canonicalOf(meta, state));
+      touch();
+      return flash(`Saved canonical progress at turn ${state.turn}. No credit used.`);
+    }
     const st = safeStorage();
     if (!st) return flash('Local storage unavailable — cannot save.');
     const saved = saveGame(state, st, APP_VERSION);
@@ -235,7 +283,7 @@ export default function App() {
           <span className="brand-elbow" aria-hidden="true" />
           <div>
             <h1>STARBRIDGE</h1>
-            <p className="subtitle">{scenario.title}</p>
+            <p className="subtitle" data-testid="mission-title">{meta.title}</p>
           </div>
         </div>
         <div className="topbar-status">
@@ -245,9 +293,14 @@ export default function App() {
           <span className={`alert-pill alert-${state.alert}`} data-testid="alert-level">{state.alert.toUpperCase()} ALERT</span>
           <span className="clock" data-testid="mission-clock">{formatMissionClock(state.time)} · TURN {state.turn}</span>
           <span className="seed" data-testid="seed" title="Scenario seed — the same seed and orders reproduce a run exactly. Add ?seed=N to the URL to choose one.">SEED {state.seed}</span>
+          {luOn && (
+            <button className={`credits-chip ${left === 0 ? 'empty' : ''}`} onClick={() => setHubTab('universe')} data-testid="credits" data-remaining={left} title="New canonical missions you can start today">
+              ◆ {left}/{universe.credits().dailyLimit} canonical
+            </button>
+          )}
         </div>
         <nav className="controls" aria-label="Simulation controls">
-          <button className="btn hub-btn" onClick={() => setHubTab('archive')} data-testid="open-hub" title="Mission Archive, Living Universe, Captain's Record">Hub</button>
+          <button className="btn hub-btn" onClick={() => setHubTab(luOn ? 'universe' : 'archive')} data-testid="open-hub" title="Living Universe, Mission Archive, Captain's Record">Hub</button>
           {introRunning && (
             <button className="btn ghost" onClick={() => dispatch({ type: 'skipIntro' })} data-testid="skip-intro">Skip intro</button>
           )}
@@ -262,17 +315,20 @@ export default function App() {
             Voice {voiceOn ? 'on' : 'off'}
           </button>
           <button className="btn save" onClick={onSave} data-testid="save">Save</button>
-          <button className="btn load" onClick={onLoad} disabled={!hasSave} data-testid="load">Load</button>
-          <button className="btn restart" onClick={onRestart} data-testid="restart" title="Restart this scenario with the same seed">Restart</button>
-          <button className="btn ghost" onClick={onNewScenario} data-testid="new-scenario" title="Start a fresh scenario with a random seed">New</button>
+          <button className="btn load" onClick={onLoad} disabled={!hasSave || canonical} data-testid="load" title={canonical ? 'Canonical missions resume from the Living Universe board' : 'Load the saved simulation'}>Load</button>
+          <button className="btn restart" onClick={onRestart} disabled={canonical} data-testid="restart" title={canonical ? 'Canonical history cannot be restarted. Replay it as a simulation from the Mission Archive.' : 'Restart this scenario with the same seed'}>Restart</button>
+          <button className="btn ghost" onClick={onNewScenario} disabled={canonical} data-testid="new-scenario" title={canonical ? 'Leave via the Hub; this mission stays saved' : 'Start a fresh scenario with a random seed'}>New</button>
         </nav>
       </header>
 
       <ModeBanner timeline={timeline} conditions={meta.timeline === 'simulation' ? meta.conditions : undefined} title={meta.title} />
       {toast && <div className="toast" role="status" data-testid="toast">{toast}</div>}
       {hubTab && (
-        <Hub tab={hubTab} onTab={setHubTab} onClose={() => setHubTab(null)} tabs={['archive']}>
-          {hubTab === 'archive' && <ArchivePanel key={rev} entries={universe.archive()} actions={archiveActions} />}
+        <Hub tab={hubTab} onTab={setHubTab} onClose={() => setHubTab(null)} tabs={['universe', 'archive', 'record', 'settings']}>
+          {hubTab === 'universe' && <UniversePanel key={rev} universe={universe} actions={universeActions} />}
+          {hubTab === 'archive' && <ArchivePanel key={rev} entries={universe.archive()} actions={{ ...archiveActions, onResume: universeActions.onResume }} />}
+          {hubTab === 'record' && <p className="muted">The captain's canonical record appears here once you have served in the Living Universe.</p>}
+          {hubTab === 'settings' && <SettingsPanel key={rev} universe={universe} onChange={(msg) => { touch(); flash(msg); }} />}
         </Hub>
       )}
 
@@ -287,11 +343,20 @@ export default function App() {
             <div className={`outcome ${state.outcome.success ? 'outcome-good' : 'outcome-bad'}`} role="alert" data-testid="outcome">
               <strong>{state.outcome.title}</strong>
               <span>{state.outcome.summary}</span>
-              <div className="outcome-actions">
-                <button className="btn restart" onClick={() => enter(rerun(state.seed), meta.title, `Restarted with the same seed (${state.seed}).`)} data-testid="outcome-same">Same seed</button>
-                <button className="btn ghost" onClick={() => { const seed = randomSeed(); enter(universe.startTraining(TRAINING_ID, seed), scenario.title, `New scenario — seed ${seed}.`); }}>New scenario</button>
-                <button className="btn load" onClick={() => setHubTab('archive')} data-testid="outcome-archive">Mission Archive</button>
-              </div>
+              {canonical ? (
+                <div className="outcome-actions">
+                  <span className="tag canon">Recorded in canonical history</span>
+                  <button className="btn" onClick={() => setHubTab('universe')} data-testid="outcome-universe">Living Universe</button>
+                  <button className="btn save" onClick={() => archiveActions.onReplayOriginal(meta.missionId)} data-testid="outcome-replay">Replay as simulation</button>
+                </div>
+              ) : (
+                <div className="outcome-actions">
+                  <span className="tag sim">Simulated outcome</span>
+                  <button className="btn restart" onClick={() => enter(rerun(state.seed), meta.title, `Restarted with the same seed (${state.seed}).`)} data-testid="outcome-same">Same seed</button>
+                  <button className="btn ghost" onClick={() => { const seed = randomSeed(); enter(universe.startTraining(TRAINING_ID, seed), scenario.title, `New scenario — seed ${seed}.`); }}>New scenario</button>
+                  <button className="btn load" onClick={() => setHubTab('archive')} data-testid="outcome-archive">Mission Archive</button>
+                </div>
+              )}
             </div>
           )}
           <NarrativePanel log={state.log} />

@@ -10,8 +10,17 @@ import { buildArchive, TRAINING, type ArchiveEntry } from './archive';
 import type { DeepReadonly } from './freeze';
 import type { UniverseRepository } from './repository';
 import { replaySnapshot, replayVariation, startTraining, type SimulationSession } from './sessions';
-import type { CanonicalState, FamiliarityMemory, SimRunRecord } from './types';
+import type { CanonicalState, CreditLedger, Entitlements, FamiliarityMemory, MissionOffer, ResetPolicy, SimRunRecord } from './types';
 import { learnFromCommand, recordSimulationEnd } from './familiarity';
+import { openCanonicalContext, type CanonicalContext } from './gate';
+import { beginBridgeMission, beginEventMission, canonicalSession, completeBridgeMission, newCanon, recordProgress, updateEvent } from './canon';
+import type { CanonicalSession } from './sessions';
+import { replenish, seedBoard } from './catalogue';
+import { charge, configure, msUntilReset, refresh, remaining, resetNow } from './credits';
+import * as world from './world';
+
+export type StartResult = { ok: true; session: CanonicalSession | null; missionId: string; charged: boolean } | { ok: false; reason: 'not-entitled' | 'no-credits' | 'not-open' | 'unknown' };
+export type OfferResponse = 'decline' | 'ignore' | 'question' | 'refuse' | 'disobey';
 
 export interface UniverseOptions {
   repo: UniverseRepository;
@@ -86,6 +95,140 @@ export class Universe {
     if (!scenarioId) throw new Error(`Cannot vary ${archiveId}`);
     const runId = this.newRun(archiveId, seed, 'variation');
     return replayVariation(this.scenario(scenarioId), archiveId, seed, runId, this.familiarity().training.drilled);
+  }
+
+  // ---------------------------------------------------------- entitlements --
+
+  entitlements(): Entitlements {
+    return this.repo.entitlements.read();
+  }
+  /** Local development toggle standing in for a real subscription. */
+  setLivingUniverse(on: boolean): Entitlements {
+    return this.repo.entitlements.update((e) => ({ ...e, livingUniverse: on, source: 'dev-toggle' }));
+  }
+
+  // --------------------------------------------------------------- credits --
+
+  credits(): CreditLedger {
+    const l = refresh(this.repo.credits.read(), this.now());
+    return l;
+  }
+  creditsRemaining(): number {
+    return remaining(this.repo.credits.read(), this.now());
+  }
+  msUntilCreditReset(): number {
+    return msUntilReset(this.repo.credits.read(), this.now());
+  }
+  configureCredits(opts: { dailyLimit?: number; policy?: ResetPolicy }): CreditLedger {
+    return this.repo.credits.update((l) => configure(l, opts, this.now()));
+  }
+  resetCreditsNow(): CreditLedger {
+    return this.repo.credits.update((l) => resetNow(l, this.now()));
+  }
+
+  // ------------------------------------------------------------- canonical --
+
+  private ctx(): CanonicalContext {
+    return openCanonicalContext(this.entitlements());
+  }
+
+  /** Create the canonical profile on first entry to the Living Universe. */
+  ensureCanon(): DeepReadonly<CanonicalState> | null {
+    if (!this.entitlements().livingUniverse) return null;
+    const cur = this.canon();
+    if (cur) return cur;
+    const seed = Math.floor((this.now().getTime() / 1000) % 1_000_000);
+    const profileId = `local-${seed.toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`;
+    return this.repo.canon.initialise(this.ctx(), seedBoard(newCanon({ profileId, seed, appVersion: this.appVersion }), this.appVersion));
+  }
+
+  offers(): readonly DeepReadonly<MissionOffer>[] {
+    return this.canon()?.offers ?? [];
+  }
+
+  /** Start a NEW canonical mission from an offer. The only thing that costs a credit. */
+  startCanonical(offerId: string): StartResult {
+    if (!this.entitlements().livingUniverse) return { ok: false, reason: 'not-entitled' };
+    const c = this.ensureCanon();
+    const offer = c?.offers.find((o) => o.id === offerId);
+    if (!c || !offer) return { ok: false, reason: 'unknown' };
+    if (offer.status !== 'open' && offer.status !== 'questioned') return { ok: false, reason: 'not-open' };
+    const charged = charge(this.repo.credits.read(), `offer:${offerId}`, this.now());
+    if (!charged.ok) {
+      this.repo.credits.write(charged.ledger);
+      return { ok: false, reason: 'no-credits' };
+    }
+    let missionId = '';
+    const iso = this.now().toISOString();
+    const next = this.repo.canon.commit(this.ctx(), (d) => {
+      const o = d.offers.find((x) => x.id === offerId)!;
+      o.status = 'accepted';
+      o.responses.push({ at: d.clock, response: o.classification === 'distress' ? 'responded' : 'accepted' });
+      updateEvent(d, o.eventId, { status: 'active', decision: o.classification === 'distress' ? 'Halcyon responded to the call.' : 'Captain accepted the assignment.' });
+      if (o.mission.kind === 'bridge') {
+        const sc = this.scenario(o.mission.scenarioId);
+        missionId = beginBridgeMission(d, { offerId, title: o.missionTitle, classification: o.classification, scenario: sc, scenarioVersion: world.scenarioVersion(sc), seed: o.seed, startedAtIso: iso, appVersion: this.appVersion, eventId: o.eventId, prepare: (s) => world.prepareBridge(d, s) }).missionId;
+      } else {
+        missionId = beginEventMission(d, { offerId, title: o.missionTitle, classification: o.classification, model: o.mission.model, seed: o.seed, params: world.eventParams(d, o), startedAtIso: iso, appVersion: this.appVersion, eventId: o.eventId });
+        world.resolveEventMission(d, missionId, this.appVersion);
+      }
+      d.missions[missionId].decisions.push(`${o.classification === 'distress' ? 'Responded to' : 'Accepted'}: ${o.title}`);
+      replenish(d, this.appVersion);
+      return d;
+    });
+    // The credit is recorded only once the canonical commit has succeeded.
+    this.repo.credits.write(charged.ledger);
+    const m = next.missions[missionId];
+    return { ok: true, missionId, charged: charged.charged, session: m.mission.kind === 'bridge' ? canonicalSession(next, missionId, this.familiarity().training.drilled) : null };
+  }
+
+  /** Decline / ignore / question / refuse / disobey: always free. */
+  respond(offerId: string, response: OfferResponse, reason = ''): DeepReadonly<CanonicalState> {
+    const c = this.ensureCanon();
+    if (!c) throw new Error('Living Universe is not enabled.');
+    return this.repo.canon.commit(this.ctx(), (d) => {
+      world.respondToOffer(d, offerId, response, reason, this.appVersion);
+      replenish(d, this.appVersion);
+      return d;
+    });
+  }
+
+  /** Resume an active canonical bridge mission from its last committed progress (free). */
+  resumeCanonical(missionId: string): CanonicalSession {
+    const c = this.canon();
+    if (!c) throw new Error('No canonical profile.');
+    return canonicalSession(c, missionId, this.familiarity().training.drilled);
+  }
+
+  /** Save canonical progress (free). Accepts only canonical sessions. */
+  saveCanonical(session: CanonicalSession): void {
+    this.repo.canon.commit(this.ctx(), (d) => recordProgress(d, session));
+  }
+
+  /** File a finished canonical mission and let the world move on by the mission's duration. */
+  finishCanonical(session: CanonicalSession): DeepReadonly<CanonicalState> {
+    return this.repo.canon.commit(this.ctx(), (d) => {
+      if (d.missions[session.missionId]?.status === 'completed') return d;
+      const before = d.clock;
+      completeBridgeMission(d, session, { after: (cc, record, final) => world.afterBridgeMission(cc, record, final, this.appVersion) });
+      world.advanceWorld(d, d.clock - before, this.appVersion, { from: before });
+      replenish(d, this.appVersion);
+      return d;
+    });
+  }
+
+  /** "Continue patrol": let canonical time pass (free). Paused while the daily allowance is spent. */
+  advanceTime(hours: number): { ok: true } | { ok: false; reason: 'no-credits-paused' | 'not-entitled' } {
+    if (!this.ensureCanon()) return { ok: false, reason: 'not-entitled' };
+    if (this.creditsRemaining() <= 0) return { ok: false, reason: 'no-credits-paused' };
+    this.repo.canon.commit(this.ctx(), (d) => {
+      const from = d.clock;
+      d.clock += Math.round(hours * 60);
+      world.advanceWorld(d, d.clock - from, this.appVersion, { from });
+      replenish(d, this.appVersion);
+      return d;
+    });
+    return { ok: true };
   }
 
   /** Learn from a command in any mode (terminology, comms preferences, sim drills). */

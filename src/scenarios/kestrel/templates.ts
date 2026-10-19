@@ -27,12 +27,15 @@ const T: Record<string, TemplateFn> = {
   reinforcementsHoldOff: () => 'Directorate reinforcements arrive at the edge of the Reach, see the situation settled, and hold position.',
 
   // ---- system / meta
-  simEnded: () => 'This simulation has ended. Restart, start a new seed, or load a save.',
+  simEnded: (_v, s) =>
+    s.provenance.timeline === 'canonical'
+      ? 'This mission has ended and is part of canonical history. Replay it as a simulation from the Mission Archive, or return to the Living Universe.'
+      : 'This simulation has ended. Restart, start a new seed, or load a save.',
   shipLost: () => 'The Halcyon has been lost.',
   help: () =>
     'Speak or type orders in plain English. Combine orders with "and"/"then". Examples: "red alert", "divert power from weapons to sensors", "take us to 4,000 km of the Kestrel", "lower shields and evacuate the crew", "tell the Prefect this is a humanitarian rescue", "offer them the cargo", "bluff that a Concord battle group is on the way", "use the tractor beam as a shield", "vent plasma for cover", "eject the Kestrel\'s core", "status", "options".',
   invalidAction: () => 'An order failed schema validation and was ignored.',
-  outcome: (v) => `SIMULATION ENDED — ${v.title}. ${v.summary}`,
+  outcome: (v, s) => `${s.provenance.timeline === 'canonical' ? 'MISSION ENDED (canonical record)' : 'SIMULATION ENDED'} — ${v.title}. ${v.summary}`,
   objectiveNew: (v) => `New objective: ${v.text}.`,
   objectiveUpdate: (v) => `Objective ${String(v.status).toUpperCase()}: ${v.text}.`,
   notUnderstood: (v) => `I didn't follow that order, Captain ("${v.text}"). Try "options" for suggestions, or "help".`,
