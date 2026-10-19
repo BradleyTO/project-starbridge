@@ -2,10 +2,71 @@
 
 All notable changes to Project Starbridge are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [0.2.0] — 2026-10-18 — Milestone 2: deterministic simulation
+
+### Added
+- **Simulation engine** (`src/engine`). This is a generic, pure and deterministic core around an authoritative `WorldState` v2, which holds:
+  - ships with ten systems each (health, power and derived status), positions and ranges, hull, shields, weapons, tractor, jump charge and souls aboard
+  - crew and NPCs with goals, motivation, knowledge, resources, trust and memory
+  - facts that start hidden and are discovered during play
+  - faction tension
+  - the mission clock and turn counter
+  - pending events and standing helm orders
+- **Seeded RNG** (mulberry32) whose state is stored in the world. The same seed and the same orders replay identically; different seeds change the passenger, the Prefect's temperament, the reactor timeline, the complication, reinforcement timing and the crew count. Choose a seed with `?seed=N`; it is shown in the header.
+- **Action pipeline:**
+  - zod `ProposedAction` schema → validator (accepted, partial or rejected, with in-character reasons) → pure reducer → turn advance → NPC agents → scheduled events → objectives → outcome → narration.
+  - A sentence with several orders costs one turn.
+  - Free actions (shields, alert, power, locks) cost no time.
+- **NPC agents.** They act independently every turn:
+  - **Prefect Vane:** approaches, hails, loses patience, locks on, fires or holds fire, retreats, keeps or breaks agreements, and reacts to bluffs.
+  - **Captain Arden:** lies about the compartment until he trusts you, then hands over the shield codes.
+  - **The hidden passenger:** wakes as the stasis pod fails, and gives intelligence that serves as leverage.
+  - **Your own officers:** give one-time advisories; relief officers take over when the primary officer is injured or killed.
+- **Delayed consequences and events:** reactor decay that speeds up with a coolant leak, breach and shockwave, cruiser fire, bluff checks, the reinforcement warning and their arrival.
+- **Unconventional orders** go through a generic `improvise` path and are judged on plausibility:
+  - tractor beam as a shield
+  - venting plasma as cover (allows a covert passenger extraction)
+  - projecting a sensor ghost (strengthens bluffs)
+  - extending shields around the Kestrel
+  - ejecting the Kestrel's core
+  - interposing the Halcyon
+  - bluffs and trades (passenger, cargo, medical supplies or data)
+- **14 possible outcomes.** Objectives are derived from state every turn, and none stays active after the ending.
+- **Offline interpreter** (`src/interpreter`) behind an async `Interpreter` interface. It handles:
+  - synonyms, politeness and filler words, and addressing an officer by name
+  - several orders in one sentence, with reported speech kept together
+  - targets and pronouns
+  - quantities such as "10,000 km", "10k" and "four thousand"
+  - clarifying questions, shown as tappable options
+- **Template narrator** behind a `Narrator` interface. It renders officers in character from engine reports and state diffs. The dead and those in stasis never speak.
+- **Save format v2**, which stores the full world state including the seed and RNG, plus a format version. It validates on load and rejects v1 saves gracefully.
+- UI: real system health and power table, jump charge, torpedoes and souls aboard. The tactical plot shows only what the crew has detected and identified. Order suggestions depend on the situation. Added **Restart** (same seed) and **New** (random seed), and viewscreen effects for beams, torpedoes, explosions and plasma.
+
+### Changed
+- The badge now reads **SIMULATION · OFFLINE INTERPRETER** instead of SCRIPTED DEMO.
+- The captain's own orders are no longer read aloud when voice is on.
+- `/api/command` now reports `milestone: 2`. It is still a stub with no AI calls and no secrets.
+- `npm run typecheck` now also type-checks the tests.
+
+### Fixed
+- After evacuation the Kestrel shows **evacuated** instead of "distressed".
+
+### Removed
+- The M1 keyword script (`demoScript.ts`), `initialState.ts`, `crew.ts` and `gameReducer.ts`, all replaced by the engine and scenario modules.
 
 ### Verified
 - Voice-to-text and text-to-speech confirmed working on a real phone by the user (v0.1.1). This resolves the 0.1.0 known limitation that voice had only been verified with stubbed APIs.
+
+### Tests
+- 162 Vitest tests:
+  - an 88-phrasing interpreter table plus normalisation, pronoun and clarification tests
+  - validator and reducer
+  - NPC behaviour
+  - determinism (same seed replays exactly; different seeds vary)
+  - persistence
+  - 19 natural-language playthroughs (withdrawal, diplomacy, science, combat, unconventional)
+  - a fuzz test of 120 random runs that checks invariants after every order: bounds, destroyed-ship consistency, no acting with destroyed systems, no dead speakers, no missing templates, no active objectives after an ending
+- The smoke test was rewritten for the M2 UI (55 checks, including multi-order sentences, clarification, save/load with the seed, and the evacuated status).
 
 ## [0.1.1] — 2026-10-18 — Milestone 1 fixes
 
