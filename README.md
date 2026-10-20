@@ -1,8 +1,8 @@
 # Project Starbridge
 
-A browser-based, AI-assisted **starship command simulator**. You command the exploration ship **CSV Halcyon** (Concord Exploration Service) and complete dynamic training missions by giving natural-language orders. The long-term goal is integration with a physical starship bridge, so the UI is built to scale from tablets to dedicated bridge consoles.
+A browser-based, AI-assisted **starship command simulator**. You command the exploration ship **ISV Halcyon** of the **Intergalactic Star Agency** (ISA), the service of the player's faction, **the Agency**, and complete dynamic training missions by giving natural-language orders. The long-term goal is integration with a physical starship bridge, so the UI is built to scale from tablets to dedicated bridge consoles.
 
-> **Status: v0.5.0 (Milestone 3.1: the bridge experience, Active Duty and two-way communications).** The app opens on the **bridge of the Halcyon**, not in a mission. Talk to the crew, ask science what is out there, and start a training simulation only when you ask for one ("Computer, begin the Kestrel Incident simulation"). When a simulation ends you are back on the bridge with a debrief. **Active Duty** (formerly "Living Universe") is the persistent canonical career. There is no mission menu: hails, distress calls, requests and science readings reach the bridge as canonical time passes, and you answer them in your own words. Orders and speech are read by a rule-based **offline interpreter**. No AI is used yet (see [Roadmap](#roadmap)).
+> **Status: v0.5.1 (Milestone 3.1: the bridge experience, Active Duty and two-way communications).** The app opens on the **bridge of the Halcyon**, not in a mission. Talk to the crew, ask science what is out there, and start a training simulation only when you ask for one ("Computer, begin the Kestrel Incident simulation"). When a simulation ends you are back on the bridge with a debrief. **Active Duty** (formerly "Living Universe") is the persistent canonical career. There is no mission menu: hails, distress calls, requests and science readings reach the bridge as canonical time passes, and you answer them in your own words. Orders and speech are read by a rule-based **offline interpreter**. No AI is used yet (see [Roadmap](#roadmap)).
 
 ## The bridge, Active Duty and two-way comms (v0.5 / M3.1)
 
@@ -44,14 +44,14 @@ Accepting starts a canonical mission and costs one credit, exactly as before. De
 
 | Disposition | Peaceful | Firm | Threatening |
 |---|---|---|---|
-| open | asks to open talks on **joining the Concord** | wary contact | warned off |
+| open | asks to open talks on **joining the Agency** | wary contact | warned off |
 | cautious | trade and contact, **will not join** | wary contact | warned off |
 | isolationist | **declines contact**, asks you to leave | declines | warned off |
 | guarded | wary contact | warned off | hostile |
 
-**Not every civilization wants to join the Concord.** Only an open people approached peacefully does. The outcome is written once to canon (a world event and an entry in the captain's record). Rask will not fire on a civilian station or on a ship that has not fired. The survey and the civilizations are seeded per career (four original peoples: the Ossari, Kethren, Lumae and Drassk).
+**Not every civilization wants to join the Agency.** Only an open people approached peacefully does. The outcome is written once to canon (a world event and an entry in the captain's record). Rask will not fire on a civilian station or on a ship that has not fired. The survey and the civilizations are seeded per career (four original peoples: the Ossari, Kethren, Lumae and Drassk).
 
-**Naming note.** The M3.1 brief spoke of civilizations joining the "Directorate". In Starbridge the player's own faction is the **Concord** (the Halcyon belongs to the Concord Exploration Service). The **Tessarine Directorate** is the rival power on the border. So civilizations here are invited to join the Concord.
+**Naming (resolved in v0.5.1).** The M3.1 brief spoke of civilizations joining the "Directorate", but the **Tessarine Directorate** is the rival power on the border (Prefect Vane's side) and stays as it is. The player's faction was called the Concord until v0.5.0; it is now **the Agency**. Its fleet service is the **Intergalactic Star Agency (ISA)**, its ships carry the prefix **ISV** (ISV Halcyon), registry codes would read `ISA-nnnn` (the app shows none today; the load-time migration maps any old `CES-nnnn`), and **Fleet Command** is the ISA's command. Civilizations are invited to join the Agency. Older saves load with the new names (display text is rewritten on load; internal ids such as the faction id `concord` are unchanged), and the interpreter still accepts the old words ("Concord space", "run for Concord space") as aliases for Agency space.
 
 **Two-way comms.** A hail opens a persistent channel (the indicator shows who you are talking to). Lines of speech go to the other party; orders addressed to the crew go to the crew, even with a channel open. Promises you make ("our weapons stay down") are remembered and checked. Anything unclear gets a clarifying question from the other party. You can hold, resume, mute or close channels.
 
@@ -83,7 +83,7 @@ All names, ships, factions and artwork are original. The interface is *inspired 
 
 ## The scenario — The Kestrel Incident
 
-The Halcyon arrives at the edge of the **Calloway Reach**, space disputed between the Concord and the **Tessarine Directorate**. A civilian freighter, the **Kestrel**, is adrift with a failing reactor and 23 crew. A Directorate heavy cruiser is closing fast. The Kestrel is hiding something.
+The Halcyon arrives at the edge of the **Calloway Reach**, space disputed between the Agency and the **Tessarine Directorate**. A civilian freighter, the **Kestrel**, is adrift with a failing reactor and 23 crew. A Directorate heavy cruiser is closing fast. The Kestrel is hiding something.
 
 Every run is generated from a **seed**, which is shown in the header. You can choose one with `?seed=42`. The seed decides:
 
@@ -155,7 +155,7 @@ Type `help` or `options` in the command bar, or tap a suggestion chip.
 - `Get us inbetween the two ships. Keep the weapons down and shields down. We don't want to appear hostile. And hail them on screen.`: one turn produces five tracked orders. Helm interposes between the Kestrel and the cruiser, tactical keeps weapons safe and shields down, the posture becomes non-hostile, and comms hails both ships on screen. Helm then reports underway and in position, and the Prefect notices.
 - `Escort the Kestrel` · `Circle the freighter` · `Slip in behind the cruiser` · `Put us in the cruiser's path`
 - `Shadow the warship at fifty thousand kilometres` · `Stay out of their weapons range` · `Close to transporter range of the Kestrel`
-- `Plot an intercept course for the Tessarine ship` · `Swing around so our bow faces the freighter` · `Run for Concord space`
+- `Plot an intercept course for the Tessarine ship` · `Swing around so our bow faces the freighter` · `Run for Agency space` (the old `Run for Concord space` still works)
 - `Back us away from that warship slowly` · `Evasive pattern delta, then return fire`
 - `Lock torpedos on the crusier` (misspellings are corrected against the game's vocabulary)
 - `Get between them` (resolved to the Kestrel and the cruiser) · `interpose in front of the cruiser`: helm asks "between the cruiser and the Kestrel, or between the cruiser and the border?" and offers buttons

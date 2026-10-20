@@ -2,6 +2,27 @@
 
 All notable changes to Project Starbridge are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.5.1] — 2026-10-19 — Naming: the Agency and the Intergalactic Star Agency
+
+### Changed
+- The player's faction, until now **the Concord**, is **the Agency** ("join the Agency", "Agency space", "the Agency border").
+- Its fleet service, until now the **Concord Exploration Service (CES)**, is the **Intergalactic Star Agency (ISA)**. Ships carry the prefix **ISV**: the CSV Halcyon is now the **ISV Halcyon**. **Fleet Command** stays, as the ISA's command, and the commission comes from "Admiral Odessa Kaine, ISA Fleet Command".
+- Updated everywhere players see it: the bridge and Kestrel narration, crew lines, Prefect Vane's hails ("Agency vessel…"), the passenger's asylum request, first-contact dialogue and outcomes, world events and consequences, the commission ceremony, the ship status panel, the tactical border label, the contact faction label, the README and the smoke test.
+- The **Tessarine Directorate** (Vane's side) is unchanged.
+- The README naming note is resolved.
+
+### Compatibility
+- **Saves still load.** Simulation saves, the canonical record and simulation history saved by v0.5.0 or earlier may hold the old names. That display text is rewritten when they are read (`src/engine/naming.ts`): CSV → ISV, Concord Exploration Service → Intergalactic Star Agency, Concord Fleet Command → ISA Fleet Command, CES-nnnn → ISA-nnnn, Concord → Agency.
+- Internal ids are unchanged (the faction id `concord`, `trustConcordDirectorate`), so nothing else in a save changes. Tests cover a legacy save and a legacy canonical career.
+- **The interpreter** understands "Agency space", "ISA space", "run for Agency space" and "ISA Fleet Command" ("Tell ISA Fleet Command we are on our way", "Ask ISA Fleet Command for more details"). The old words still work as aliases: "Concord space", "run for Concord space", "Fleet Command".
+
+### Tests
+- New `tests/v05/naming.test.ts`, plus an ISA Fleet Command answer test in `delivery.test.ts`. Disabling either the migration or the new aliases makes these tests fail.
+- Expectations changed only where the text changed: CSV → ISV Halcyon in the commission test, "no Agency ship in the Reach", test titles, and the first-contact and threat lines spoken in tests.
+- Two held-out eval inputs were reworded to the new names ("Run for Agency space"; "…that the Agency will hear of this"). Scores are unchanged.
+- The smoke test checks the new names on the bridge and in the commission, with no Concord or CSV leftovers.
+- Historical changelog entries and the first-run eval records keep the old names, as written at the time.
+
 ## [0.5.0] — 2026-10-19 — Milestone 3.1: the bridge experience, Active Duty & two-way communications
 
 No AI is used in this milestone. Everything below is deterministic and offline, and runs in the browser.
