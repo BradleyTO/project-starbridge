@@ -35,6 +35,11 @@ function commitLogs(s: WorldState, reports: Report[], narrator: Narrator): World
   return s;
 }
 
+/** v0.5: append reports to the log outside a turn (idle-bridge ambience); the clock does not move. */
+export function appendReports(s: WorldState, scenario: ScenarioModule, reports: Report[], narrator: Narrator = new TemplateNarrator(scenario)): WorldState {
+  return reports.length ? commitLogs(s, reports, narrator) : s;
+}
+
 export function playIntroBeat(s: WorldState, scenario: ScenarioModule, narrator: Narrator = new TemplateNarrator(scenario)): WorldState {
   if (s.intro >= scenario.intro.length) return s;
   const before = s;
@@ -202,6 +207,7 @@ function orderLabel(s: WorldState, a: ProposedAction): string | null {
   switch (a.type) {
     case 'query':
     case 'wait':
+    case 'bridge':
       return null;
     case 'setAlert':
       return `${a.level[0].toUpperCase()}${a.level.slice(1)} alert`;

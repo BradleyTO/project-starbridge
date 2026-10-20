@@ -7,7 +7,11 @@ import { completeIntro, playIntroBeat, processOrders } from './engine/turn';
 import type { Timeline } from './engine/types';
 import { loadGame, peekSave, saveGame } from './engine/persistence';
 import { formatMissionClock } from './engine/state';
-import { kestrelScenario as scenario } from './scenarios/kestrel';
+import { kestrelScenario } from './scenarios/kestrel';
+import { scenarioFor } from './scenarios/registry';
+import { BRIDGE_TITLE, ambientLine, createBridge } from './scenarios/bridge';
+import { appendReports } from './engine/turn';
+import { narrate, say } from './engine/report';
 import { OfflineInterpreter } from './interpreter/parser';
 import { contextFrom } from './interpreter/types';
 import { contactsView, helmView, ordersView } from './ui/view';
@@ -35,12 +39,14 @@ const BEAT_MS = 3500;
 const VOICE_KEY = 'starbridge.voice';
 const APP_VERSION = '0.4.0';
 const TRAINING_ID = TRAINING[0].id;
+const AMBIENT_MS = 22000;
 const interpreter = new OfflineInterpreter();
 
 type Msg = { type: 'beat' } | { type: 'skipIntro' } | { type: 'replace'; state: WorldState };
 
 /** What the bridge is currently playing (the WorldState itself lives in the reducer). */
 export type SessionMeta =
+  | { timeline: 'bridge'; title: string }
   | { timeline: 'simulation'; archiveId: string; runId: string; conditions: 'training' | 'original' | 'variation'; title: string }
   | { timeline: 'canonical'; missionId: string; archiveId: string; title: string };
 
@@ -48,13 +54,35 @@ function canonicalOf(m: Extract<SessionMeta, { timeline: 'canonical' }>, state: 
   return { timeline: 'canonical', missionId: m.missionId, archiveId: m.archiveId, scenarioId: state.scenarioId, state };
 }
 
-function metaOf(sess: BridgeSession, title: string): SessionMeta {
+function metaOf(sess: BridgeSession, title: string): Exclude<SessionMeta, { timeline: 'bridge' }> {
   return sess.timeline === 'canonical'
     ? { timeline: 'canonical', missionId: sess.missionId, archiveId: sess.missionId, title }
     : { timeline: 'simulation', archiveId: sess.archiveId ?? TRAINING_ID, runId: sess.runId, conditions: sess.conditions, title };
 }
 
+/** What a finished simulation leaves behind on the bridge (the debrief card). */
+interface Debrief {
+  title: string;
+  summary: string;
+  success: boolean;
+  seed: number | string;
+  meta: Extract<SessionMeta, { timeline: 'simulation' }>;
+}
+
+/** The idle bridge (optionally with a debrief of the simulation that just ended). */
+function bridgeState(seed: number | string, debrief?: { title: string; summary: string; objectives: string } | 'ended'): WorldState {
+  const b = createBridge(seed);
+  if (!debrief) return b;
+  const done = completeIntro(b, scenarioFor(b.scenarioId));
+  const reports =
+    debrief === 'ended'
+      ? [narrate('simEndedByOrder'), say('xo', 'simEndedByOrderXo')]
+      : [narrate('simDebriefNarr', { title: debrief.title, summary: debrief.summary }), say('xo', 'simDebriefXo', { objectives: debrief.objectives })];
+  return appendReports({ ...done, log: [] }, scenarioFor(b.scenarioId), reports);
+}
+
 function reducer(s: WorldState, m: Msg): WorldState {
+  const scenario = scenarioFor(s.scenarioId);
   switch (m.type) {
     case 'beat':
       return playIntroBeat(s, scenario);
@@ -84,11 +112,16 @@ function initialSeed(): number | string {
 
 export default function App() {
   const { universe, rev, touch } = useUniverse(APP_VERSION);
-  const [boot] = useState(() => universe.startTraining(TRAINING_ID, initialSeed()));
-  const [meta, setMeta] = useState<SessionMeta>(() => metaOf(boot, scenario.title));
-  const [state, dispatch] = useReducer(reducer, undefined, () => boot.state);
+  // v0.5: the app opens on the idle bridge. ?seed=N seeds the bridge and the first simulation launched from it.
+  const [firstSeed] = useState(() => initialSeed());
+  const nextSimSeed = useRef<number | string | null>(new URLSearchParams(window.location.search).get('seed') ? firstSeed : null);
+  const [meta, setMeta] = useState<SessionMeta>(() => ({ timeline: 'bridge', title: BRIDGE_TITLE }));
+  const [state, dispatch] = useReducer(reducer, undefined, () => bridgeState(firstSeed));
   const [hubTab, setHubTab] = useState<HubTab | null>(null);
-  const timeline: Timeline = meta.timeline;
+  const [debrief, setDebrief] = useState<Debrief | null>(null);
+  const onBridge = meta.timeline === 'bridge';
+  const timeline: Timeline = meta.timeline === 'bridge' ? 'simulation' : meta.timeline;
+  const scenario = scenarioFor(state.scenarioId);
   const stateRef = useRef(state);
   useEffect(() => {
     stateRef.current = state;
@@ -102,11 +135,11 @@ export default function App() {
   const [voiceOn, setVoiceOn] = useState(() => safeStorage()?.getItem(VOICE_KEY) === 'on');
   const lastSpoken = useRef(state.nextLogId - 1);
   const introRunning = state.intro < scenario.intro.length;
-  const contacts = useMemo(() => contactsView(state, scenario), [state]);
+  const contacts = useMemo(() => contactsView(state, scenarioFor(state.scenarioId)), [state]);
   const helm = useMemo(() => helmView(state), [state]);
   const orders = useMemo(() => ordersView(state), [state]);
-  const suggestions = useMemo(() => scenario.suggestions(state), [state]);
-  const channel = useMemo(() => channelView(state, scenario.hooks.dialogue), [state]);
+  const suggestions = useMemo(() => scenarioFor(state.scenarioId).suggestions(state), [state]);
+  const channel = useMemo(() => channelView(state, scenarioFor(state.scenarioId).hooks.dialogue), [state]);
 
   // Opening exposition beats on a timer until the intro completes (or is skipped).
   useEffect(() => {
@@ -149,17 +182,23 @@ export default function App() {
         const expanded = expandAliases(text, fam.aliases).text;
         const interp: Interpretation = await interpreter.interpret(expanded, contextFrom(stateRef.current));
         const before = stateRef.current;
-        const res = processOrders(before, text, interp, scenario);
+        const res = processOrders(before, text, interp, scenarioFor(before.scenarioId));
         dispatch({ type: 'replace', state: res.state });
         stateRef.current = res.state;
         const m = metaRef.current;
-        universe.noteCommand(m.timeline, text, res.results);
+        universe.noteCommand(m.timeline === 'bridge' ? 'simulation' : m.timeline, text, res.results);
         // Canonical progress is committed after every order (saving is free).
         if (m.timeline === 'canonical' && !res.state.outcome) universe.saveCanonical(canonicalOf(m, res.state));
         // A finished run is filed: simulations in simulation history, canonical missions through the commit gate.
         if (res.state.outcome && !before.outcome) {
-          if (m.timeline === 'simulation') universe.finishSimulation({ timeline: 'simulation', runId: m.runId, archiveId: m.archiveId, conditions: m.conditions, scenarioId: res.state.scenarioId, state: res.state }, res.state);
-          else {
+          if (m.timeline === 'simulation') {
+            universe.finishSimulation({ timeline: 'simulation', runId: m.runId, archiveId: m.archiveId, conditions: m.conditions, scenarioId: res.state.scenarioId, state: res.state }, res.state);
+            // v0.5: the simulation ends and the captain is back on the bridge, with a debrief.
+            const o = res.state.outcome;
+            const met = res.state.objectives.filter((x) => x.status === 'complete').length;
+            setDebrief({ title: o.title, summary: o.summary, success: o.success, seed: res.state.seed, meta: m });
+            returnToBridge.current?.(bridgeState(res.state.seed, { title: o.title, summary: o.summary, objectives: `${met} of ${res.state.objectives.length} objectives met` }), `Simulation complete: ${o.title}. Back on the bridge.`);
+          } else if (m.timeline === 'canonical') {
             universe.finishCanonical(canonicalOf(m, res.state));
             flash(`Canonical record updated: ${res.state.outcome.title}.`);
           }
@@ -184,16 +223,60 @@ export default function App() {
   const enter = (sess: BridgeSession, title: string, msg: string) => {
     setMeta(metaOf(sess, title));
     metaRef.current = metaOf(sess, title);
+    setDebrief(null);
     reset(sess.state, msg);
     setHubTab(null);
     touch();
   };
-  const titleFor = (archiveId: string) => universe.archive().find((e) => e.id === archiveId)?.title ?? scenario.title;
+  /** Back to the idle bridge (after a simulation ends, or on the captain's order). */
+  const goBridge = (next: WorldState, msg: string) => {
+    const m: SessionMeta = { timeline: 'bridge', title: BRIDGE_TITLE };
+    setMeta(m);
+    metaRef.current = m;
+    reset(next, msg);
+    touch();
+  };
+  const returnToBridge = useRef<typeof goBridge | null>(null);
+  returnToBridge.current = goBridge;
+  /** Start a training simulation from the bridge (spoken, typed or from the archive). */
+  const beginTraining = (id: string) => {
+    const seed = nextSimSeed.current ?? randomSeed();
+    nextSimSeed.current = null;
+    enter(universe.startTraining(id, seed), universe.archive().find((e) => e.id === id)?.title ?? kestrelScenario.title, `Training simulation, seed ${seed}.`);
+  };
+  // v0.5: bridge commands ask the app to act (open the archive, begin / end a simulation).
+  const handledRequest = useRef<WorldState['uiRequest']>(null);
+  useEffect(() => {
+    const r = state.uiRequest;
+    if (!r || r === handledRequest.current) return;
+    handledRequest.current = r;
+    const id = window.setTimeout(() => {
+      if (r.kind === 'openArchive') setHubTab('archive');
+      else if (r.kind === 'beginSim') beginTraining(r.id ?? TRAINING_ID);
+      else if (r.kind === 'endSim') {
+        setDebrief(null);
+        goBridge(bridgeState(state.seed, 'ended'), 'Simulation ended. Back on the bridge.');
+      }
+    }, r.kind === 'openArchive' ? 0 : 700);
+    return () => window.clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.uiRequest]);
+  // v0.5: routine bridge activity while the captain is on station and quiet.
+  useEffect(() => {
+    if (!onBridge || busy || hubTab || introRunning) return;
+    const id = window.setTimeout(() => {
+      const cur = stateRef.current;
+      if (cur.scenarioId !== 'bridge') return;
+      const a = ambientLine(cur);
+      const next = appendReports(a.state, scenarioFor(cur.scenarioId), a.reports);
+      dispatch({ type: 'replace', state: next });
+      stateRef.current = next;
+    }, AMBIENT_MS);
+    return () => window.clearTimeout(id);
+  }, [onBridge, busy, hubTab, introRunning, state.nextLogId]);
+  const titleFor = (archiveId: string) => universe.archive().find((e) => e.id === archiveId)?.title ?? kestrelScenario.title;
   const archiveActions = {
-    onTrain: (id: string) => {
-      const seed = randomSeed();
-      enter(universe.startTraining(id, seed), titleFor(id), `Training simulation, seed ${seed}.`);
-    },
+    onTrain: (id: string) => beginTraining(id),
     onReplayOriginal: (id: string) => enter(universe.replayOriginal(id), titleFor(id), 'Simulation: original canonical conditions restored.'),
     onVariation: (id: string) => {
       const seed = randomSeed();
@@ -234,17 +317,19 @@ export default function App() {
     },
   };
   const canonical = meta.timeline === 'canonical';
+  const simMeta = meta.timeline === 'simulation' ? meta : null;
   const luOn = universe.entitlements().livingUniverse;
   const left = luOn ? universe.creditsRemaining() : 0;
   void rev;
   /** Same conditions again (training seed, original snapshot or the same variation seed). */
-  const rerun = (seed: number | string): BridgeSession => {
-    const m = metaRef.current;
+  const rerun = (seed: number | string, from?: SessionMeta): BridgeSession => {
+    const m = from ?? metaRef.current;
     if (m.timeline === 'simulation' && m.conditions === 'original') return universe.replayOriginal(m.archiveId);
     if (m.timeline === 'simulation' && m.conditions === 'variation') return universe.replayVariation(m.archiveId, Number(seed));
     return universe.startTraining(TRAINING_ID, seed);
   };
   const onSave = () => {
+    if (meta.timeline === 'bridge') return flash('Nothing to save on the bridge. Simulations and Active Duty missions save while they run.');
     if (meta.timeline === 'canonical') {
       universe.saveCanonical(canonicalOf(meta, state));
       touch();
@@ -262,20 +347,28 @@ export default function App() {
     if (!res || !res.ok) return flash(res?.ok === false && res.reason === 'legacy' ? 'That save is from an older version and cannot be loaded.' : 'No valid save found.');
     // The simulation slot only ever holds simulations.
     const loaded: WorldState = { ...res.state, provenance: { ...res.state.provenance, timeline: 'simulation' } };
-    const m: SessionMeta = { timeline: 'simulation', archiveId: loaded.provenance.archiveId ?? TRAINING_ID, runId: `loaded-${Date.now()}`, conditions: 'training', title: scenario.title };
+    const m: SessionMeta = { timeline: 'simulation', archiveId: loaded.provenance.archiveId ?? TRAINING_ID, runId: `loaded-${Date.now()}`, conditions: 'training', title: scenarioFor(loaded.scenarioId).title };
+    setDebrief(null);
     setMeta(m);
     metaRef.current = m;
     reset(loaded, res.meta.migratedFrom ? `Loaded a v0.${res.meta.migratedFrom} save (upgraded) from turn ${res.meta.turn}.` : `Loaded save from turn ${res.meta.turn}.`);
   };
-  const confirmLoss = () => state.turn === 0 || state.outcome !== null || window.confirm('Abandon this run? Unsaved progress will be lost.');
+  const confirmLoss = () => onBridge || state.turn === 0 || state.outcome !== null || window.confirm('Abandon this run? Unsaved progress will be lost.');
   const onRestart = () => {
-    if (!confirmLoss()) return;
+    if (onBridge || !confirmLoss()) return;
     enter(rerun(state.seed), meta.title, `Restarted with the same seed (${state.seed}).`);
   };
   const onNewScenario = () => {
     if (!confirmLoss()) return;
     const seed = randomSeed();
-    enter(universe.startTraining(TRAINING_ID, seed), scenario.title, `New scenario — seed ${seed}.`);
+    nextSimSeed.current = null;
+    enter(universe.startTraining(TRAINING_ID, seed), kestrelScenario.title, `New simulation — seed ${seed}.`);
+  };
+  const onEndSim = () => {
+    if (!simMeta) return;
+    if (!(state.turn === 0 || state.outcome !== null || window.confirm('End this simulation and return to the bridge? Nothing will be recorded.'))) return;
+    setDebrief(null);
+    goBridge(bridgeState(state.seed, 'ended'), 'Simulation ended. Back on the bridge.');
   };
   const toggleVoice = () => {
     const next = !voiceOn;
@@ -296,7 +389,7 @@ export default function App() {
         </div>
         <div className="topbar-status">
           <span className="demo-badge" data-testid="demo-badge" title="Deterministic simulation engine with the offline (rule-based) order interpreter. No external AI calls.">
-            {timeline === 'canonical' ? 'CANONICAL' : 'SIMULATION'} · OFFLINE INTERPRETER
+            {timeline === 'canonical' ? 'CANONICAL' : onBridge ? 'BRIDGE' : 'SIMULATION'} · OFFLINE INTERPRETER
           </span>
           <span className={`alert-pill alert-${state.alert}`} data-testid="alert-level">{state.alert.toUpperCase()} ALERT</span>
           <span className="clock" data-testid="mission-clock">{formatMissionClock(state.time)} · TURN {state.turn}</span>
@@ -322,14 +415,15 @@ export default function App() {
           >
             Voice {voiceOn ? 'on' : 'off'}
           </button>
-          <button className="btn save" onClick={onSave} data-testid="save">Save</button>
+          {simMeta && <button className="btn ghost" onClick={onEndSim} data-testid="end-sim" title="End the simulation and return to the bridge">End sim</button>}
+          <button className="btn save" onClick={onSave} disabled={onBridge} data-testid="save" title={onBridge ? 'Nothing to save on the idle bridge' : undefined}>Save</button>
           <button className="btn load" onClick={onLoad} disabled={!hasSave || canonical} data-testid="load" title={canonical ? 'Canonical missions resume from the Living Universe board' : 'Load the saved simulation'}>Load</button>
-          <button className="btn restart" onClick={onRestart} disabled={canonical} data-testid="restart" title={canonical ? 'Canonical history cannot be restarted. Replay it as a simulation from the Mission Archive.' : 'Restart this scenario with the same seed'}>Restart</button>
+          <button className="btn restart" onClick={onRestart} disabled={canonical || onBridge} data-testid="restart" title={canonical ? 'Canonical history cannot be restarted. Replay it as a simulation from the Mission Archive.' : 'Restart this scenario with the same seed'}>Restart</button>
           <button className="btn ghost" onClick={onNewScenario} disabled={canonical} data-testid="new-scenario" title={canonical ? 'Leave via the Hub; this mission stays saved' : 'Start a fresh scenario with a random seed'}>New</button>
         </nav>
       </header>
 
-      <ModeBanner timeline={timeline} conditions={meta.timeline === 'simulation' ? meta.conditions : undefined} title={meta.title} />
+      <ModeBanner timeline={timeline} bridge={onBridge} conditions={meta.timeline === 'simulation' ? meta.conditions : undefined} title={meta.title} />
       {toast && <div className="toast" role="status" data-testid="toast">{toast}</div>}
       {hubTab && (
         <Hub tab={hubTab} onTab={setHubTab} onClose={() => setHubTab(null)} tabs={['universe', 'archive', 'record', 'settings']}>
@@ -343,10 +437,23 @@ export default function App() {
       <main className="grid">
         <aside className="col-left">
           <ShipStatus ship={state.ships.halcyon} torpedoes={state.counters.torpedoes ?? 0} targetName={(id) => contacts.find((c) => c.id === id)?.name ?? id} />
-          <Objectives objectives={state.objectives} />
+          <Objectives objectives={state.objectives} emptyText={onBridge ? 'No mission. On station.' : undefined} />
         </aside>
         <div className="col-center">
           <Viewscreen state={state} contacts={contacts} />
+          {onBridge && debrief && (
+            <div className={`outcome debrief ${debrief.success ? 'outcome-good' : 'outcome-bad'}`} role="status" data-testid="outcome" data-debrief="1">
+              <strong>Debrief — {debrief.title}</strong>
+              <span>{debrief.summary}</span>
+              <div className="outcome-actions">
+                <span className="tag sim">Simulated outcome</span>
+                <button className="btn restart" onClick={() => enter(rerun(debrief.seed, debrief.meta), debrief.meta.title, `Running it again — seed ${debrief.seed}.`)} data-testid="outcome-same">Run it again</button>
+                <button className="btn ghost" onClick={() => { const seed = randomSeed(); enter(universe.replayVariation(debrief.meta.archiveId, seed), debrief.meta.title, `New variation — seed ${seed}.`); }} data-testid="outcome-new">New variation</button>
+                <button className="btn load" onClick={() => setHubTab('archive')} data-testid="outcome-archive">Mission Archive</button>
+                <button className="btn ghost" onClick={() => setDebrief(null)} data-testid="outcome-dismiss">Dismiss</button>
+              </div>
+            </div>
+          )}
           {state.outcome && (
             <div className={`outcome ${state.outcome.success ? 'outcome-good' : 'outcome-bad'}`} role="alert" data-testid="outcome">
               <strong>{state.outcome.title}</strong>
@@ -361,7 +468,7 @@ export default function App() {
                 <div className="outcome-actions">
                   <span className="tag sim">Simulated outcome</span>
                   <button className="btn restart" onClick={() => enter(rerun(state.seed), meta.title, `Restarted with the same seed (${state.seed}).`)} data-testid="outcome-same">Same seed</button>
-                  <button className="btn ghost" onClick={() => { const seed = randomSeed(); enter(universe.startTraining(TRAINING_ID, seed), scenario.title, `New scenario — seed ${seed}.`); }}>New scenario</button>
+                  <button className="btn ghost" onClick={() => { const seed = randomSeed(); enter(universe.startTraining(TRAINING_ID, seed), kestrelScenario.title, `New scenario — seed ${seed}.`); }}>New scenario</button>
                   <button className="btn load" onClick={() => setHubTab('archive')} data-testid="outcome-archive">Mission Archive</button>
                 </div>
               )}
@@ -377,6 +484,7 @@ export default function App() {
             onCommand={onCommand}
             suggestions={suggestions}
             disabled={!!state.outcome}
+            placeholderIdle={onBridge ? 'Talk to your crew, e.g. "Computer, begin the Kestrel Incident simulation"' : undefined}
             busy={busy}
             clarification={state.clarification}
           />

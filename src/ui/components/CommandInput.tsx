@@ -8,6 +8,8 @@ interface Props {
   suggestions: string[];
   /** v0.5: a comms channel is open — the input takes both dialogue and crew orders. */
   onChannel?: boolean;
+  /** v0.5: placeholder for the idle bridge. */
+  placeholderIdle?: string;
   disabled?: boolean;
   /** Shown when disabled (the run has ended). */
   endedHint?: string;
@@ -15,7 +17,7 @@ interface Props {
   clarification?: { question: string; options: string[] } | null;
 }
 
-export function CommandInput({ onCommand, suggestions, disabled, busy, clarification, endedHint = 'Simulation ended — restart or load', onChannel = false }: Props) {
+export function CommandInput({ onCommand, suggestions, disabled, busy, clarification, endedHint = 'Simulation ended — restart or load', onChannel = false, placeholderIdle }: Props) {
   const [text, setText] = useState('');
   const [listening, setListening] = useState(false);
   const [micNote, setMicNote] = useState('');
@@ -64,7 +66,7 @@ export function CommandInput({ onCommand, suggestions, disabled, busy, clarifica
           data-testid="command-input"
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder={disabled ? endedHint : onChannel ? 'Speak to them, or give the crew an order ("We mean no harm", "Raise shields")' : 'Give any order, e.g. "Lower shields and beam the crew over"'}
+          placeholder={disabled ? endedHint : placeholderIdle ? placeholderIdle : onChannel ? 'Speak to them, or give the crew an order ("We mean no harm", "Raise shields")' : 'Give any order, e.g. "Lower shields and beam the crew over"'}
           autoComplete="off"
           spellCheck={false}
         />

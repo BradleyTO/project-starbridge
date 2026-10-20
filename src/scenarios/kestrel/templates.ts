@@ -8,6 +8,7 @@ import { SYSTEM_IDS } from '../../engine/types';
 import { efficiency, km, range, systemLabel } from '../../engine/rules';
 import { knows } from '../../engine/state';
 import { HELM_TEMPLATES } from '../../engine/helmTemplates';
+import { BRIDGE_TEMPLATES } from '../../engine/bridge';
 import { COMMS_TEMPLATES, DIALOGUE_TEMPLATES } from './dialogueTemplates';
 
 type V = Record<string, string | number>;
@@ -280,4 +281,4 @@ const T: Record<string, TemplateFn> = {
   adviseOptions: () => 'Captain, time is passing. We could close and evacuate, send engineers to stabilise her, or talk to the Prefect. Say "options" if you want my read.',
 };
 
-export const templates: Record<string, TemplateFn> = { ...HELM_TEMPLATES, ...COMMS_TEMPLATES, ...DIALOGUE_TEMPLATES, ...T };
+export const templates: Record<string, TemplateFn> = { ...HELM_TEMPLATES, ...BRIDGE_TEMPLATES, ...COMMS_TEMPLATES, ...DIALOGUE_TEMPLATES, ...T };

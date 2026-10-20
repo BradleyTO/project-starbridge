@@ -18,6 +18,7 @@ import { addTension, adjustTrust, knows, patchCharacter, patchShip, patchSystem,
 import type { DialogueProvider } from './dialogue';
 import { channelOf, closeChannel, commsOf, declare, openChannel, openChannelTo, patchComms, recordLine, setChannelState } from './comms';
 import { explainRefusal } from './roe';
+import { reduceBridge } from './bridge';
 import type { Party } from './schema';
 
 export interface Applied {
@@ -32,6 +33,8 @@ export interface ScenarioHooks {
   query(s: WorldState, topic: Extract<ProposedAction, { type: 'query' }>['topic']): Applied;
   /** v0.5: two-way conversation on open channels (offline provider today; AI later). */
   dialogue?: DialogueProvider;
+  /** v0.5: scenario-specific bridge commands (survey, small talk). */
+  bridge?(s: WorldState, action: Extract<ProposedAction, { type: 'bridge' }>, rng: Rng): Applied;
 }
 
 const names = (s: WorldState, d: DialogueProvider | undefined, party: Party) => ({ speaker: d?.speakerName(s, party) ?? party, vessel: d?.vesselName(s, party) ?? party });
@@ -290,6 +293,9 @@ export function applyAction(s: WorldState, action: ProposedAction, rng: Rng, hoo
 
     case 'wait':
       return { state: s, reports: [say('xo', 'waiting')] };
+
+    case 'bridge':
+      return reduceBridge(s, action, hooks, rng);
 
     case 'learn':
       return { state: s, reports: [say('xo', 'learnAck', { phrase: action.phrase, meaning: action.meaning })] };

@@ -177,6 +177,24 @@ export interface NpcCommitment {
   untilTurn: number | null;
   madeTurn: number;
 }
+export interface SurveySystem {
+  id: string;
+  name: string;
+  star: string;
+  distanceLy: number;
+  /** What science has detected so far. */
+  signal: 'none' | 'possible' | 'confirmed';
+  /** One-line science note (only what has been detected). */
+  note: string;
+  contacted: boolean;
+  investigated: boolean;
+}
+export interface SurveyState {
+  systems: SurveySystem[];
+  /** Systems the captain has ordered a course to (Active Duty investigation). */
+  course: string | null;
+}
+
 export interface CommsState {
   channels: CommsChannel[];
   /** The party currently on the open channel (null: nobody). */
@@ -341,4 +359,8 @@ export interface WorldState {
   comms?: CommsState;
   /** v0.5 crew autonomy: recent refusals with the reasons the officer gave (for "why?"). */
   refusals?: { officer: string; turn: number; order: string; reasons: string[] }[];
+  /** v0.5: the science officer's survey of systems within exploration range (idle bridge). */
+  survey?: SurveyState;
+  /** v0.5: a bridge command asked the app to do something (open the archive, begin / end a simulation). */
+  uiRequest?: { kind: 'openArchive' | 'beginSim' | 'endSim'; id?: string; seq: number } | null;
 }

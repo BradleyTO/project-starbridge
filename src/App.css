@@ -270,3 +270,5 @@
 .channel-indicator .ch-who { color: #e6f2ff; }
 .channel-indicator .ch-held { color: #9fb1c6; font-style: italic; }
 @media (max-width: 640px) { .channel-indicator { font-size: 0.72rem; } }
+.mode-banner.bridge { border-color: #3a6b8f; background: linear-gradient(90deg, rgba(40, 90, 130, 0.35), rgba(10, 20, 35, 0.2)); }
+.mode-banner.bridge strong { color: #9fd8ff; }

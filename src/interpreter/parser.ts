@@ -1097,13 +1097,49 @@ export function interpretSync(input: string, ctx: InterpreterContext): Interpret
   }
   // Answering a clarifying question goes straight to the clause parser (it knows the pending clause).
   if (ctx.pending) return interpretCore(input, ctx);
+  // v0.5: bridge commands — the simulation archive, beginning / ending a simulation, the survey.
+  const bridge = bridgeCommand(input);
+  if (bridge) return { kind: 'actions', actions: [bridge] as never, unparsed: [], notes: [], source };
   // v0.5: "why?" / "Rask, why did you refuse?" asks the officer to explain a refusal.
   const why = whyQuery(input, ctx);
   if (why) return { kind: 'actions', actions: [why] as never, unparsed: [], notes: [], source };
   // v0.5: with a channel open (or someone addressed by name) speech and crew orders are separated first.
   const routed = routeComms(input, ctx, (t, c) => ordersSync(t, c));
-  if (routed) return safe(routed, input);
-  return ordersSync(input, ctx);
+  const r = routed ? safe(routed, input) : ordersSync(input, ctx);
+  // v0.5: "Okafor, how are the engines?" — an officer addressed with something that is not an order is small talk.
+  if (r.kind === 'unrecognised') {
+    const chat = crewChatOf(input);
+    if (chat) return { kind: 'actions', actions: [chat] as never, unparsed: [], notes: [], source };
+  }
+  return r;
+}
+
+const SIM_WORD = '(?:simulation|sim|simulator|drill|exercise|training(?: simulation| run| exercise)?|holo(?:gram|deck)?(?: program(?:me)?)?|(?:simulation|training|holo) program(?:me)?)';
+const LEAD = "^(?:(?:computer|ship|ops|xo|number one|first officer|commander|marrow)[,:]?\\s+)?(?:please\\s+)?(?:(?:can|could|would) you\\s+)?(?:let'?s\\s+)?";
+const BEGIN_SIM = new RegExp(`${LEAD}(?:begin|start|run|load|launch|initiate|commence|play|engage|activate|set up|give me|i want|i'd like|we'?ll (?:run|do))\\s+(?:up\\s+)?(?:the\\s+|a\\s+|another\\s+|new\\s+)*(?:(.{0,40}?)\\s+)?${SIM_WORD}\\b(?:\\s+(?:of|called|named|for)\\s+(.+))?|${LEAD}(?:begin|start|run|load|launch|play)\\s+(?:the\\s+)?(kestrel(?: incident)?)\\b`);
+const END_SIM = new RegExp(`${LEAD}(?:end|stop|terminate|exit|abort|cancel|quit|close|leave|freeze)\\s+(?:the\\s+|this\\s+)?${SIM_WORD}\\b|^(?:computer[,:]?\\s+)?(?:end|exit) program(?:me)?\\b`);
+const OPEN_ARCHIVE = new RegExp(`${LEAD}(?:open|show(?: me)?|display|bring up|pull up|access|list|go to)\\s+(?:the\\s+|my\\s+|our\\s+)?(?:simulation|mission|training|sim)?\\s*(?:archive|library|records?|simulations|missions list)\\b`);
+const SURVEY = /\b(?:what|which|any|list|show(?: me)?|tell me about)\b.*\b(?:systems?|stars?|worlds?|planets?)\b.*\b(?:exploration|survey|sensor|jump)? ?(?:range|nearby|near us|in reach|around us|close by|within reach)\b|\b(?:survey|chart) (?:the )?(?:local |nearby )?(?:systems|neighbou?rhood|area)\b/;
+
+function bridgeCommand(input: string): { type: 'bridge'; op: 'openArchive' | 'beginSim' | 'endSim' | 'survey'; scenario?: string } | null {
+  const t = input.trim().toLowerCase().replace(/[?!.]+$/, '').replace(/\s+/g, ' ');
+  if (END_SIM.test(t)) return { type: 'bridge', op: 'endSim' };
+  const b = BEGIN_SIM.exec(t);
+  if (b) {
+    const name = (b[3] ?? b[2] ?? b[1] ?? '').replace(/\b(the|a|new|another)\b/g, '').trim();
+    return { type: 'bridge', op: 'beginSim', ...(name ? { scenario: name } : {}) };
+  }
+  if (OPEN_ARCHIVE.test(t)) return { type: 'bridge', op: 'openArchive' };
+  if (SURVEY.test(t) && !/\b(scan|hail|fire|lock|approach)\b/.test(t)) return { type: 'bridge', op: 'survey' };
+  return null;
+}
+
+const CHAT_VOC = /^(computer|number one|first officer|xo|helm|helmsman|tactical|sensors|science|comms|communications|engineering|chief( okafor)?|okafor|commander( marrow)?|marrow|varga|szabo|adeyemi|ensign|rask|doctor|doc|osei|lieutenant)\s*[,:]\s*(.+)$/;
+
+function crewChatOf(input: string): { type: 'bridge'; op: 'chat'; officer: string; text: string } | null {
+  const m = CHAT_VOC.exec(input.trim().toLowerCase());
+  if (!m || m[1] === 'computer') return null;
+  return { type: 'bridge', op: 'chat', officer: m[1], text: m[m.length - 1].slice(0, 300) };
 }
 
 const WHY_EXPLICIT =

@@ -3,11 +3,11 @@ import { Panel } from './Panel';
 
 const ICON = { active: '◇', complete: '◆', failed: '✕', missed: '–' } as const;
 
-export function Objectives({ objectives }: { objectives: Objective[] }) {
+export function Objectives({ objectives, emptyText = 'Awaiting mission data…' }: { objectives: Objective[]; emptyText?: string }) {
   return (
     <Panel title="Mission Objectives" code="07-332" accent="lilac" testId="objectives">
       {objectives.length === 0 ? (
-        <p className="muted">Awaiting mission data…</p>
+        <p className="muted">{emptyText}</p>
       ) : (
         <ul className="objectives">
           {objectives.map((o) => (

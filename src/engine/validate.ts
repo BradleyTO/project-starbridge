@@ -16,6 +16,7 @@ import { knows } from './state';
 import { COMMS_SECONDS, channelOf, commsOf, openChannel } from './comms';
 import { dot, effectivePerf, len, sub } from './kinematics';
 import { assessFire } from './roe';
+import { bridgeSeconds } from './bridge';
 
 export interface Validation {
   status: 'accepted' | 'partial' | 'rejected';
@@ -315,6 +316,9 @@ export function validate(s: WorldState, action: ProposedAction): Validation {
 
     case 'wait':
       return ok(action, 1);
+
+    case 'bridge':
+      return { ...ok(action, 0), seconds: bridgeSeconds(action) };
 
     case 'standing':
     case 'restrict':
