@@ -1,4 +1,4 @@
-// Headless smoke test: v0.5 / M3.1 (bridge-first startup, Active Duty, organic traffic, science, first contact)
+// Headless smoke test: v0.6 (multi-scenario + Training Simulation 002), v0.5 / M3.1 (bridge-first startup, Active Duty, organic traffic, science, first contact)
 // plus the v0.2–v0.4 checks (which now enter their simulations from the bridge, as a player does).
 // Usage: npm run build && npx vite preview --port 4173 &  then  node scripts/smoke.mjs [url]
 // Env: SHOTS_DIR (default ./smoke-shots)
@@ -585,6 +585,85 @@ for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape',
   check('v0.5 phone: bridge commands work', /Captain/.test(r));
   await p5.screenshot({ path: `${SHOTS}/v05-07-phone-bridge.png`, fullPage: true });
   await ctx5.close();
+}
+
+// ============================================================== v0.6 =====
+// Multi-scenario foundation + Training Simulation 002: list, archive, launch #2 by name, play to an ending.
+{
+  const ctx6 = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await ctx6.addInitScript(stubs);
+  const p6 = await ctx6.newPage();
+  p6.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  p6.on('pageerror', (e) => errors.push(String(e)));
+  const all6 = async () => (await p6.innerText('[data-testid=narrative]')) + '\n' + (await p6.innerText('[data-testid=comms]'));
+  const mode6 = () => p6.getAttribute('[data-testid=mode-banner]', 'data-mode');
+  const hub6 = async (tab) => {
+    if (!(await p6.locator('[data-testid=hub]').count())) await p6.click('[data-testid=open-hub]');
+    await p6.click(`[data-testid=hub-tab-${tab}]`);
+    await p6.waitForTimeout(150);
+  };
+  const close6 = async () => { if (await p6.locator('[data-testid=hub]').count()) await p6.click('[data-testid=hub-close]'); await p6.waitForTimeout(100); };
+
+  // Seed 5: an incense allergy and a humane Warden (a short, known path to an ending).
+  await p6.goto(withSeed(5), { waitUntil: 'networkidle' });
+  await p6.waitForTimeout(600);
+  await skipIntro(p6);
+  check('v0.6: opens on the idle bridge', (await mode6()) === 'bridge');
+  await sendOn(p6, 'Computer, list simulations', 600);
+  let t6 = await all6();
+  check('v0.6: "list simulations" names #1 and #2', /The Kestrel Incident/.test(t6) && /Quarantine at Tallis Gate/.test(t6), t6.slice(-300));
+  check('v0.6: listing does not start a simulation', (await mode6()) === 'bridge');
+  await p6.screenshot({ path: `${SHOTS}/sim02-01-list-simulations.png` });
+  await hub6('archive');
+  const arch = await p6.innerText('[data-testid=hub]');
+  check('v0.6: Mission Archive lists Training Simulation 002', /Training Simulation 002: Quarantine at Tallis Gate/.test(arch) && /Training Simulation 001: The Kestrel Incident/.test(arch));
+  check('v0.6: archive has a train button for #2', (await p6.locator('[data-testid=archive-train-TRN-tallis]').count()) === 1);
+  await p6.screenshot({ path: `${SHOTS}/sim02-02-archive.png` });
+  await close6();
+
+  await sendOn(p6, 'Computer, begin the Quarantine at Tallis Gate simulation', 1200);
+  await p6.waitForSelector('[data-testid=mode-banner][data-mode=simulation]');
+  check('v0.6: launch #2 by name starts a simulation', (await mode6()) === 'simulation');
+  await p6.waitForTimeout(4500);
+  t6 = await all6();
+  check('v0.6: #2 intro plays (Tallis Gate, the liner)', /Tallis Gate/.test(t6) && /Mercy of Ilun/.test(t6), t6.slice(0, 300));
+  await skipIntro(p6);
+  await p6.screenshot({ path: `${SHOTS}/sim02-03-intro.png` });
+  check('v0.6: two contacts on sensors, unidentified until scanned', (await p6.locator('[data-testid=contact-kestrel]').count()) === 1 && (await p6.locator('[data-testid=contact-cruiser]').count()) === 1 && !/Kestrel/.test(await p6.innerText('[data-testid=contact-kestrel]')));
+  check('v0.6: four objectives for #2', (await p6.locator('[data-testid=objectives] li').count()) === 4);
+  for (const c of ['take us to 3,000 km of the liner', 'wait', 'wait']) await sendOn(p6, c, 250);
+  await sendOn(p6, 'scan the liner', 300);
+  check('v0.6: close scan diagnoses the sickness', /allergic reaction/.test(await all6()));
+  await sendOn(p6, 'scan the picket', 300);
+  check('v0.6: scans identify the liner and the picket', /Mercy of Ilun/.test(await p6.innerText('[data-testid=contact-kestrel]')) && /Thornwake/.test(await p6.innerText('[data-testid=contact-cruiser]')));
+  await sendOn(p6, 'hail the picket', 400);
+  check('v0.6: comms session with Warden-Commander Marr', (await p6.getAttribute('[data-testid=channel-indicator]', 'data-party')) === 'cruiser' && /Warden-Commander Isolde Marr/.test(await p6.innerText('[data-testid=comms]')));
+  await p6.screenshot({ path: `${SHOTS}/sim02-04-comms.png` });
+  await sendOn(p6, 'tell her our scans show it is not contagious', 600);
+  await p6.waitForSelector('[data-testid=outcome]');
+  const out6 = await p6.innerText('[data-testid=outcome]');
+  check('v0.6: #2 played to an ending (Line Lifted)', /Line Lifted/i.test(out6), out6.slice(0, 200));
+  t6 = await all6();
+  check('v0.6: no Kestrel names leak into #2', !/Kestrel|Prefect|Ashen Covenant|Directorate|\[[a-zA-Z_]+\]/.test(t6), (t6.match(/.{0,60}(Kestrel|Prefect|Ashen Covenant|Directorate|\[[a-zA-Z_]+\]).{0,60}/) ?? [''])[0]);
+  await p6.screenshot({ path: `${SHOTS}/sim02-05-outcome.png` });
+  await hub6('archive');
+  check('v0.6: the #2 run is filed under #2 in the archive', /Line Lifted/i.test((await p6.locator('[data-testid=archive-entry-TRN-tallis]').textContent()) ?? '') && !/Line Lifted/i.test((await p6.locator('[data-testid=archive-entry-TRN-kestrel]').textContent()) ?? ''));
+  await close6();
+  if (await p6.locator('[data-testid=outcome-new]').count()) {
+    await p6.click('[data-testid=outcome-new]');
+    await p6.waitForTimeout(800);
+    await skipIntro(p6);
+    const body6 = await p6.innerText('body');
+    check('v0.6: "New scenario" keeps simulation #2 (new seed)', (await mode6()) === 'simulation' && /Training Simulation 002: Quarantine at Tallis Gate/i.test(body6) && !/Kestrel Incident/i.test(body6), body6.slice(0, 160));
+  } else check('v0.6: "New scenario" keeps simulation #2 (new seed)', false, 'no outcome-new button');
+  await p6.setViewportSize({ width: 390, height: 844 });
+  await p6.waitForTimeout(400);
+  const ov6 = await p6.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  check('v0.6 phone: #2 has no horizontal overflow', ov6 <= 0, `overflow ${ov6}px`);
+  await p6.screenshot({ path: `${SHOTS}/sim02-06-phone.png`, fullPage: true });
+  await sendOn(p6, 'Computer, end the simulation', 1200);
+  check('v0.6: ending #2 returns to the bridge', (await mode6()) === 'bridge');
+  await ctx6.close();
 }
 
 check('no console errors', errors.length === 0, errors.join(' | '));
