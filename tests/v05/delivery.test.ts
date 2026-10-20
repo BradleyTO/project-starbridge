@@ -132,11 +132,12 @@ describe('answering calls on the bridge (credit rules unchanged)', () => {
     t.talk('We refuse the directive, the ship is not fit for duty');
     expect(t.u.canon()!.discipline[0]?.reason).toBe('unfit');
     expect(t.u.creditsRemaining()).toBe(credits);
-    for (let i = 0; i < 6 && t.s.duty?.incoming?.classification !== 'distress'; i++) {
+    const waiting = (): string | undefined => t.s.duty?.incoming?.classification;
+    for (let i = 0; i < 6 && waiting() !== 'distress'; i++) {
       t.talk('Continue the patrol');
-      if (t.s.duty?.incoming && t.s.duty.incoming.classification !== 'distress') t.talk('Decline');
+      if (waiting() && waiting() !== 'distress') t.talk('Decline');
     }
-    expect(t.s.duty?.incoming?.classification).toBe('distress');
+    expect(waiting()).toBe('distress');
     t.talk('Respond to the distress call');
     expect(t.u.creditsRemaining()).toBe(credits - 1);
     expect(t.s.duty?.incoming).toBeNull();
