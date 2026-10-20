@@ -109,8 +109,11 @@ export function UniversePanel({ universe, actions }: { universe: Universe; actio
           </ul>
         </>
       )}
-      <h3>Assignments & signals</h3>
-      {open.length === 0 && <p className="muted">Nothing on the board right now.</p>}
+      <h3>Fleet Command offer log</h3>
+      <p className="muted" data-testid="offer-log-note">
+        Secondary record. Hails, distress calls and requests reach you on the bridge as time passes — say "continue the patrol" and answer them in your own words. Viewing this log is always free.
+      </p>
+      {open.length === 0 && <p className="muted">Nothing open in the log right now.</p>}
       <ul className="offer-list">
         {open.map((o) => {
           const k = CLASS[o.classification];

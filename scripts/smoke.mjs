@@ -1,4 +1,5 @@
-// Headless smoke test: v0.4 (Simulation / Living Universe / Archive / credits / interpreter) plus the v0.2–v0.3 checks.
+// Headless smoke test: v0.5 / M3.1 (bridge-first startup, Active Duty, organic traffic, science, first contact)
+// plus the v0.2–v0.4 checks (which now enter their simulations from the bridge, as a player does).
 // Usage: npm run build && npx vite preview --port 4173 &  then  node scripts/smoke.mjs [url]
 // Env: SHOTS_DIR (default ./smoke-shots)
 import { chromium } from 'playwright';
@@ -21,7 +22,7 @@ const stubs = () => {
     window.speechSynthesis.cancel = () => {};
   }
   window.SpeechRecognition = window.webkitSpeechRecognition = class {
-    start() { setTimeout(() => { this.onresult?.({ results: [[{ transcript: 'scan the cruiser' }]] }); this.onend?.(); }, 50); }
+    start() { setTimeout(() => { this.onresult?.({ results: [[{ transcript: window.__transcript || 'scan the cruiser' }]] }); this.onend?.(); }, 50); }
     stop() { this.onend?.(); }
   };
 };
@@ -42,6 +43,18 @@ const send = async (cmd) => {
 };
 
 
+/** v0.5: the app opens on the idle bridge; a simulation starts only when the captain asks for one. */
+const BEGIN = 'Computer, begin the Kestrel Incident simulation';
+const withSeed = (seed) => URL + (URL.includes('?') ? '&' : '?') + `seed=${seed}`;
+const skipIntro = async (pg) => { if (await pg.locator('[data-testid=skip-intro]').count()) await pg.click('[data-testid=skip-intro]'); await pg.waitForTimeout(150); };
+const sendOn = async (pg, cmd, wait = 150) => { await pg.fill('[data-testid=command-input]', cmd); await pg.press('[data-testid=command-input]', 'Enter'); await pg.waitForTimeout(wait); };
+const gotoSim = async (pg, seed) => {
+  await pg.goto(withSeed(seed), { waitUntil: 'networkidle' });
+  await skipIntro(pg);
+  await sendOn(pg, BEGIN, 1100);
+  await pg.waitForSelector('[data-testid=mode-banner][data-mode=simulation]');
+};
+
 const overlaps = (a, b) => a && b && a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
 const checkToast = async (label) => {
   await page.click('[data-testid=save]');
@@ -52,13 +65,12 @@ const checkToast = async (label) => {
   check(`${label}: toast does not overlap demo badge or header`, toast && !overlaps(toast, badge) && !overlaps(toast, header), JSON.stringify({ toast, badge }));
 };
 
-const SEEDED = URL + (URL.includes('?') ? '&' : '?') + 'seed=2';
-await page.goto(SEEDED, { waitUntil: 'networkidle' });
+await gotoSim(page, 2);
 check('title', (await page.title()).includes('Starbridge'), await page.title());
 for (const id of ['viewscreen', 'ship-status', 'narrative', 'command', 'tactical', 'comms', 'objectives', 'save', 'load', 'restart', 'new-scenario', 'systems']) {
   check(`panel visible: ${id}`, await page.locator(`[data-testid=${id}]`).isVisible());
 }
-check('badge says simulation / offline interpreter', /SIMULATION\s*·\s*OFFLINE INTERPRETER/i.test(await page.innerText('[data-testid=demo-badge]')));
+check('badge says simulation / offline interpreter', /SIMULATION\s*·\s*OFFLINE INTERPRETER/i.test(await page.innerText('[data-testid=demo-badge]')), await page.innerText('[data-testid=demo-badge]'));
 check('seed from URL shown', (await page.innerText('[data-testid=seed]')).includes('SEED 2'));
 await page.waitForTimeout(4500);
 check('intro plays on timer', (await narrative()).includes('distress beacon'));
@@ -91,7 +103,8 @@ check('one turn for a multi-order sentence', (await page.innerText('[data-testid
 check('kestrel details shown after scan', /aboard/.test(await page.innerText('[data-testid=contact-kestrel]')));
 
 await send('purple monkey dishwasher');
-check('unknown order handled in character', (await narrative()).includes("didn't follow"));
+// v0.5 (deliberate change): with the Prefect's channel open, an unclear line goes to him and he asks for clarification.
+check('unknown line handled in character (channel party asks to clarify)', /didn't follow|Speak plainly|asking for something, or telling me/.test((await narrative()) + (await page.innerText('[data-testid=comms]'))));
 
 await send('approach');
 check('ambiguous order asks a clarifying question', await page.locator('[data-testid=clarification]').isVisible());
@@ -143,10 +156,15 @@ for (const c of ['withdraw', 'wait', 'jump', 'jump']) {
 }
 const outcome = (await page.locator('[data-testid=outcome]').count()) ? await page.innerText('[data-testid=outcome]') : '';
 check('rescue ending shown', /rescue and withdrawal/i.test(outcome), outcome.split('\n')[0]);
+await page.waitForTimeout(1000);
+// v0.5: the simulation ends and the captain is back on the bridge, with a debrief (deliberate change from v0.4).
+check('v0.5: sim end returns to the bridge with a debrief', (await page.getAttribute('[data-testid=mode-banner]', 'data-mode')) === 'bridge' && (await page.locator('[data-testid=outcome][data-debrief="1"]').count()) === 1 && /SIMULATION ENDED/.test(await narrative()));
 const objText = (await page.innerText('[data-testid=objectives]')).toLowerCase();
 check('no objective left active after ending', !/\bactive\b/.test(objText), objText.replace(/\n/g, ' | '));
 await page.screenshot({ path: `${SHOTS}/03-desktop-ending.png` });
 
+await page.click('[data-testid=outcome-same]');
+await page.waitForTimeout(300);
 await page.click('[data-testid=restart]');
 await page.waitForTimeout(300);
 check('voice note cleared on restart', !(await page.locator('.mic-note').allInnerTexts()).some((t) => t.startsWith('Heard')));
@@ -157,7 +175,7 @@ check('new scenario picks a new seed', !/^SEED 2$/.test((await page.innerText('[
 
 // v0.3: the captain's compound spatial order, typed verbatim, played to completion
 const USER_ORDER = 'Get us inbetween the two ships. Keep the weapons down and shields down. We don\'t want to appear hostile. And hail them on screen.';
-await page.goto(URL + (URL.includes('?') ? '&' : '?') + 'seed=42', { waitUntil: 'networkidle' });
+await gotoSim(page, 42);
 await page.click('[data-testid=skip-intro]');
 await page.waitForTimeout(200);
 const logStart = (await narrative()).length;
@@ -246,9 +264,9 @@ for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape',
   };
 
   // --- critical interpreter regressions, typed into the UI
-  await p4.goto(URL + (URL.includes('?') ? '&' : '?') + 'seed=42', { waitUntil: 'networkidle' });
+  await gotoSim(p4, 42);
   await p4.click('[data-testid=skip-intro]');
-  check('v0.4: default load is a SIMULATION', (await banner()) === 'simulation', await p4.innerText('[data-testid=mode-banner]'));
+  check('v0.4: a simulation started from the bridge is a SIMULATION', (await banner()) === 'simulation', await p4.innerText('[data-testid=mode-banner]'));
   let mark = (await nar4()).length;
   await send4('Bring us in, activate shields, do not power up weapons, and hail the ship.');
   let said = (await nar4()).slice(mark);
@@ -261,14 +279,14 @@ for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape',
   check('v0.4 (a): weapons still SAFE three minutes later', (await p4.innerText('[data-testid=weapons-state]')).startsWith('SAFE'));
 
   // Safety: an untargeted "Fire" with both ships in view asks rather than guessing.
-  await p4.goto(URL + (URL.includes('?') ? '&' : '?') + 'seed=42', { waitUntil: 'networkidle' });
+  await gotoSim(p4, 42);
   await p4.click('[data-testid=skip-intro]');
   await send4('Fire');
   check('v0.4 safety: bare "Fire" asks which contact', /Fire on which contact/.test(await p4.innerText('[data-testid=clarification]')));
   check('v0.4 safety: nothing fired', (await p4.innerText('[data-testid=weapons-state]')).startsWith('SAFE') && !/beams|torpedo away|firing/i.test((await nar4()).slice(-300)));
   await send4('Lower shields and raise them again');
   check('v0.4 safety: contradictory shields order asks', /Raise or lower the shields/.test(await p4.innerText('[data-testid=clarification]')) && (await p4.innerText('[data-testid=shield-state]')) === 'LOWERED');
-  await p4.goto(URL + (URL.includes('?') ? '&' : '?') + 'seed=4', { waitUntil: 'networkidle' });
+  await gotoSim(p4, 4);
   await p4.click('[data-testid=skip-intro]');
   mark = (await nar4()).length;
   await send4('No matter what, keep us between the Kestrel and the cruiser. If the Kestrel arms its weapons, raise our shields, but not until then.');
@@ -290,11 +308,15 @@ for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape',
   await p4.screenshot({ path: `${SHOTS}/v04-01-standing-order.png` });
 
   // --- Living Universe: enable (dev), credits
-  await p4.goto(URL + (URL.includes('?') ? '&' : '?') + 'seed=3', { waitUntil: 'networkidle' });
-  await p4.click('[data-testid=skip-intro]');
+  await p4.goto(withSeed(3), { waitUntil: 'networkidle' });
+  await skipIntro(p4);
   await hub('universe');
   await p4.click('[data-testid=lu-enable]');
   await p4.waitForTimeout(150);
+  // v0.5: first activation is a commission (deliberate change: v0.4 enabled the board directly).
+  await p4.click('[data-testid=commission-accept]');
+  await p4.waitForTimeout(150);
+  await hub('universe');
   check('v0.4: 10 canonical starts shown', (await credits()) === 10 && (await p4.getAttribute('[data-testid=credits-remaining]', 'data-remaining')) === '10');
   check('v0.4: three offer classes on the board', (await p4.locator('[data-class=directive]').count()) === 1 && (await p4.locator('[data-class=distress]').count()) === 1 && (await p4.locator('[data-class=voluntary]').count()) >= 1);
   await p4.screenshot({ path: `${SHOTS}/v04-02-universe-board.png`, fullPage: true });
@@ -396,6 +418,153 @@ for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape',
   await hub('record');
   await p4.screenshot({ path: `${SHOTS}/v04-10-phone-record.png`, fullPage: true });
   await ctx4.close();
+}
+
+// ============================================================== v0.5 / M3.1 =====
+// Bridge-first startup, two-way comms, Active Duty (commission, organic traffic, science, first contact), reserve.
+{
+  const ctx5 = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await ctx5.addInitScript(stubs);
+  const p5 = await ctx5.newPage();
+  p5.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  p5.on('pageerror', (e) => errors.push(String(e)));
+  const all5 = async () => (await p5.innerText('[data-testid=narrative]')) + '\n' + (await p5.innerText('[data-testid=comms]'));
+  const mode = () => p5.getAttribute('[data-testid=mode-banner]', 'data-mode');
+  const hub5 = async (tab) => {
+    if (!(await p5.locator('[data-testid=hub]').count())) await p5.click('[data-testid=open-hub]');
+    await p5.click(`[data-testid=hub-tab-${tab}]`);
+    await p5.waitForTimeout(150);
+  };
+  const close5 = async () => { if (await p5.locator('[data-testid=hub]').count()) await p5.click('[data-testid=hub-close]'); await p5.waitForTimeout(100); };
+  /** Say something on the bridge and return only what was said in reply (crew + comms). */
+  const tailAfter = (b, a) => (a.startsWith(b) ? a.slice(b.length) : a.slice(-1200));
+  const ask = async (cmd, wait = 1000) => {
+    const n0 = await p5.innerText('[data-testid=narrative]');
+    const c0 = await p5.innerText('[data-testid=comms]');
+    await sendOn(p5, cmd, wait);
+    const n1 = await p5.innerText('[data-testid=narrative]');
+    const at = n1.lastIndexOf(cmd);
+    const narr = at >= 0 ? n1.slice(at + cmd.length) : tailAfter(n0, n1);
+    return narr + '\n' + tailAfter(c0, await p5.innerText('[data-testid=comms]'));
+  };
+
+  // 1. idle bridge on load
+  await p5.goto(URL, { waitUntil: 'networkidle' });
+  await p5.waitForTimeout(800);
+  check('v0.5: app opens on the idle bridge', (await mode()) === 'bridge' && /holds station/.test(await all5()));
+  check('v0.5: idle bridge has no contacts, no objectives, no emergency', (await p5.locator('[data-testid=contact-kestrel]').count()) === 0 && (await p5.locator('[data-testid=contact-cruiser]').count()) === 0 && !/distress|warship/i.test(await all5()));
+  await skipIntro(p5);
+  await p5.screenshot({ path: `${SHOTS}/v05-01-idle-bridge.png` });
+
+  // 2. bridge interaction before any mission
+  let r = await ask('First Officer, give me a status report');
+  check('v0.5: crew answers on the idle bridge (status)', /All quiet, Captain/.test(r), r.slice(-200));
+  r = await ask('Science, what systems are within exploration range?');
+  check('v0.5: science survey on the bridge', /systems within exploration range/.test(r), r.slice(-200));
+  r = await ask('Okafor, how are the engines?');
+  check('v0.5: small talk with an officer', /Chief Dana Okafor/i.test(r) && !/didn't follow/.test(r), r.slice(-160));
+  check('v0.5: still on the bridge (no sim without a request)', (await mode()) === 'bridge');
+
+  // 3. voice-style simulation start (stubbed recognition)
+  await p5.evaluate(() => { window.__transcript = 'Computer, begin the Kestrel Incident simulation'; });
+  await p5.click('[data-testid=mic-button]');
+  await p5.waitForTimeout(250);
+  check('v0.5 voice: recognised command fills the input', (await p5.inputValue('[data-testid=command-input]')) === 'Computer, begin the Kestrel Incident simulation');
+  await p5.press('[data-testid=command-input]', 'Enter');
+  await p5.waitForTimeout(1200);
+  check('v0.5 voice: spoken request starts the simulation', (await mode()) === 'simulation');
+  await skipIntro(p5);
+
+  // 4. multi-turn comms on a persistent channel
+  r = await ask('Hail the cruiser', 300);
+  check('v0.5 comms: hail opens a persistent channel', (await p5.getAttribute('[data-testid=channel-indicator]', 'data-party')) === 'cruiser', r.slice(-200));
+  r = await ask('We are here to rescue the crew of the Kestrel.', 300);
+  check('v0.5 comms: the Prefect answers the line (turn 1)', /vane/i.test(r), r.slice(-200));
+  r = await ask('How long will you give us?', 300);
+  check('v0.5 comms: the conversation continues (turn 2), channel still open', /vane/i.test(r) && (await p5.locator('[data-testid=channel-indicator]').count()) === 1, r.slice(-200));
+  r = await ask('Rask, keep weapons safe.', 300);
+  check('v0.5 comms: a crew order on an open channel goes to the crew, not the Prefect', /rask/i.test(r) && !/vane/i.test(r) && (await p5.innerText('[data-testid=weapons-state]')).startsWith('SAFE'), r.slice(-200));
+  await p5.screenshot({ path: `${SHOTS}/v05-02-sim-comms.png` });
+
+  // 5. ending the simulation returns to the bridge
+  await sendOn(p5, 'Computer, end the simulation', 1200);
+  check('v0.5: "end the simulation" returns to the bridge', (await mode()) === 'bridge' && /Simulation ended|simulation ends/i.test(await all5()));
+
+  // 6. commission on first activation of Active Duty
+  await hub5('settings');
+  await p5.click('[data-testid=dev-lu-toggle]');
+  await p5.waitForTimeout(300);
+  check('v0.5: first activation shows the commission ceremony', (await p5.locator('[data-testid=commission]').count()) === 1);
+  await p5.screenshot({ path: `${SHOTS}/v05-03-commission.png` });
+  await p5.click('[data-testid=commission-accept]');
+  await p5.waitForTimeout(400);
+  await close5();
+  await p5.waitForTimeout(1500);
+  check('v0.5: commissioned — on active duty', (await p5.getAttribute('[data-testid=mode-banner]', 'data-duty')) === 'active');
+
+  // 7. organic delivery: Fleet hails in; the captain answers by talking
+  let txt = await all5();
+  check('v0.5 organic: a Fleet directive arrives as a hail on the bridge', /Fleet Command is hailing/.test(txt) && /mandatory directive/.test(txt));
+  await p5.screenshot({ path: `${SHOTS}/v05-04-fleet-hail.png` });
+  r = await ask('Request clarification from Fleet Command');
+  check('v0.5 organic: questioning the directive gets Fleet’s reply', /Directive stands/.test(r), r.slice(-200));
+  r = await ask('We refuse the directive, the ship is not fit for duty');
+  check('v0.5 organic: refusal by voice is transmitted (free)', /Refusal transmitted/.test(r), r.slice(-200));
+  let event = false;
+  let quiet = false;
+  for (let i = 0; i < 8 && !(event && quiet); i++) {
+    r = await ask('Continue the patrol');
+    if (/distress call|A request for us|Fleet Command is hailing|News on the Fleet relay|something new on the long-range array/.test(r)) event = true;
+    if (/quiet watch/.test(r)) quiet = true;
+    if (/Your call, Captain|take it or decline/.test(r)) await ask('Log it and continue');
+  }
+  check('v0.5 organic: patrol brings events (no mission menu)', event);
+  check('v0.5 organic: and quiet periods', quiet);
+  await p5.screenshot({ path: `${SHOTS}/v05-05-patrol.png` });
+
+  // 8. science: civilizations detected but not contacted → investigate → first contact
+  r = await ask("Science, show me the civilizations we've detected but haven't contacted");
+  check('v0.5 science: three uncontacted civilizations listed', /(3|4) systems show signs of a civilization/.test(r), r.slice(-260));
+  const target = /contacted: ([A-Z][a-z]+(?: [A-Z][a-z]+)?), /.exec(r)?.[1];
+  r = await ask(`Helm, set a course for ${target}`);
+  check('v0.5 science: course laid in and the system investigated', /Course laid in/.test(r) && /Confirmed, Captain/.test(r), r.slice(-300));
+  r = await ask('Hail them');
+  check('v0.5 first contact: hail opens a channel to the civilization', (await p5.getAttribute('[data-testid=channel-indicator]', 'data-party')) === 'kestrel', r.slice(-200));
+  r = await ask('Who are your people?');
+  check('v0.5 first contact: multi-turn (they answer and ask again)', /We are the/.test(r), r.slice(-200));
+  r = await ask('We come in peace. We are explorers from the Concord.');
+  check('v0.5 first contact: outcome recorded in canonical history', /Entered in your record/.test(r), r.slice(-260));
+  await p5.screenshot({ path: `${SHOTS}/v05-06-first-contact.png` });
+  await hub5('record');
+  check('v0.5 first contact: in the captain’s career', /First contact with the/.test(await p5.innerText('[data-testid=career]')));
+  await hub5('universe');
+  check('v0.5: the offer log is secondary (Fleet Command offer log)', /Fleet Command offer log/i.test(await p5.innerText('[data-testid=hub]')));
+  await close5();
+
+  // 9. inactive duty (reserve): career preserved, canon frozen
+  await hub5('settings');
+  await p5.click('[data-testid=dev-lu-toggle]');
+  await p5.waitForTimeout(300);
+  await hub5('universe');
+  check('v0.5 reserve: reserve status shown', (await p5.locator('[data-testid=lu-reserve]').count()) === 1);
+  await close5();
+  r = await ask('Continue the patrol');
+  check('v0.5 reserve: no patrol / canonical time while inactive', /training status/.test(r), r.slice(-200));
+  await hub5('record');
+  check('v0.5 reserve: career preserved', /First contact with the/.test(await p5.innerText('[data-testid=career]')));
+  await close5();
+
+  // 10. mobile
+  await p5.setViewportSize({ width: 390, height: 844 });
+  await p5.waitForTimeout(400);
+  const ov5 = await p5.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  const wide5 = await p5.evaluate(() => [...document.querySelectorAll('body *')].filter((e) => e.getBoundingClientRect().right > window.innerWidth + 1).slice(0, 4).map((e) => `${e.tagName}.${String(e.className).slice(0, 40)}[${e.getAttribute('data-testid') ?? ''}]`).join(', '));
+  check('v0.5 phone: bridge has no horizontal overflow', ov5 <= 0, `overflow ${ov5}px ${wide5}`);
+  check('v0.5 phone: command input and mode banner visible', (await p5.locator('[data-testid=command-input]').isVisible()) && (await p5.locator('[data-testid=mode-banner]').isVisible()));
+  r = await ask('First Officer, give me a status report');
+  check('v0.5 phone: bridge commands work', /Captain/.test(r));
+  await p5.screenshot({ path: `${SHOTS}/v05-07-phone-bridge.png`, fullPage: true });
+  await ctx5.close();
 }
 
 check('no console errors', errors.length === 0, errors.join(' | '));
