@@ -19,6 +19,14 @@ import type { CanonicalSession } from './sessions';
 import { replenish, seedBoard } from './catalogue';
 import { charge, configure, msUntilReset, refresh, remaining, resetNow } from './credits';
 import * as world from './world';
+import * as explore from './exploration';
+import { markDelivered, pickTraffic, type Traffic } from './delivery';
+import type { Exploration } from './types';
+
+export type PatrolResult = { ok: true; hours: number; traffic: Traffic | null } | { ok: false; reason: 'no-credits-paused' | 'not-entitled' };
+export type CourseResult =
+  | { ok: true; to: string; hours: number; charged: boolean; investigating: boolean; traffic: Traffic | null }
+  | { ok: false; reason: 'not-entitled' | 'no-credits' | 'no-credits-paused' | 'unknown' | 'here' | 'contacted' };
 
 export type StartResult = { ok: true; session: CanonicalSession | null; missionId: string; charged: boolean } | { ok: false; reason: 'not-entitled' | 'no-credits' | 'not-open' | 'unknown' };
 export type OfferResponse = 'decline' | 'ignore' | 'question' | 'refuse' | 'disobey';
@@ -287,6 +295,117 @@ export class Universe {
       return d;
     });
     return { ok: true };
+  }
+
+  // ------------------------------------------------------------ exploration --
+
+  /** The long-range survey and the Halcyon's position (read-only; seeded view before first use). */
+  exploration(): DeepReadonly<Exploration> | null {
+    const c = this.canon();
+    return c ? explore.explorationOf(c) : null;
+  }
+
+  /**
+   * Hold the patrol for up to `hours` of canonical time. Each hour the world moves on; the patrol
+   * stops early when something reaches the bridge (a hail, a distress call, a science reading).
+   * Free; paused while the daily allowance is spent (as "continue patrol" always was).
+   */
+  patrol(hours: number): PatrolResult {
+    if (!this.ensureCanon()) return { ok: false, reason: 'not-entitled' };
+    if (this.creditsRemaining() <= 0) return { ok: false, reason: 'no-credits-paused' };
+    let passed = 0;
+    let traffic: Traffic | null = null;
+    this.repo.canon.commit(this.ctx(), (d) => {
+      const e = explore.ensureExploration(d);
+      for (let h = 0; h < Math.max(1, Math.round(hours)); h++) {
+        const from = d.clock;
+        d.clock += 60;
+        passed++;
+        world.advanceWorld(d, 60, this.appVersion, { from });
+        replenish(d, this.appVersion);
+        traffic = pickTraffic(d);
+        if (traffic) {
+          this.deliver(d, e, traffic);
+          break;
+        }
+      }
+      return d;
+    });
+    return { ok: true, hours: passed, traffic };
+  }
+
+  /** Priority traffic waiting for the Halcyon right now (Fleet directives), without time passing. Free. */
+  checkTraffic(): Traffic | null {
+    const c = this.canon();
+    if (!c || !this.entitlements().activeDuty) return null;
+    const t = pickTraffic(clone(c) as CanonicalState, { priorityOnly: true });
+    if (!t) return null;
+    this.repo.canon.commit(this.ctx(), (d) => {
+      this.deliver(d, explore.ensureExploration(d), t);
+      return d;
+    });
+    return t;
+  }
+
+  private deliver(d: CanonicalState, e: Exploration, t: Traffic): void {
+    markDelivered(d, e, t);
+    if (t.kind === 'science') explore.detectCivilization(d, e, t.systemId, this.appVersion);
+  }
+
+  /**
+   * "Helm, set a course for Veyra." Travel takes canonical time. A course to a civilization that
+   * has not been contacted is an investigation: a new canonical start, charged once (credit rules unchanged).
+   */
+  setCourse(placeId: string): CourseResult {
+    if (!this.ensureCanon()) return { ok: false, reason: 'not-entitled' };
+    const e0 = explore.explorationOf(this.canon()!);
+    const target = placeId === explore.STATION ? null : explore.systemById(e0 as Exploration, placeId);
+    if (placeId !== explore.STATION && !target) return { ok: false, reason: 'unknown' };
+    if (e0.location === placeId) return { ok: false, reason: 'here' };
+    const investigating = !!(target?.civ && target.signal !== 'none' && !target.contacted);
+    let charged = false;
+    let ledger: CreditLedger | null = null;
+    if (investigating) {
+      const r = charge(this.repo.credits.read(), `investigate:${placeId}`, this.now());
+      if (!r.ok) {
+        this.repo.credits.write(r.ledger);
+        return { ok: false, reason: 'no-credits' };
+      }
+      charged = r.charged;
+      ledger = r.ledger;
+    } else if (this.creditsRemaining() <= 0) return { ok: false, reason: 'no-credits-paused' };
+    const hours = explore.travelHours(e0 as Exploration, e0.location, placeId);
+    let traffic: Traffic | null = null;
+    this.repo.canon.commit(this.ctx(), (d) => {
+      const e = explore.ensureExploration(d);
+      if (investigating && e.investigation?.systemId !== placeId) e.investigation = { systemId: placeId, startedAt: d.clock, arrivedAt: null };
+      const from = d.clock;
+      d.clock += hours * 60;
+      world.advanceWorld(d, hours * 60, this.appVersion, { from });
+      replenish(d, this.appVersion);
+      explore.arrive(d, e, placeId, this.appVersion);
+      if (investigating) d.captain.career.push({ id: `career-investigate-${placeId}-${d.nextSeq++}`, at: d.clock, missionId: null, eventId: null, text: `Investigated possible civilization signals at ${target!.name}.` });
+      traffic = pickTraffic(d, { priorityOnly: true });
+      if (traffic) this.deliver(d, e, traffic);
+      return d;
+    });
+    if (ledger) this.repo.credits.write(ledger);
+    return { ok: true, to: placeId, hours, charged, investigating, traffic };
+  }
+
+  /** First contact concluded on the bridge: record what it settled (once). */
+  recordFirstContact(systemId: string, approach: explore.Approach): { ok: true; outcome: import('./types').ContactOutcome } | { ok: false; reason: 'not-entitled' | 'not-investigating' } {
+    const c = this.canon();
+    if (!c || !this.entitlements().activeDuty) return { ok: false, reason: 'not-entitled' };
+    const e = explore.explorationOf(c);
+    const sys = explore.systemById(e as Exploration, systemId);
+    if (!sys?.civ || sys.contacted || e.investigation?.systemId !== systemId || e.investigation.arrivedAt === null) return { ok: false, reason: 'not-investigating' };
+    let outcome: import('./types').ContactOutcome = 'wary-contact';
+    this.repo.canon.commit(this.ctx(), (d) => {
+      outcome = explore.recordContact(d, explore.ensureExploration(d), systemId, approach, this.appVersion);
+      return d;
+    });
+    return { ok: true, outcome };
   }
 
   /** Learn from a command in any mode (terminology, comms preferences, sim drills). */

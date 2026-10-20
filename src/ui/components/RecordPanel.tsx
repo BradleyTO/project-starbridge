@@ -10,6 +10,7 @@ const CLASS: Record<WorldEvent['classification'], string> = {
   consequence: 'Consequence',
   bulletin: 'Bulletin',
   disciplinary: 'Disciplinary',
+  exploration: 'Exploration',
 };
 
 /** The captain's canonical record, with simulator familiarity kept visibly separate. */

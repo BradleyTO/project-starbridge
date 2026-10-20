@@ -115,7 +115,8 @@ export type EventClass =
   | 'mission' // a mission the captain carried out
   | 'consequence' // something that happened as a result (with or without the player)
   | 'bulletin' // news reaching the Halcyon (evidence of other events)
-  | 'disciplinary';
+  | 'disciplinary'
+  | 'exploration'; // v0.5: survey discoveries, investigations and first contact
 export type Authority = 'civilian' | 'fleet-command' | 'captain' | 'local-government' | 'observed';
 
 export interface WorldEvent {
@@ -202,7 +203,56 @@ export interface CanonicalState {
   news: { eventId: string; text: string; deliveredTo: string | null }[];
   /** v0.5: the captain's commission to active duty (absent on pre-v0.5 careers, which count as commissioned). */
   commission?: { at: CanonMinutes; atIso: string; ship: string; by: string };
+  /** v0.5: the long-range survey, where the Halcyon is, and what has reached the bridge (created lazily, seeded). */
+  exploration?: Exploration;
   provenance: Provenance;
+}
+
+// --------------------------------------------------------------- exploration --
+
+/** How a civilization feels about outsiders. Hidden from the captain until contact. Not every one wants the Concord. */
+export type Disposition = 'open' | 'cautious' | 'isolationist' | 'guarded';
+
+export interface Civilization {
+  id: string;
+  people: string;
+  leader: string;
+  station: string;
+  stationClass: string;
+  souls: number;
+  disposition: Disposition;
+}
+
+/** What first contact settled (written once, through the commit gate). */
+export type ContactOutcome = 'membership-talks' | 'trade-contact' | 'wary-contact' | 'declined' | 'warned-off' | 'hostile';
+
+export interface ExploredSystem {
+  id: string;
+  name: string;
+  star: string;
+  distanceLy: number;
+  /** Bearing from the patrol station (degrees), for travel times between systems. */
+  bearing: number;
+  signal: 'none' | 'possible' | 'confirmed';
+  note: string;
+  civ: Civilization | null;
+  detectedAt: CanonMinutes | null;
+  investigated: boolean;
+  contacted: boolean;
+  outcome: ContactOutcome | null;
+}
+
+export interface Exploration {
+  /** 'station' (the Tessarine patrol station) or a system id. */
+  location: string;
+  systems: ExploredSystem[];
+  /** The investigation under way (charged once, like any new canonical start). */
+  investigation: { systemId: string; startedAt: CanonMinutes; arrivedAt: CanonMinutes | null } | null;
+  /** Offers / discoveries / news already delivered to the bridge (ids). */
+  delivered: string[];
+  lastDeliveryAt: CanonMinutes | null;
+  /** What reached the bridge, in order (hails, distress calls, science readings, bulletins). */
+  traffic: { at: CanonMinutes; kind: 'hail' | 'distress' | 'request' | 'science' | 'bulletin' | 'arrival'; ref: string }[];
 }
 
 // ----------------------------------------------------------------- simulation --
