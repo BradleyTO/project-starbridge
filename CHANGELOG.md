@@ -38,6 +38,9 @@ No AI is used in this milestone. Everything below is deterministic and offline, 
   - Every first run is kept in `tests/eval/RESULTS-*-firstrun.md`.
 - **Smoke** (`scripts/smoke.mjs`) now covers: the idle bridge on load, bridge commands, a voice-style simulation start, multi-turn comms, ending a simulation, the commission, organic events and quiet periods, the science investigation and first contact, reserve status, and the phone layout.
 
+### Fixed
+- On phones a long caller name in the comms log (e.g. a first-contact speaker) could widen the comms panel past the screen (an intermittent 32 px overflow). Speaker labels now wrap and panels may shrink. A smoke check injects a long speaker name at 390 px (169 px of overflow before the fix, 0 after).
+
 ### Changed (deliberate test expectation changes)
 - The smoke test enters every simulation from the bridge (v0.4 opened directly in a simulation).
 - The v0.4 "unknown order" smoke check: with a channel open, an unclear line now goes to the other party, who asks for clarification.

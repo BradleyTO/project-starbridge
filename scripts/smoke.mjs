@@ -560,6 +560,17 @@ for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape',
   const ov5 = await p5.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   const wide5 = await p5.evaluate(() => [...document.querySelectorAll('body *')].filter((e) => e.getBoundingClientRect().right > window.innerWidth + 1).slice(0, 4).map((e) => `${e.tagName}.${String(e.className).slice(0, 40)}[${e.getAttribute('data-testid') ?? ''}]`).join(', '));
   check('v0.5 phone: bridge has no horizontal overflow', ov5 <= 0, `overflow ${ov5}px ${wide5}`);
+  const ovLong = await p5.evaluate(() => {
+    const s = document.querySelector('.comms .log-scroll') || document.querySelector('.comms .panel-body');
+    if (!s) return -1;
+    const d = document.createElement('div'); d.className = 'log-entry ch-comms'; d.id = 'smoke-long-speaker';
+    d.innerHTML = '<span class="log-time">T+01:00</span><span class="log-speaker">Ossari Listening Ring · First Listener Tavin Ossu of the Quiet Council</span><p class="log-text">Smoke layout probe.</p>';
+    s.appendChild(d);
+    const o = document.documentElement.scrollWidth - window.innerWidth;
+    d.remove();
+    return o;
+  });
+  check('v0.5 phone: a long caller name does not widen the comms panel', ovLong === 0, `overflow ${ovLong}px`);
   check('v0.5 phone: command input and mode banner visible', (await p5.locator('[data-testid=command-input]').isVisible()) && (await p5.locator('[data-testid=mode-banner]').isVisible()));
   r = await ask('First Officer, give me a status report');
   check('v0.5 phone: bridge commands work', /Captain/.test(r));

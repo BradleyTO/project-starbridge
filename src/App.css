@@ -285,3 +285,11 @@
 .duty-chip.reserve { border-color: #8a96a8; color: #c4ccd8; }
 .mode-banner.bridge.duty-active { border-color: #c9a24a; }
 .mode-banner.bridge.duty-reserve { border-color: #8a96a8; }
+
+/* v0.5.0: long caller names (e.g. a first-contact speaker) must not widen the comms panel past a phone screen */
+.col-right > .panel, .col-left > .panel, .col-center > .panel { min-width: 0; }
+.log-entry { grid-template-columns: 52px minmax(0, auto) 1fr; }
+@media (max-width: 760px) {
+  .grid { grid-template-columns: minmax(0, 1fr); }
+  .log-speaker { white-space: normal; overflow-wrap: anywhere; }
+}
