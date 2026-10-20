@@ -1123,23 +1123,38 @@ const SURVEY = /\b(?:what|which|any|list|show(?: me)?|tell me about)\b.*\b(?:sys
 
 const CIVS = /\b(?:civili[sz]ations?|inhabited (?:systems?|worlds?|planets?)|intelligent life|alien (?:life|signals?|species)|(?:other |new )?species|cultures|peoples|first contact candidates?)\b/;
 const PATROL =
-  /^(?:(?:helm|xo|number one|first officer|commander|marrow|ensign|adeyemi)[,:]?\s+)?(?:(?:ok(?:ay)?|right|alright|all right)[,.]?\s+)?(?:let'?s\s+)?(?:continue|resume|carry on(?: with)?|proceed with|begin|start|go on with|get back to|return to|back to|keep up)\s+(?:the\s+|our\s+)?patrol\b|^(?:let'?s\s+)?patrol the (?:sector|area|border|reach|region)\b|\b(?:wait|hold (?:station|position)|stand by|keep station|hold here)\b.*?\b(\d+|an?|one|two|three|four|five|six|eight|ten|twelve|several|a few|a couple of) hours?\b|\blet (?:some )?time pass\b|^(?:carry on|as you were|steady as she goes)$/;
+  /^(?:(?:helm|xo|number one|first officer|commander|marrow|ensign|adeyemi)[,:]?\s+)?(?:(?:ok(?:ay)?|right|alright|all right)[,.]?\s+)?(?:let'?s\s+)?(?:continue|resume|carry on(?: with)?|proceed with|begin|start|go on with|get back to|return to|back to|keep up)\s+(?:the\s+|our\s+)?patrol\b|^(?:let'?s\s+)?patrol the (?:sector|area|border|reach|region)\b|\b(?:wait|hold (?:station|position)|stand by|keep station|hold here)\b.*?\b(\d+|an?|one|two|three|four|five|six|eight|ten|twelve|several|a few|a couple of) hours?\b|\blet (?:some )?time pass\b|\blet (?:a few|some|several|a couple of|\d+|two|three|four|six) hours (?:go by|pass|roll by|tick by)\b|\bpass the time\b|\b(?:keep|continue|carry on|resume|go on) patrolling\b|\bkeep (?:on |up )?(?:the |our )?patrol\b|^(?:carry on|as you were|steady as she goes)$/;
 const NUM: Record<string, number> = { a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, eight: 8, ten: 10, twelve: 12, several: 4, 'a few': 3, 'a couple of': 2 };
 const COURSE =
-  /^(?:(?:helm|ensign|adeyemi|mr\.? adeyemi|navigation|nav)[,:]?\s+)?(?:please\s+)?(?:(?:set|lay in|plot)(?: (?:a|our|the))? course (?:for|to)|take us(?: back)? to|head (?:for|to)|make for|go to|let'?s (?:go to|investigate|visit|check out|head to)|investigate|visit|move us to|return to|jump to|bring us (?:to|back to)|engage(?: a)? course (?:for|to))\s+(.+)$/;
+  /^(?:(?:helm|ensign|adeyemi|mr\.? adeyemi|navigation|nav)[,:]?\s+)?(?:please\s+)?(?:(?:set|lay in|plot)(?: (?:a|our|the))? course (?:for|to)|take us(?: back)? to|head (?:back )?(?:for|to)|make for|go (?:back )?to|let'?s (?:go to|investigate|visit|check out|head to)|investigate|visit|move us to|return to|jump to|bring us (?:to|back to)|engage(?: a)? course (?:for|to))\s+(.+)$/;
 const ACCEPT =
   /\b(?:accept(?:ed)?|we'?ll take it|take (?:the|that|this) (?:assignment|mission|job)|(?:we'?re |we are )?on our way|set (?:a )?course to assist|(?:respond|responding|answer|answering) (?:to )?(?:the|that|their|this) (?:call|distress(?: call)?|signal|mayday|hail)|let'?s help|we'?ll help|go to their aid|we'?ll do it|count us in|we'?ll go|affirmative|acknowledged|understood|we are responding|we'?re responding|help them|tell them we'?re coming|yes)\b/;
-const DECLINE = /\b(?:decline|pass on (?:it|this|that)|not this time|turn (?:it|them|that) down|we can'?t (?:help|take it|go|spare)|no,? thank you|no thanks|tell them no|say no|we'?ll pass)\b/;
+const DECLINE = /\b(?:can'?t make it|(?:we'?re|we are) (?:sorry|unable)|unable to (?:help|go|assist|take)|decline|pass on (?:it|this|that)|not this time|turn (?:it|them|that) down|we can'?t (?:help|take it|go|spare)|no,? thank you|no thanks|tell them no|say no|we'?ll pass)\b/;
 const IGNORE = /\b(?:ignore (?:it|them|that|the call|the signal|the hail)?|log it and (?:continue|carry on|move on)|no response|don'?t (?:answer|respond|reply)|let it go|disregard)\b/;
 const QUESTION = /\b(?:request (?:more )?(?:details|clarification|information|confirmation)|(?:question|query|challenge) (?:the|that|this) (?:order|directive)|ask (?:them|fleet|fleet command|the admiral|her|him) (?:for|to) (?:more )?(?:details|clarif\w+|explain|confirm)|more (?:details|information)|what (?:are|were) the details|tell me more)\b/;
 const REFUSE = /\b(?:refuse|we will not comply|we won'?t (?:comply|do it|go|obey)|i won'?t do (?:it|that)|we'?re not going)\b/;
 
-function respondOf(t: string): string | null {
+/** "Tell Fleet we're on it", "Inform the colony office that…", "Ask the admiral why…": answering through comms. */
+const RELAY_LEAD = /^(?:(?:comms|communications|szabo|lieutenant)[,:]?\s+)?(?:please\s+)?(tell|inform|advise|signal|message|notify|reply to|answer|thank|ask)\s+(?:fleet(?: command)?|the admiral|admiral kaine|kaine|them|her|him|the colony(?: office)?|the (?:survey|colony) office|hollin|the hauler|the caller)\b(?:\s+(?:that|but))?[,:]?\s*/;
+const ACCEPT_MORE = /\b(?:acknowledge(?: (?:the|that|it|this)(?: directive| order| call)?)?|(?:is|are|we'?re) responding|(?:going to|gonna|we'?ll|we will) (?:help|assist|rescue|aid)|help (?:that|the|those) (?:hauler|ship|freighter|crew|people|tender)|(?:we'?re|we are) on it|on it|message received|intercept|go get them|get them out|sure|we can (?:escort|help|do (?:it|that)|take (?:it|that))|will do|right away|make it so|we'?ll be there|go now)\b/;
+const REFUSE_MORE = /\bwe(?:'ll| will)? stay (?:here|put|on station)\b|\b(?:(?:will|won'?t) not be going|won'?t be going|not be going|forbids?|we decline to comply)\b/;
+const IGNORE_MORE = /\bleave it\b|\b(?:someone|somebody) (?:else|closer) (?:will|can)\b|\blet someone else\b|\b(?:pretend we (?:didn'?t|did not) (?:hear|get) (?:it|that|them)|say nothing|we never got (?:it|that))\b/;
+
+function respondOf(t0: string): string | null {
+  const lead = RELAY_LEAD.exec(t0);
+  const t = lead ? t0.slice(lead[0].length) : t0;
+  // "Ask the admiral why it has to be us": a question to the caller.
+  if (lead?.[1] === 'ask' && /^(?:why|what|how|whether|if|for|to (?:explain|clarify|confirm))\b/.test(t)) return 'question';
+  if (/^why\b|\bwhy (?:us|the halcyon|does|do|is|has|would|should)\b|\b(?:i|we) (?:want|would like|'d like) to know\b/.test(t)) return 'question';
+  if (REFUSE_MORE.test(t)) return 'refuse';
+  if (IGNORE_MORE.test(t)) return 'ignore';
   if (QUESTION.test(t)) return 'question';
   if (REFUSE.test(t)) return 'refuse';
   if (DECLINE.test(t)) return 'decline';
   if (IGNORE.test(t)) return 'ignore';
-  if (ACCEPT.test(t)) return 'accept';
+  if (ACCEPT.test(t) || ACCEPT_MORE.test(t)) return 'accept';
+  // A bare "No." (after questions, declines and accepts had their chance: "No, tell me more" asks; "No problem, we'll go" accepts).
+  if (/^no\b(?! problem| worries)/.test(t)) return 'refuse';
   return null;
 }
 

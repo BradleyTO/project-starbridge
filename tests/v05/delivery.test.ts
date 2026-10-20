@@ -284,3 +284,31 @@ describe('Simulation Mode and reserve bridges never touch the canon', () => {
     expect(JSON.stringify(t.u.exploration())).toBe(before);
   });
 });
+
+describe('answering a waiting call: wording edge cases (safety)', () => {
+  const answerOf = (text: string) => {
+    const t = setup();
+    const n = t.mark();
+    t.talk(text);
+    return { t, said: t.since(n) };
+  };
+  it('"No, tell me more" asks rather than refusing a directive', () => {
+    const { t, said } = answerOf('No, tell me more');
+    expect(said).toMatch(/Directive stands/);
+    expect(t.u.canon()!.discipline).toHaveLength(0);
+  });
+  it('"No problem, we\'ll go" accepts', () => {
+    const { t } = answerOf("No problem, we'll go");
+    expect(t.entered).toEqual(['The Kestrel Incident']);
+  });
+  it('a bare "No." refuses (formally, with a review), never silently', () => {
+    const { t, said } = answerOf('No. We stay here.');
+    expect(said).toMatch(/Refusal transmitted/);
+    expect(t.u.canon()!.discipline).toHaveLength(1);
+  });
+  it('raising shields while a call waits is an order, not an answer', () => {
+    const { t } = answerOf('Raise shields');
+    expect(t.s.duty?.incoming?.classification).toBe('directive');
+    expect(t.s.ships.halcyon.shields.raised).toBe(true);
+  });
+});
