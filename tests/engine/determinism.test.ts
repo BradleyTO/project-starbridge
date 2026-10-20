@@ -6,6 +6,7 @@ const SCRIPT = [
   'scan the kestrel and hail the cruiser',
   'approach the kestrel',
   'tell the prefect this is a humanitarian rescue',
+  'wait', // v0.5: messages cost seconds, not a minute; keeps the v0.4 timeline
   'wait',
   'lower shields and evacuate the crew',
   'raise shields and arm weapons',

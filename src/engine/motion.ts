@@ -31,9 +31,10 @@ export function postureSpeed(s: WorldState, id: ShipId, goal: NavGoal): number {
   return f;
 }
 
-export function runPhysics(s: WorldState): { state: WorldState; reports: Report[] } {
+export function runPhysics(s: WorldState, seconds: number = TURN_SECONDS): { state: WorldState; reports: Report[] } {
   const reports: Report[] = [];
-  const steps = Math.round(TURN_SECONDS / SUBSTEP_SECONDS);
+  // v0.5: physics can also run for the seconds spent talking (multiples of the 5 s sub-step).
+  const steps = Math.max(0, Math.round(seconds / SUBSTEP_SECONDS));
   const helm0 = s.ships.halcyon.nav;
   const order0 = helm0 ? getOrder(s, helm0.orderId) : undefined;
 

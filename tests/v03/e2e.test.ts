@@ -35,7 +35,7 @@ describe('e2e: a peaceful interposition influences Vane', () => {
   });
 
   it('control: approaching with shields up erodes his patience until he locks on', () => {
-    const s = play(start(SEED), ['raise shields', 'approach the kestrel', 'hail them', ...WAITS(6)]);
+    const s = play(start(SEED), ['raise shields', 'approach the kestrel', 'hail them', ...WAITS(7)] /* v0.5: the hail costs 15 s, not a minute */);
     expect(s.characters.vane.memory.patience ?? 0).toBeLessThanOrEqual(0);
     expect(s.characters.vane.memory.lockedOn).toBe(1);
   });
@@ -47,7 +47,7 @@ describe('e2e: a peaceful interposition influences Vane', () => {
     let controlLocks = 0;
     for (let seed = 1; seed <= 30; seed++) {
       const a = play(start(seed), [USER_ORDER, ...WAITS(6)]);
-      const b = play(start(seed), ['raise shields', 'approach the kestrel', 'hail them', ...WAITS(6)]);
+      const b = play(start(seed), ['raise shields', 'approach the kestrel', 'hail them', ...WAITS(7)] /* v0.5: the hail costs 15 s, not a minute */);
       peacefulFired += a.flags.cruiserFired ? 1 : 0;
       controlFired += b.flags.cruiserFired ? 1 : 0;
       peacefulLocks += a.characters.vane.memory.lockedOn ? 1 : 0;

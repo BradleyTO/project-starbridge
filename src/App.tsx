@@ -1,3 +1,5 @@
+import { ChannelIndicator } from './ui/components/ChannelIndicator';
+import { channelView } from './engine/comms';
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import type { WorldState } from './engine/types';
 import type { Interpretation } from './engine/schema';
@@ -104,6 +106,7 @@ export default function App() {
   const helm = useMemo(() => helmView(state), [state]);
   const orders = useMemo(() => ordersView(state), [state]);
   const suggestions = useMemo(() => scenario.suggestions(state), [state]);
+  const channel = useMemo(() => channelView(state, scenario.hooks.dialogue), [state]);
 
   // Opening exposition beats on a timer until the intro completes (or is skipped).
   useEffect(() => {
@@ -366,7 +369,9 @@ export default function App() {
           )}
           <NarrativePanel log={state.log} />
           <OrdersStrip orders={orders} />
+          <ChannelIndicator view={channel} />
           <CommandInput
+            onChannel={!!channel && channel.state !== 'hold'}
             key={session}
             endedHint={canonical ? 'Canonical mission ended — open the Hub to continue' : 'Simulation ended — restart or load'}
             onCommand={onCommand}

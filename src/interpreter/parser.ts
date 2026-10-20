@@ -14,6 +14,7 @@
  * Anything that maps to no action and is not rationale is returned in
  * `unparsed`: the hook for a future AI fallback interpreter.
  */
+import { routeComms } from './dialogue';
 import type { Interpretation, ProposedActionInput, CommIntent, TradeOffer, ManeuverIntentT } from '../engine/schema';
 import { InterpretationSchema } from '../engine/schema';
 import { planConflict } from '../engine/standing';
@@ -168,7 +169,7 @@ interface Rule {
 
 const SPEECH = /\b(hail|hailing|contact (?=the |them|her|him|it\b|vane|arden|prefect|captain|both|every)|get (?:the |that )?\w+ on (?:the )?(?:line|screen)|call|signal|open (a )?(channel|comms|frequency|hailing frequencies|line)|on screen|on (?:the )?(?:main )?(?:viewer|viewscreen)|onscreen|tell|inform|say|explain|warn|threaten|assure|reassure|ask|request|demand|offer|propose|trade|exchange|negotiate|bluff|lie to|plead|appeal|respond|reply|talk|speak|answer|broadcast|transmit|message|remind|convince|persuade|hand over|grant|promise)\b/;
 
-function commIntent(c: string): { intent: CommIntent; offer?: TradeOffer; topic?: 'cargo' | 'passenger' | 'intentions' | 'crew' | 'general' } {
+export function commIntent(c: string): { intent: CommIntent; offer?: TradeOffer; topic?: 'cargo' | 'passenger' | 'intentions' | 'crew' | 'general' } {
   if (/\b(asylum|sanctuary|safe haven|refuge|protection)\b/.test(c)) return { intent: 'offerAsylum' };
   if (/\b(offer|trade|exchange|give (them|him|it)|hand over|handover|surrender|in return|a deal|swap|ransom|in exchange)\b/.test(c)) {
     let offer: TradeOffer = 'unspecified';
@@ -237,7 +238,7 @@ const navDraft = (intent: ManeuverIntentT, c: string, extra: Record<string, unkn
 const RULES: Rule[] = [
   {
     name: 'help',
-    test: /^(help|commands|what (orders|commands) can i give|how do i play)\b/,
+    test: /^(help|commands|what (orders|commands) can i give|how do i play)\b(?!\s+(is|are|was|will|has|have|'?s)\b)/,
     build: () => ({ kind: 'action', action: { type: 'query', topic: 'help' } }),
   },
   {
@@ -780,6 +781,8 @@ function resolveTargets(parsed: Parsed[], ctx: InterpreterContext): { actions: P
       if (!ref && ['standoff', 'approach', 'holdStation', 'orbit'].includes(intent) && (antecedent === 'kestrel' || antecedent === 'cruiser')) ref = antecedent;
       // "Bring us in": in a distress call, in means toward the ship in distress.
       if (!ref && intent === 'approach' && /\b(bring|take|move|go|close|head) (us )?in\b/.test(p.clause) && ctx.visible.includes('kestrel')) ref = 'kestrel';
+      // "Get us within transporter range": only the Kestrel can be transported to.
+      if (!ref && /\btransport(er)? range\b/.test(p.clause) && ctx.visible.includes('kestrel')) ref = 'kestrel';
       if (!ref && !OPTIONAL_TARGET.includes(intent)) ref = defaultNavTarget(intent, p.clause, ctx);
       if (!ref && !OPTIONAL_TARGET.includes(intent)) {
         clarify = clarify ?? { question: `${verbFor(intent)} which contact, Captain — the Kestrel or the cruiser?`, options: OPTIONS_CONTACTS, clause: p.clause };
@@ -1094,6 +1097,38 @@ export function interpretSync(input: string, ctx: InterpreterContext): Interpret
   }
   // Answering a clarifying question goes straight to the clause parser (it knows the pending clause).
   if (ctx.pending) return interpretCore(input, ctx);
+  // v0.5: "why?" / "Rask, why did you refuse?" asks the officer to explain a refusal.
+  const why = whyQuery(input, ctx);
+  if (why) return { kind: 'actions', actions: [why] as never, unparsed: [], notes: [], source };
+  // v0.5: with a channel open (or someone addressed by name) speech and crew orders are separated first.
+  const routed = routeComms(input, ctx, (t, c) => ordersSync(t, c));
+  if (routed) return safe(routed, input);
+  return ordersSync(input, ctx);
+}
+
+const WHY_EXPLICIT =
+  /^(?:([a-z.]+(?: [a-z.]+)?)\s*[,:]\s*)?(?:why (?:did|would|do|won'?t|wouldn'?t|didn'?t) (you|he|she|they|[a-z.]+(?: [a-z.]+)?) (?:refuse|decline|say no|not (?:fire|shoot|do it|comply|obey))\b.*|why (?:the|that) refusal\b.*|explain (?:your|the|that|his|her) refusal\b.*|why (?:won'?t|wouldn'?t|didn'?t) (?:you|he|she) (?:fire|shoot|comply|obey)\b.*)$/;
+const WHY_BARE = /^(?:([a-z.]+(?: [a-z.]+)?)\s*[,:]\s*)?(?:why|why not|why's that|why is that|on what grounds|explain yourself)$/;
+
+function whyQuery(input: string, ctx: InterpreterContext): { type: 'query'; topic: 'why'; officer?: string } | null {
+  const t = input.trim().toLowerCase().replace(/[?!.]+$/, '').trim();
+  const e = WHY_EXPLICIT.exec(t);
+  if (e) {
+    const who = e[1] ?? (e[2] && !/^(you|he|she|they)$/.test(e[2]) ? e[2] : undefined);
+    return { type: 'query', topic: 'why', ...(who ? { officer: who } : {}) };
+  }
+  const b = WHY_BARE.exec(t);
+  if (b && (ctx.recentRefusal || !ctx.channel || b[1])) {
+    // "Prefect, why?" is for the channel, not the crew.
+    if (b[1] && /\b(prefect|vane|captain|arden|hollis|sorel)\b/.test(b[1])) return null;
+    return { type: 'query', topic: 'why', ...(b[1] ? { officer: b[1] } : {}) };
+  }
+  return null;
+}
+
+/** The crew-order interpreter (v0.4 behaviour): structured sentences, then the clause parser. */
+function ordersSync(input: string, ctx: InterpreterContext): Interpretation {
+  const source = 'offline-parser';
   const text = normaliseMarked(input);
   const sentences = text.split(/\s*[.;]+\s*/).map((x) => x.trim()).filter(Boolean);
   const structured = (x: string) => {

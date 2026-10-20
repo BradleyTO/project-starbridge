@@ -22,6 +22,8 @@ import { TURN_SECONDS, clamp, efficiency } from './rules';
 import { addLog, patchShip, patchSystem, setCounter } from './state';
 import { runPhysics } from './motion';
 import { addOrder, goalLabel, updateOrder } from './orders';
+import { checkPromises } from './comms';
+import { recordRefusal } from './roe';
 
 export interface TurnResult {
   state: WorldState;
@@ -75,6 +77,7 @@ export function processOrders(
   const reports: Report[] = [];
   const rng = createRng(s.rng);
   let timePasses = false;
+  let seconds = 0;
 
   // The WHOLE command becomes a validated plan before anything changes: every action must pass
   // the schema, and contradictory parts mean nothing runs (the crew asks instead).
@@ -109,6 +112,7 @@ export function processOrders(
     results.push({ action: v.action, status: v.status });
     const label = orderLabel(s, parsed.data);
     if (v.status === 'rejected') {
+      if (v.refusal) s = recordRefusal(s, v.refusal.officer, v.refusal.order, v.refusal.reasons);
       if (label) s = addOrder(s, deptOf(parsed.data), label, 'impossible', v.reasons[0]?.key ?? '').state;
       continue;
     }
@@ -128,6 +132,7 @@ export function processOrders(
     // Manoeuvres and jump charging track their own lifecycle; everything else completes now.
     if (label && v.action.type !== 'maneuver' && !(v.action.type === 'jump' && v.action.mode !== 'engage')) s = addOrder(s, deptOf(v.action), orderLabel(s, v.action) ?? label, 'completed').state;
     if (v.timeCost) timePasses = true;
+    seconds += v.seconds ?? 0;
     if (s.flags.jumped || s.ships.halcyon.destroyed) break;
   }
 
@@ -135,6 +140,10 @@ export function processOrders(
   const now = checkStanding(s, rng, scenario.hooks);
   s = now.state;
   reports.push(...now.reports);
+  // Promises made on the record are checked immediately (arming right after promising not to is noticed).
+  const kept = checkPromises(s, scenario.hooks.dialogue);
+  s = kept.state;
+  reports.push(...kept.reports);
 
   s = { ...s, lastTarget: lastTargetOf(actions, s.lastTarget) };
   const lastComm = [...results].reverse().find((r) => r.action.type === 'communicate' && r.status !== 'rejected');
@@ -144,6 +153,11 @@ export function processOrders(
 
   if (timePasses && !s.flags.jumped) {
     const t = advanceTurn({ ...s, rng: rng.state }, rng, scenario);
+    s = t.state;
+    reports.push(...t.reports);
+  } else if (seconds > 0 && !s.flags.jumped && !s.outcome) {
+    // Talking costs seconds, not minutes. The clock still runs: every full minute the world acts.
+    const t = advanceSeconds({ ...s, rng: rng.state }, seconds, rng, scenario);
     s = t.state;
     reports.push(...t.reports);
   }
@@ -174,6 +188,8 @@ function deptOf(a: ProposedAction): Department {
     case 'scan':
       return 'science';
     case 'communicate':
+    case 'speak':
+    case 'channel':
       return 'comms';
     default:
       return 'xo';
@@ -218,7 +234,10 @@ function orderLabel(s: WorldState, a: ProposedAction): string | null {
     case 'restrict':
       return `Hold: ${SUBJECT_LABEL[a.subject]}${a.until ? ` until ${describeTrigger(s, a.until)}` : ''}`;
     case 'learn':
+    case 'speak':
       return null;
+    case 'channel':
+      return a.op === 'open' ? `${a.private ? 'Private channel' : 'Channel'} to ${name(a.party === 'passenger' ? 'passenger' : a.party)}` : `Channel: ${a.op}`;
   }
 }
 
@@ -231,10 +250,12 @@ function finalise(s: WorldState, scenario: ScenarioModule): WorldState {
 /** One minute of simulated time: standing orders, physics, then the scenario's agents and events. */
 export function advanceTurn(s: WorldState, rng: Rng, scenario: ScenarioModule): { state: WorldState; reports: Report[] } {
   const reports: Report[] = [];
-  s = { ...s, turn: s.turn + 1, time: s.time + TURN_SECONDS };
+  // Seconds already spent talking since the last minute boundary count toward this minute.
+  const carry = s.counters.clockCarry ?? 0;
+  s = { ...s, turn: s.turn + 1, time: s.time + TURN_SECONDS - carry, counters: { ...s.counters, clockCarry: 0 } };
 
-  // Physics: every ship follows its nav goal for TURN_SECONDS in sub-steps.
-  const phys = runPhysics(s);
+  // Physics: every ship follows its nav goal for the rest of the minute (talk time already moved them).
+  const phys = runPhysics(s, TURN_SECONDS - carry);
   s = phys.state;
   reports.push(...phys.reports);
 
@@ -269,5 +290,34 @@ export function advanceTurn(s: WorldState, rng: Rng, scenario: ScenarioModule): 
   const sim = scenario.simulate(s, rng);
   // Standing orders and conditional prohibitions react to what just happened.
   const st = checkStanding(sim.state, rng, scenario.hooks);
-  return { state: st.state, reports: [...reports, ...sim.reports, ...st.reports] };
+  const pr = checkPromises(st.state, scenario.hooks.dialogue);
+  return { state: pr.state, reports: [...reports, ...sim.reports, ...st.reports, ...pr.reports] };
+}
+
+/**
+ * Sub-minute time (dialogue, hails, channel operations). The clock advances by `seconds`;
+ * whenever that crosses a minute boundary the world takes its normal one-minute turn
+ * (physics, NPC agents, events), so talking is cheap but never free.
+ */
+export function advanceSeconds(s: WorldState, seconds: number, rng: Rng, scenario: ScenarioModule): { state: WorldState; reports: Report[] } {
+  const reports: Report[] = [];
+  let carry = s.counters.clockCarry ?? 0;
+  let left = seconds;
+  while (left > 0 && !s.outcome) {
+    const room = TURN_SECONDS - carry;
+    if (left < room) {
+      // Ships keep moving while we talk; the NPCs decide again at the minute boundary.
+      const phys = runPhysics(s, left);
+      s = { ...phys.state, time: s.time + left, counters: { ...phys.state.counters, clockCarry: carry + left } };
+      reports.push(...phys.reports);
+      break;
+    }
+    const t = advanceTurn(s, rng, scenario);
+    s = t.state;
+    reports.push(...t.reports);
+    left -= room;
+    carry = 0;
+    if (scenario.detectOutcome(s)) break;
+  }
+  return { state: s, reports };
 }

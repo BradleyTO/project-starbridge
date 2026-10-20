@@ -1,4 +1,5 @@
 /** Scenario-specific meaning of scans, conversation, improvised tactics and queries. */
+import { explainRefusal } from '../../engine/roe';
 import type { ProposedAction } from '../../engine/schema';
 import type { Applied, ScenarioHooks } from '../../engine/reduce';
 import type { Report } from '../../engine/report';
@@ -102,7 +103,7 @@ function scan(s: WorldState, target: 'kestrel' | 'cruiser' | 'compartment' | 'ar
 
 type Comm = Extract<ProposedAction, { type: 'communicate' }>;
 
-function talkToArden(s: WorldState, a: Comm): Applied {
+export function talkToArden(s: WorldState, a: Comm): Applied {
   const r: Report[] = [];
   const arden = s.characters.arden;
   const first = !arden.memory.hailed;
@@ -140,7 +141,7 @@ function talkToArden(s: WorldState, a: Comm): Applied {
   return { state: s, reports: r };
 }
 
-function talkToPassenger(s: WorldState, a: Comm): Applied {
+export function talkToPassenger(s: WorldState, a: Comm): Applied {
   const r: Report[] = [];
   const p = s.characters.passenger;
   const prof = PASSENGER_PROFILES[s.variant.passenger];
@@ -180,7 +181,7 @@ function reachAgreement(s: WorldState, kind: 1 | 2 | 3, r: Report[]): WorldState
   return s;
 }
 
-function talkToVane(s: WorldState, a: Comm, rng: Rng): Applied {
+export function talkToVane(s: WorldState, a: Comm, rng: Rng): Applied {
   const r: Report[] = [];
   const vane = s.characters.vane;
   const temp = s.variant.temperament;
@@ -384,6 +385,8 @@ export function suggestOptions(s: WorldState): string[] {
 function query(s: WorldState, topic: Extract<ProposedAction, { type: 'query' }>['topic']): Applied {
   const h = s.ships.halcyon;
   switch (topic) {
+    case 'why':
+      return { state: s, reports: explainRefusal(s, undefined) };
     case 'status':
       return {
         state: s,

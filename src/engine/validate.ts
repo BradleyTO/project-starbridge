@@ -13,7 +13,9 @@ import type { ShipId, WorldState } from './types';
 import { weaponRange } from './combat';
 import { TRACTOR_RANGE, efficiency, km, range, systemLabel, transportRange, usable } from './rules';
 import { knows } from './state';
+import { COMMS_SECONDS, channelOf, commsOf, openChannel } from './comms';
 import { dot, effectivePerf, len, sub } from './kinematics';
+import { assessFire } from './roe';
 
 export interface Validation {
   status: 'accepted' | 'partial' | 'rejected';
@@ -21,8 +23,12 @@ export interface Validation {
   reasons: Report[];
   /** Does this action consume a turn (60 s)? */
   timeCost: 0 | 1;
+  /** v0.5: sub-minute time cost in seconds (dialogue, hails, channel operations). */
+  seconds?: number;
   /** The order is already satisfied (e.g. "keep shields down" while they are down): confirm, change nothing. */
   noop?: boolean;
+  /** v0.5: an officer refused on principle; recorded so "why?" can be answered. */
+  refusal?: { officer: 'tactical' | 'helm' | 'xo' | 'comms' | 'sensors' | 'engineering' | 'medical'; order: string; reasons: string[] };
 }
 const confirm = (action: ProposedAction, reasons: Report[]): Validation => ({ status: 'accepted', action, reasons, timeCost: 0, noop: true });
 
@@ -69,29 +75,56 @@ export function validate(s: WorldState, action: ProposedAction): Validation {
     }
 
     case 'communicate': {
+      const talk = (a: ProposedAction): Validation => ({ status: 'accepted', action: a, reasons: [], timeCost: 0, seconds: action.intent === 'open' ? COMMS_SECONDS.hail : COMMS_SECONDS.legacyMessage });
       if (!usable(h, 'comms', 0.1)) return no(action, [say('comms', 'systemUnavailable', { system: 'communications', status: h.systems.comms.status })]);
       if (action.target === 'passenger') {
         const p = s.characters.passenger;
         if (!knows(s, 'passenger_identity')) return no(action, [say('comms', 'unknownPassenger')]);
         if (p.status === 'dead') return no(action, [say('xo', 'passengerDead', { name: p.name })]);
         if (p.status === 'stasis') return no(action, [say('comms', 'passengerStasis', { name: p.name })]);
-        return ok(action, 1);
+        return talk(action);
       }
       if (action.target === 'all') {
         const reachable = (['kestrel', 'cruiser'] as const).filter((t) => validate(s, { ...action, target: t }).status !== 'rejected');
         if (!reachable.length) return no(action, [say('comms', 'nobodyToHail')]);
-        return ok(action, 1);
+        return talk(action);
       }
       if (action.target === 'kestrel') {
         const arden = s.characters.arden;
         if (arden.status === 'dead') return no(action, [say('comms', 'nobodyAnswers', { ship: 'Kestrel' })]);
         if (arden.ship === 'kestrel' && s.ships.kestrel.systems.comms.health <= 0) return no(action, [say('comms', 'nobodyAnswers', { ship: 'Kestrel' })]);
-        return ok(action, 1);
+        return talk(action);
       }
       if (!present(s, 'cruiser')) return no(action, [say('comms', 'noContact', { target: 'cruiser' })]);
       if (action.intent === 'trade' && action.offer === 'passenger' && !knows(s, 'passenger_identity'))
         return no(action, [say('xo', 'cannotOfferUnknown')]);
-      return ok(action, 1);
+      return talk(action);
+    }
+
+    case 'speak': {
+      if (!usable(h, 'comms', 0.1)) return no(action, [say('comms', 'systemUnavailable', { system: 'communications', status: h.systems.comms.status })]);
+      const v = validate(s, { type: 'communicate', target: action.to, intent: 'ask', onScreen: false });
+      if (v.status === 'rejected') return v.reasons.length ? { ...v, action } : no(action, [say('comms', 'noChannel')]);
+      return { status: 'accepted', action, reasons: [], timeCost: 0, seconds: action.relayed ? COMMS_SECONDS.relay : COMMS_SECONDS.speak };
+    }
+
+    case 'channel': {
+      const c = commsOf(s);
+      if (action.op === 'open') {
+        if (!action.party) return no(action, [say('comms', 'channelWho')]);
+        const v = validate(s, { type: 'communicate', target: action.party, intent: 'open', onScreen: false });
+        return v.status === 'rejected' ? { ...v, action } : { status: 'accepted', action, reasons: [], timeCost: 0, seconds: COMMS_SECONDS.hail };
+      }
+      if (action.op === 'resume') {
+        const held = action.party ? channelOf(s, action.party) : c.channels.find((x) => x.state === 'hold');
+        if (!held) return no(action, [say('comms', 'noHeldChannel')]);
+      } else if (action.op === 'unmute') {
+        if (!c.channels.some((x) => x.state === 'muted')) return no(action, [say('comms', 'notMuted')]);
+      } else {
+        const target = action.party ? channelOf(s, action.party) : openChannel(s) ?? c.channels[0];
+        if (!target) return no(action, [say('comms', 'noChannel')]);
+      }
+      return { status: 'accepted', action, reasons: [], timeCost: 0, seconds: COMMS_SECONDS.channelOp };
     }
 
     case 'maneuver': {
@@ -161,8 +194,10 @@ export function validate(s: WorldState, action: ProposedAction): Validation {
       const target = action.target;
       if (!target) return no(action, [say('tactical', 'needTarget')]);
       if (!present(s, target)) return no(action, [say('tactical', 'noContact', { target })]);
-      if (target === 'kestrel' && s.ships.kestrel.souls > 0 && !action.warning)
-        return no(action, [say('tactical', 'refuseCivilian', { souls: s.ships.kestrel.souls + (s.characters.passenger.ship === 'kestrel' ? 1 : 0) })]);
+      // v0.5: rules of engagement from world conditions (civilian / life signs / threat / surrender).
+      const roe = assessFire(s, target, { warning: action.warning });
+      if (roe.refuse)
+        return { ...no(action, [say('tactical', 'refuseCivilian', { souls: roe.souls, name: s.ships[target].name })]), refusal: { officer: 'tactical', order: action.mode === 'lock' ? `lock on the ${s.ships[target].name}` : `fire on the ${s.ships[target].name}`, reasons: roe.reasons } };
       if (action.mode === 'lock') {
         if (h.weapons.state === 'locked' && h.weapons.target === target) return no(action, [say('tactical', 'alreadyLocked')]);
         return ok(action, 0);

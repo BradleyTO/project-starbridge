@@ -6,6 +6,8 @@ import type { RecognitionLike } from '../speech';
 interface Props {
   onCommand: (text: string) => void;
   suggestions: string[];
+  /** v0.5: a comms channel is open — the input takes both dialogue and crew orders. */
+  onChannel?: boolean;
   disabled?: boolean;
   /** Shown when disabled (the run has ended). */
   endedHint?: string;
@@ -13,7 +15,7 @@ interface Props {
   clarification?: { question: string; options: string[] } | null;
 }
 
-export function CommandInput({ onCommand, suggestions, disabled, busy, clarification, endedHint = 'Simulation ended — restart or load' }: Props) {
+export function CommandInput({ onCommand, suggestions, disabled, busy, clarification, endedHint = 'Simulation ended — restart or load', onChannel = false }: Props) {
   const [text, setText] = useState('');
   const [listening, setListening] = useState(false);
   const [micNote, setMicNote] = useState('');
@@ -62,7 +64,7 @@ export function CommandInput({ onCommand, suggestions, disabled, busy, clarifica
           data-testid="command-input"
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder={disabled ? endedHint : 'Give any order, e.g. "Lower shields and beam the crew over"'}
+          placeholder={disabled ? endedHint : onChannel ? 'Speak to them, or give the crew an order ("We mean no harm", "Raise shields")' : 'Give any order, e.g. "Lower shields and beam the crew over"'}
           autoComplete="off"
           spellCheck={false}
         />
@@ -93,7 +95,7 @@ export function CommandInput({ onCommand, suggestions, disabled, busy, clarifica
         </div>
       ) : (
         !disabled && (
-          <div className="chips" aria-label="Suggested orders" data-testid="suggestions">
+          <div className="chips" aria-label={onChannel ? 'Suggested replies' : 'Suggested orders'} data-testid="suggestions">
             {suggestions.map((s) => (
               <button key={s} type="button" className="chip" onClick={() => !busy && onCommand(s)}>{s}</button>
             ))}

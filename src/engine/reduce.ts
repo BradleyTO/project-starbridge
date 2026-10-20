@@ -15,6 +15,10 @@ import { addOrder, getOrder, goalLabel, refName, updateOrder } from './orders';
 import { estimateEta, guidanceFor, headingOf, sub } from './kinematics';
 import { etaText, roundEta } from './motion';
 import { addTension, adjustTrust, knows, patchCharacter, patchShip, patchSystem, setCounter, setFlag } from './state';
+import type { DialogueProvider } from './dialogue';
+import { channelOf, closeChannel, commsOf, declare, openChannel, openChannelTo, patchComms, recordLine, setChannelState } from './comms';
+import { explainRefusal } from './roe';
+import type { Party } from './schema';
 
 export interface Applied {
   state: WorldState;
@@ -26,6 +30,32 @@ export interface ScenarioHooks {
   communicate(s: WorldState, action: Extract<ProposedAction, { type: 'communicate' }>, rng: Rng): Applied;
   improvise(s: WorldState, action: Extract<ProposedAction, { type: 'improvise' }>, rng: Rng): Applied;
   query(s: WorldState, topic: Extract<ProposedAction, { type: 'query' }>['topic']): Applied;
+  /** v0.5: two-way conversation on open channels (offline provider today; AI later). */
+  dialogue?: DialogueProvider;
+}
+
+const names = (s: WorldState, d: DialogueProvider | undefined, party: Party) => ({ speaker: d?.speakerName(s, party) ?? party, vessel: d?.vesselName(s, party) ?? party });
+
+/** Open a channel and let the other party answer (the comms officer reports it first). */
+function hailParty(s: WorldState, party: Party, rng: Rng, hooks: ScenarioHooks, priv: boolean, reports: Report[]): WorldState {
+  const d = hooks.dialogue;
+  const cur = openChannel(s);
+  if (cur?.party === party && (!priv || cur.private)) {
+    reports.push(say('comms', 'channelAlreadyOpen', names(s, d, party)));
+    return s;
+  }
+  const held = channelOf(s, party)?.state === 'hold';
+  if (cur && cur.party !== party) reports.push(say('comms', 'channelHoldOther', names(s, d, cur.party)));
+  s = openChannelTo(s, party, { private: priv });
+  const at = reports.length;
+  if (d && !held) {
+    const g = d.greet(s, party, rng, { private: priv });
+    s = g.state;
+    reports.push(...g.reports);
+  }
+  // The comms officer announces who answered (named once they have identified themselves).
+  reports.splice(at, 0, say('comms', held ? 'channelResumed' : priv ? 'channelOpenedPrivate' : 'channelOpened', names(s, d, party)));
+  return s;
 }
 
 const DONOR_ORDER: SystemId[] = ['weapons', 'tractor', 'sensors', 'transporter', 'jumpDrive', 'comms'];
@@ -36,6 +66,7 @@ export function applyAction(s: WorldState, action: ProposedAction, rng: Rng, hoo
 
   switch (action.type) {
     case 'query':
+      if (action.topic === 'why') return { state: s, reports: explainRefusal(s, action.officer) };
       return hooks.query(s, action.topic);
 
     case 'setAlert': {
@@ -66,12 +97,78 @@ export function applyAction(s: WorldState, action: ProposedAction, rng: Rng, hoo
       const intent = action.intent === 'open' && s.posture.stance === 'nonHostile' ? 'reassure' : action.intent;
       const targets = action.target === 'all' ? (['kestrel', 'cruiser'] as const).filter((t) => commReachable(s, t)) : [action.target];
       if (action.onScreen) reports.push(say('comms', targets.length > 1 ? 'onScreenSplit' : 'onScreen'));
+      const d = hooks.dialogue;
       for (const t of targets) {
+        if (d && t !== 'passenger') {
+          // v0.5: a hail opens a persistent session (the passenger is spoken to in person, no channel); a message to a closed channel opens one first.
+          const was = openChannel(s)?.party === t;
+          if (action.intent === 'open' && intent === 'open') {
+            s = hailParty(s, t, rng, hooks, false, reports);
+            continue;
+          }
+          if (!was) {
+            if (openChannel(s)) reports.push(say('comms', 'channelHoldOther', names(s, d, openChannel(s)!.party)));
+            s = openChannelTo(s, t);
+            reports.push(say('comms', 'channelOpened', names(s, d, t)));
+          }
+          s = recordLine(s, { from: 'captain', intents: [intent === 'open' ? 'greet' : intent === 'reassure' ? 'declarePeaceful' : intent === 'warn' ? 'warn' : intent === 'ask' ? 'ask' : (intent as never)], text: intent });
+          if (intent === 'reassure' || intent === 'humanitarian') s = declare(s, intent === 'humanitarian' ? 'rescue' : 'peaceful');
+        }
         const r = hooks.communicate(s, { ...action, target: t, intent }, rng);
         s = r.state;
         reports.push(...r.reports);
       }
+      // With two ships hailed at once the Prefect stays on the main channel; the Kestrel waits.
+      if (d && targets.length > 1 && targets.includes('cruiser')) s = openChannelTo(s, 'cruiser');
       if (s.posture.stance !== 'neutral' && targets.includes('cruiser')) s = setCounter(s, 'postureHeardTurn', s.turn);
+      return { state: s, reports };
+    }
+
+    case 'speak': {
+      const d = hooks.dialogue;
+      if (!d) return { state: s, reports: [say('comms', 'noDialogue')] };
+      const ch = channelOf(s, action.to);
+      if (ch?.state === 'muted') return { state: recordLine(s, { from: 'captain', intents: action.intents, text: action.text }), reports: [say('comms', 'mutedNoTransmit', names(s, d, action.to))] };
+      if (!ch || ch.state === 'hold' || openChannel(s)?.party !== action.to) {
+        const cur = openChannel(s);
+        if (cur && cur.party !== action.to) reports.push(say('comms', 'channelHoldOther', names(s, d, cur.party)));
+        reports.push(say('comms', ch ? 'channelResumed' : 'channelOpened', names(s, d, action.to)));
+        s = openChannelTo(s, action.to);
+      }
+      if (action.relayed) reports.push(say('comms', 'relaying', names(s, d, action.to)));
+      s = recordLine(s, { from: 'captain', intents: action.intents, text: action.text });
+      if (action.to === 'cruiser' && (action.intents.includes('declarePeaceful') || action.intents.includes('humanitarian'))) s = setCounter(s, 'postureHeardTurn', s.turn);
+      const r = d.respond(s, action, rng);
+      return { state: r.state, reports: [...reports, ...r.reports] };
+    }
+
+    case 'channel': {
+      const d = hooks.dialogue;
+      const c = commsOf(s);
+      const party = action.party ?? (action.op === 'resume' ? c.channels.find((x) => x.state === 'hold')?.party : (c.active ?? c.channels[0]?.party));
+      if (!party) return { state: s, reports: [say('comms', 'noChannel')] };
+      switch (action.op) {
+        case 'open':
+          return { state: hailParty(s, party, rng, hooks, action.private, reports), reports };
+        case 'close':
+          reports.push(say('comms', 'channelClosed', names(s, d, party)));
+          return { state: closeChannel(s, party), reports };
+        case 'hold':
+          reports.push(say('comms', 'channelOnHold', names(s, d, party)));
+          return { state: setChannelState(s, party, 'hold'), reports };
+        case 'resume': {
+          const cur = openChannel(s);
+          if (cur && cur.party !== party) reports.push(say('comms', 'channelHoldOther', names(s, d, cur.party)));
+          reports.push(say('comms', 'channelResumed', names(s, d, party)));
+          return { state: openChannelTo(s, party), reports };
+        }
+        case 'mute':
+          reports.push(say('comms', 'channelMuted', names(s, d, party)));
+          return { state: setChannelState(s, party, 'muted'), reports };
+        case 'unmute':
+          reports.push(say('comms', 'channelUnmuted', names(s, d, party)));
+          return { state: patchComms(setChannelState(s, party, 'open'), {}), reports };
+      }
       return { state: s, reports };
     }
 

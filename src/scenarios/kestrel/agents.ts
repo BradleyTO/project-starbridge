@@ -4,6 +4,7 @@
  * what its character could plausibly know (e.g. Vane only learns the passenger
  * moved if his sensors could see the transport).
  */
+import { activePromise, commitment, openChannelTo, patchComms } from '../../engine/comms';
 import type { Applied } from '../../engine/reduce';
 import type { Report } from '../../engine/report';
 import { comms, narrate, say } from '../../engine/report';
@@ -144,6 +145,9 @@ function cruiserAgent(s: WorldState, rng: Rng, r: Report[]): WorldState {
     s = patchShip(s, 'cruiser', (x) => ({ scanLevel: Math.max(1, x.scanLevel), disposition: x.disposition === 'unknown' ? 'neutral' : x.disposition }));
     r.push(say('comms', 'incomingHail'));
     r.push(comms('vane', 'vaneDemand', { temp }));
+    // v0.5: an incoming hail opens a channel; his demand is what "Agreed" / "No" will answer.
+    s = openChannelTo(s, 'cruiser', { incoming: true });
+    s = patchComms(s, { pending: { party: 'cruiser', kind: 'withdraw', turn: s.turn } });
     return s;
   }
 
@@ -186,18 +190,22 @@ function cruiserAgent(s: WorldState, rng: Rng, r: Report[]): WorldState {
     r.push(comms('vane', 'vaneSeesPeacefulInterpose'));
   }
 
+  // v0.5: time he granted on the channel ("you have ten minutes") is honoured: no pressure, no lock.
+  const grace = !!commitment(s, 'cruiser', 'grace');
   // Patience erodes while the Halcyon stays near the quarry; how fast depends on how she looks.
-  if (mem().hailed && s.turn > (mem().hailTurn ?? 0)) {
+  if (mem().hailed && s.turn > (mem().hailTurn ?? 0) && !grace) {
     const complying = range(s, 'halcyon', 'kestrel') > 30000 && !s.flags.passengerAboard;
     if (!complying) {
       let loss = 1;
       if (view.stance === 1) loss = temp === 'hardliner' ? s.turn % 2 : 0;
       else if (view.stance === -1) loss = 2;
+      // A promise to keep weapons cold that is being kept softens him a little.
+      if (loss && activePromise(s, 'cruiser', 'weaponsDown') && s.ships.halcyon.weapons.state === 'safe') loss -= 1;
       if (loss) s = setMemory(s, 'vane', 'patience', (mem().patience ?? 0) - loss);
     }
   }
 
-  if ((mem().patience ?? 0) <= 0 && !mem().lockedOn && range(s, 'cruiser', hunt) <= 30000) {
+  if ((mem().patience ?? 0) <= 0 && !mem().lockedOn && !grace && !commitment(s, 'cruiser', 'releasedLock') && range(s, 'cruiser', hunt) <= 30000) {
     if (smoke) r.push(say('tactical', 'vaneBlind'));
     // He will not fire on the ship carrying his quarry, so he threatens the interfering Halcyon instead.
     else s = lockOn(s, hunt === believedHolder(s) && hunt === 'kestrel' ? 'halcyon' : hunt, r);

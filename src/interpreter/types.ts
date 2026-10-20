@@ -21,6 +21,12 @@ export interface InterpreterContext {
   mostDamaged: string | null;
   /** The Halcyon's current weapons lock, if any (an untargeted "fire" uses it). */
   weaponsTarget?: 'kestrel' | 'cruiser' | null;
+  /** v0.5: the channel the captain is talking on (open or muted), if any. */
+  channel?: { party: 'kestrel' | 'cruiser' | 'passenger'; state: 'open' | 'muted'; private: boolean } | null;
+  /** v0.5: channels on hold. */
+  held?: ('kestrel' | 'cruiser' | 'passenger')[];
+  /** v0.5: an officer refused an order in the last few minutes (a bare "why?" asks them). */
+  recentRefusal?: boolean;
 }
 
 export interface Interpreter {
@@ -46,5 +52,16 @@ export function contextFrom(s: WorldState): InterpreterContext {
     passengerNames: known ? p.name.toLowerCase().replace(/^dr\.?\s*/, '').split(/\s+/).filter((w) => w.length > 2) : [],
     mostDamaged: damaged[0]?.[0] ?? null,
     weaponsTarget: s.ships.halcyon.weapons.target === 'kestrel' || s.ships.halcyon.weapons.target === 'cruiser' ? s.ships.halcyon.weapons.target : null,
+    channel: activeChannel(s),
+    held: (s.comms?.channels ?? []).filter((c) => c.state === 'hold').map((c) => c.party),
+    recentRefusal: (s.refusals ?? []).some((r) => r.turn >= s.turn - 3),
   };
+}
+
+function activeChannel(s: WorldState): InterpreterContext['channel'] {
+  const c = s.comms;
+  if (!c?.active) return null;
+  const ch = c.channels.find((x) => x.party === c.active);
+  if (!ch || ch.state === 'hold') return null;
+  return { party: ch.party, state: ch.state, private: ch.private };
 }

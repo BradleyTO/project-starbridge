@@ -44,7 +44,7 @@ describe('withdrawal', () => {
 
 describe('diplomacy', () => {
   it('humanitarian + legal arguments open a rescue corridor (seed 5)', () => {
-    const s = play(start(5), ['hail the cruiser', 'approach the kestrel', 'tell them this is a humanitarian rescue', 'remind them the border accords forbid this', 'evacuate the crew', 'evacuate the crew', 'wait', 'wait', 'wait']);
+    const s = play(start(5), ['hail the cruiser', 'approach the kestrel', 'tell them this is a humanitarian rescue', 'remind them the border accords forbid this', 'wait', 'wait', 'evacuate the crew', 'evacuate the crew', 'wait', 'wait', 'wait']);
     assertEnded(s, 'rescue-corridor');
     expect(s.flags.shotsFired).toBeFalsy();
     expect(s.objectives.find((o) => o.id === 'escalation')?.status).toBe('complete');

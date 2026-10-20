@@ -7,6 +7,8 @@ import { hooks, suggestOptions, turnsToBreach } from './hooks';
 import { simulate } from './agents';
 import { computeObjectives, detectOutcome } from './outcome';
 import { templates } from './templates';
+import { kestrelDialogue } from './dialogue';
+import { commsOf, openChannel } from '../../engine/comms';
 
 const intro: ScenarioModule['intro'] = [
   (s) => ({ state: s, reports: [narrate('intro0')] }),
@@ -42,13 +44,26 @@ export const kestrelScenario: ScenarioModule = {
   title: SCENARIO_TITLE,
   create: createScenario,
   intro,
-  hooks,
+  hooks: { ...hooks, dialogue: kestrelDialogue },
   simulate,
   objectives: computeObjectives,
   detectOutcome,
   templates,
   roleHolders: ROLE_HOLDERS,
-  suggestions: suggestOptions,
+  suggestions: (s) => {
+    // v0.5: on an open channel, suggest things to say (the other party's own suggestions first).
+    const ch = openChannel(s);
+    if (ch && !s.outcome) {
+      const own = commsOf(s).suggestions;
+      if (own.length) return own.slice(0, 4);
+      return ch.party === 'cruiser'
+        ? ['We are here on a rescue mission.', 'We need ten minutes to evacuate the crew.', 'Release your weapons lock.', 'Close the channel.']
+        : ch.party === 'kestrel'
+          ? ['How many people are aboard?', 'Get your people ready to beam over.', 'What are you carrying?', 'Close the channel.']
+          : ['We are offering you asylum.', 'Close the channel.'];
+    }
+    return suggestOptions(s);
+  },
   contactDetails,
 };
 

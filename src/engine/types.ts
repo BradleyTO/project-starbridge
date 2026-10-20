@@ -1,4 +1,4 @@
-import type { BaseAction, RestrictSubject, Trigger } from './schema';
+import type { BaseAction, DemandKind, DialogueIntent, Party, PromiseKind, RestrictSubject, Trigger } from './schema';
 
 /**
  * Authoritative world-state types for Project Starbridge (schema version 4).
@@ -140,6 +140,65 @@ export interface Restriction {
   issuedTurn: number;
 }
 
+/** v0.5 two-way communications: one persistent session per mission. */
+export type ChannelState = 'open' | 'hold' | 'muted';
+export interface CommsChannel {
+  party: Party;
+  state: ChannelState;
+  /** Private (tight-beam) channel: other vessels cannot overhear it. */
+  private: boolean;
+  openedAt: number;
+  /** Who opened it: the Halcyon (a hail) or the other vessel (incoming). */
+  incoming: boolean;
+}
+export interface CommsLine {
+  time: number;
+  turn: number;
+  from: 'captain' | Party;
+  intents: DialogueIntent[];
+  text: string;
+}
+/** Something the captain committed to on the record. Checked by the engine every turn. */
+export interface CommsPromise {
+  id: number;
+  party: Party;
+  kind: PromiseKind;
+  madeTurn: number;
+  status: 'active' | 'kept' | 'broken' | 'released';
+  /** Turn by which it must be fulfilled (withdraw) or after which it lapses (null = open-ended). */
+  untilTurn: number | null;
+  /** Snapshot for checks (e.g. the Kestrel's hull when protection was promised). */
+  ref: number;
+}
+/** Something the other party committed to (e.g. "you have ten minutes"). */
+export interface NpcCommitment {
+  party: Party;
+  kind: 'grace' | 'holdFire' | 'releasedLock' | 'ready';
+  untilTurn: number | null;
+  madeTurn: number;
+}
+export interface CommsState {
+  channels: CommsChannel[];
+  /** The party currently on the open channel (null: nobody). */
+  active: Party | null;
+  history: CommsLine[];
+  topic: string | null;
+  /** The captain's declared intentions, in order ("peaceful", "rescue", "stay"…). */
+  declared: string[];
+  promises: CommsPromise[];
+  commitments: NpcCommitment[];
+  /** What the other party last asked of the captain (so "Agreed" / "No" has something to answer). */
+  pending: { party: Party; kind: DemandKind; turn: number } | null;
+  /** Threats and demands the captain made (counts by party). */
+  threats: Partial<Record<Party, number>>;
+  requests: Partial<Record<Party, number>>;
+  /** How often each (party:intent) was used, so replies vary and repetition stops paying. */
+  repeats: Record<string, number>;
+  /** Suggested replies offered by the other party when they did not follow. */
+  suggestions: string[];
+  nextId: number;
+}
+
 /** Which timeline a WorldState belongs to. The engine never decides this; sessions stamp it. */
 export type Timeline = 'simulation' | 'canonical';
 export interface Provenance {
@@ -278,4 +337,8 @@ export interface WorldState {
   lastTarget: ShipId | null;
   fx: VisualFx[];
   outcome: Outcome | null;
+  /** v0.5 comms session (absent in older saves = no channels). */
+  comms?: CommsState;
+  /** v0.5 crew autonomy: recent refusals with the reasons the officer gave (for "why?"). */
+  refusals?: { officer: string; turn: number; order: string; reasons: string[] }[];
 }

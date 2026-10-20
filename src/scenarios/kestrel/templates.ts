@@ -8,6 +8,7 @@ import { SYSTEM_IDS } from '../../engine/types';
 import { efficiency, km, range, systemLabel } from '../../engine/rules';
 import { knows } from '../../engine/state';
 import { HELM_TEMPLATES } from '../../engine/helmTemplates';
+import { COMMS_TEMPLATES, DIALOGUE_TEMPLATES } from './dialogueTemplates';
 
 type V = Record<string, string | number>;
 const n = (v: V, k: string) => Number(v[k] ?? 0);
@@ -70,7 +71,9 @@ const T: Record<string, TemplateFn> = {
   powerAdjusted: (v) => `I can only move ${v.amount}% safely; doing that.`,
   weaponsAlreadySafe: () => 'Weapons are already safe.',
   weaponsAlreadyArmed: () => 'Weapons are already armed.',
-  refuseCivilian: (v) => `Captain, the Kestrel has ${v.souls} people aboard. I won't fire on her.`,
+  refuseCivilian: (v) => `Captain, the ${v.name ?? 'Kestrel'} has ${v.souls} people aboard. I won't fire on her.`,
+  whyRefused: (v) => `You ordered me to ${v.order}. I refused because ${v.reasons}. Give me a real threat and I'll act — or order a warning shot.`,
+  whyNothing: () => 'Why what, Captain? Nobody has refused an order.',
   alreadyLocked: () => 'Already locked on, Captain.',
   noTorpedoesUseBeams: () => 'Torpedo magazine is empty — using beams.',
   noTorpedoes: () => 'No torpedoes left, and they are beyond beam range.',
@@ -277,4 +280,4 @@ const T: Record<string, TemplateFn> = {
   adviseOptions: () => 'Captain, time is passing. We could close and evacuate, send engineers to stabilise her, or talk to the Prefect. Say "options" if you want my read.',
 };
 
-export const templates: Record<string, TemplateFn> = { ...HELM_TEMPLATES, ...T };
+export const templates: Record<string, TemplateFn> = { ...HELM_TEMPLATES, ...COMMS_TEMPLATES, ...DIALOGUE_TEMPLATES, ...T };

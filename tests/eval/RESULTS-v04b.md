@@ -1,6 +1,6 @@
 # Held-out interpreter evaluation (v0.4b set: written after v0.4 parser work, never tuned against)
 
-**Result: 15/20 passed (75.0%). Unsafe: 0.**
+**Result: 16/20 passed (80.0%). Unsafe: 0.**
 
 ## Failures
 
@@ -10,8 +10,6 @@
   - got: `[{"type":"restrict","subject":"raiseShields"},{"type":"shields","raise":false}]`
 - `Hold position, and if the Kestrel powers up her weapons, scan her` — missing [{"type":"maneuver","intent":"holdStation"},{"type":"standing","trigger":{"kind":"weapons","ship":"kestrel","state":"armed"},"actions":[{"type":"scan","target":"kestrel"}]}]; unparsed ["and"]
   - got: `[{"type":"standing","trigger":{"kind":"weapons","ship":"kestrel","state":"armed"},"actions":[{"type":"maneuver","intent":"holdStation","speed":"full","persistent":false}]}]`
-- `Tell her we are coming. Then close to transporter range.` — kind=clarify ("Approach which contact, Captain — the Kestrel or the cruiser?"); missing [{"type":"maneuver","intent":"approach"}]
-  - got: `[{"type":"communicate","target":"kestrel","onScreen":false,"intent":"open"}]`
 - `If she arms, back us off to 40,000 km` — kind=clarify ("I'm not sure what to watch for in "if she arms", Captain. Can you put it another way?"); missing [{"type":"standing","trigger":{"kind":"weapons","ship":"kestrel","state":"armed"},"actions":[{"type":"maneuver","rangeKm":40000}]}]
   - got: `[]`
 
@@ -26,6 +24,7 @@
 - `Keep station on the Kestrel no matter what happens`
 - `Move in slowly and do not lock weapons on anyone`
 - `Stand off at 30k from the warship`
+- `Tell her we are coming. Then close to transporter range.`
 - `Weapons stay offline, shields stay up, and get between the Kestrel and the cruiser`
 - `Fire`
 - `Lower shields and raise them again`

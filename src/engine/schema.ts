@@ -25,6 +25,37 @@ export const CommIntentSchema = z.enum([
   'offerAsylum',
 ]);
 
+/** v0.5 dialogue: what a line of speech to another vessel is doing (an utterance can do several things). */
+export const DialogueIntentSchema = z.enum([
+  'declarePeaceful',
+  'requestAssist',
+  'ask',
+  'demand',
+  'offerCooperation',
+  'warn',
+  'negotiate',
+  'agree',
+  'refuse',
+  'challenge',
+  'end',
+  'greet',
+  'promise',
+  'trade',
+  'humanitarian',
+  'legal',
+  'bluff',
+  'appeal',
+  'offerAsylum',
+  'unknown',
+]);
+export type DialogueIntent = z.infer<typeof DialogueIntentSchema>;
+export const PartySchema = z.enum(['kestrel', 'cruiser', 'passenger']);
+export type Party = z.infer<typeof PartySchema>;
+export const PromiseKindSchema = z.enum(['weaponsDown', 'shieldsDown', 'stay', 'protect', 'noInterfere', 'withdraw']);
+export type PromiseKind = z.infer<typeof PromiseKindSchema>;
+export const DemandKindSchema = z.enum(['lowerWeapons', 'releaseLock', 'standDown', 'withdraw', 'keepDistance', 'holdFire', 'standBy', 'prepareEvacuation', 'explain']);
+export type DemandKind = z.infer<typeof DemandKindSchema>;
+
 export const TradeOfferSchema = z.enum(['passenger', 'kestrel', 'cargo', 'medical', 'data', 'unspecified']);
 
 export const ImproviseMethodSchema = z.enum([
@@ -73,7 +104,7 @@ export const RestrictSubjectSchema = z.enum(['armWeapons', 'fireWeapons', 'raise
 export type RestrictSubject = z.infer<typeof RestrictSubjectSchema>;
 
 const BASE_ACTIONS = [
-  z.object({ type: z.literal('query'), topic: z.enum(['status', 'systems', 'contacts', 'objectives', 'options', 'help']), ...base }),
+  z.object({ type: z.literal('query'), topic: z.enum(['status', 'systems', 'contacts', 'objectives', 'options', 'help', 'why']), officer: z.string().optional(), ...base }),
   z.object({ type: z.literal('setAlert'), level: z.enum(['green', 'yellow', 'red']), ...base }),
   z.object({ type: z.literal('shields'), raise: z.boolean(), ...base }),
   z.object({ type: z.literal('scan'), target: z.enum(['kestrel', 'cruiser', 'compartment', 'area', 'halcyon']), ...base }),
@@ -135,6 +166,27 @@ export const ProposedActionSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('standing'), trigger: TriggerSchema, actions: z.array(BaseActionSchema).min(1).max(4), ...base }),
   /** "Do not power up weapons" / "not until then": a prohibition, optionally lifted by a trigger. */
   z.object({ type: z.literal('restrict'), subject: RestrictSubjectSchema, until: TriggerSchema.optional(), ...base }),
+  /**
+   * v0.5: a line of speech to the party on an open channel. Never a ship action: the dialogue
+   * provider decides how the other character answers and what (if anything) they agree to.
+   */
+  z.object({
+    type: z.literal('speak'),
+    to: PartySchema,
+    /** What the captain actually said (relayed lines are the relayed content). */
+    text: z.string().max(400),
+    intents: z.array(DialogueIntentSchema).min(1).max(5),
+    topic: z.enum(['cargo', 'passenger', 'intentions', 'crew', 'reactor', 'weapons', 'territory', 'time', 'general']).optional(),
+    minutes: z.number().int().min(1).max(120).optional(),
+    demand: DemandKindSchema.optional(),
+    promise: PromiseKindSchema.optional(),
+    offer: TradeOfferSchema.optional(),
+    /** "Tell him …": the comms officer relays it rather than the captain speaking directly. */
+    relayed: z.boolean().default(false),
+    ...base,
+  }),
+  /** v0.5: channel operations (open / close / hold / resume / mute), handled by the comms officer. */
+  z.object({ type: z.literal('channel'), op: z.enum(['open', 'close', 'hold', 'resume', 'mute', 'unmute']), party: PartySchema.optional(), private: z.boolean().default(false), ...base }),
   /** "When I say 'go dark', I mean …": teach the crew a phrase (stored as familiarity, not world state). */
   z.object({ type: z.literal('learn'), phrase: z.string().min(2).max(60), meaning: z.string().min(2).max(300), ...base }),
 ]);
