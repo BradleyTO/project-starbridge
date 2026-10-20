@@ -17,7 +17,7 @@ export function RecordPanel({ canon, familiarity }: { canon: DeepReadonly<Canoni
   return (
     <div className="record" data-testid="record">
       {!canon ? (
-        <p className="muted">The captain's canonical record appears here once you have served in the Living Universe.</p>
+        <p className="muted">The captain's canonical record appears here once you have been commissioned to Active Duty.</p>
       ) : (
         <>
           <h3>Career (canonical)</h3>

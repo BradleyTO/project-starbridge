@@ -1121,7 +1121,7 @@ const END_SIM = new RegExp(`${LEAD}(?:end|stop|terminate|exit|abort|cancel|quit|
 const OPEN_ARCHIVE = new RegExp(`${LEAD}(?:open|show(?: me)?|display|bring up|pull up|access|list|go to)\\s+(?:the\\s+|my\\s+|our\\s+)?(?:simulation|mission|training|sim)?\\s*(?:archive|library|records?|simulations|missions list)\\b`);
 const SURVEY = /\b(?:what|which|any|list|show(?: me)?|tell me about)\b.*\b(?:systems?|stars?|worlds?|planets?)\b.*\b(?:exploration|survey|sensor|jump)? ?(?:range|nearby|near us|in reach|around us|close by|within reach)\b|\b(?:survey|chart) (?:the )?(?:local |nearby )?(?:systems|neighbou?rhood|area)\b/;
 
-function bridgeCommand(input: string): { type: 'bridge'; op: 'openArchive' | 'beginSim' | 'endSim' | 'survey'; scenario?: string } | null {
+function bridgeCommand(input: string): { type: 'bridge'; op: 'openArchive' | 'beginSim' | 'endSim' | 'survey' | 'acceptCommission'; scenario?: string } | null {
   const t = input.trim().toLowerCase().replace(/[?!.]+$/, '').replace(/\s+/g, ' ');
   if (END_SIM.test(t)) return { type: 'bridge', op: 'endSim' };
   const b = BEGIN_SIM.exec(t);
@@ -1130,6 +1130,7 @@ function bridgeCommand(input: string): { type: 'bridge'; op: 'openArchive' | 'be
     return { type: 'bridge', op: 'beginSim', ...(name ? { scenario: name } : {}) };
   }
   if (OPEN_ARCHIVE.test(t)) return { type: 'bridge', op: 'openArchive' };
+  if (/^(?:(?:computer|comms|communications|szabo)[,:]?\s+)?(?:tell (?:fleet(?: command)?|the admiral|them|her) (?:that )?)?(?:i |we )?(?:hereby |gladly |humbly )?accept(?:s|ed)? (?:the |my |your |this |our )?commission\b|^i accept\b.*\bcommission\b/.test(t)) return { type: 'bridge', op: 'acceptCommission' };
   if (SURVEY.test(t) && !/\b(scan|hail|fire|lock|approach)\b/.test(t)) return { type: 'bridge', op: 'survey' };
   return null;
 }

@@ -1,5 +1,5 @@
 /**
- * Mission catalogue for the Living Universe proof of concept. Offers are
+ * Mission catalogue for the Active Duty (formerly Living Universe) proof of concept. Offers are
  * generated deterministically from the canonical seed and clock; a future
  * server or AI author can emit the same MissionOffer records.
  */

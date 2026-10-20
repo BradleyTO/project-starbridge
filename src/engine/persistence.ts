@@ -2,7 +2,7 @@ import type { WorldState } from './types';
 
 /**
  * Simulation save slot (format v4): the full authoritative WorldState (seed, RNG
- * state, kinematics, standing orders). Canonical Living Universe data is stored
+ * state, kinematics, standing orders). Canonical Active Duty data is stored
  * separately by src/universe/repository.ts and never through this slot.
  */
 export const SAVE_KEY = 'starbridge.save.v4';

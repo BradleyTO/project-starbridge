@@ -7,18 +7,27 @@ const CONDITIONS: Record<string, string> = {
 };
 
 /** Always-visible statement of which timeline the bridge is in. */
-export function ModeBanner({ timeline, conditions, title, bridge = false }: { timeline: Timeline; conditions?: string; title: string; bridge?: boolean }) {
-  if (bridge)
+const DUTY_BANNER: Record<string, [string, string]> = {
+  active: ['BRIDGE · ACTIVE DUTY', 'On station · this is the real ship; what happens out here becomes history'],
+  reserve: ['BRIDGE · RESERVE STATUS', 'Inactive duty · career preserved, canonical timeline frozen · simulations unlimited'],
+  pending: ['BRIDGE · COMMISSION PENDING', 'Fleet Command is waiting for your answer'],
+  simulation: ['BRIDGE · SIMULATION MODE', 'No simulation running · talk to your crew, or ask the computer to begin a simulation'],
+};
+
+export function ModeBanner({ timeline, conditions, title, bridge = false, duty = 'simulation' }: { timeline: Timeline; conditions?: string; title: string; bridge?: boolean; duty?: string }) {
+  if (bridge) {
+    const [head, tail] = DUTY_BANNER[duty] ?? DUTY_BANNER.simulation;
     return (
-      <div className="mode-banner bridge" data-testid="mode-banner" data-mode="bridge" role="status">
-        <strong>BRIDGE · ON STATION</strong>
-        <span>No simulation running · talk to your crew, or ask the computer to begin a simulation</span>
+      <div className={`mode-banner bridge duty-${duty}`} data-testid="mode-banner" data-mode="bridge" data-duty={duty} role="status">
+        <strong>{head}</strong>
+        <span>{tail}</span>
       </div>
     );
+  }
   if (timeline === 'canonical')
     return (
       <div className="mode-banner canonical" data-testid="mode-banner" data-mode="canonical" role="status">
-        <strong>CANONICAL · LIVING UNIVERSE</strong>
+        <strong>CANONICAL · ACTIVE DUTY</strong>
         <span>{title} · your choices here become permanent history</span>
       </div>
     );

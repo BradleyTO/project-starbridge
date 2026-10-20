@@ -20,7 +20,7 @@ export function ArchivePanel({ entries, actions }: { entries: ArchiveEntry[]; ac
     <div className="archive" data-testid="archive">
       <p className="muted small">Every canonical mission you begin is archived here. Replays always run as <strong>simulations</strong>: they never change the canonical record.</p>
       <h3>Canonical missions</h3>
-      {canonical.length === 0 && <p className="muted">None yet. Start one from the Living Universe board.</p>}
+      {canonical.length === 0 && <p className="muted">None yet. Missions you take on Active Duty are archived here automatically.</p>}
       <ul className="archive-list">
         {canonical.map((e) => (
           <li key={e.id} className="archive-item canonical" data-testid={`archive-entry-${e.id}`}>

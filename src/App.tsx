@@ -1,4 +1,5 @@
 import { ChannelIndicator } from './ui/components/ChannelIndicator';
+import { CommissionCeremony } from './ui/components/CommissionCeremony';
 import { channelView } from './engine/comms';
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import type { WorldState } from './engine/types';
@@ -119,6 +120,7 @@ export default function App() {
   const [state, dispatch] = useReducer(reducer, undefined, () => bridgeState(firstSeed));
   const [hubTab, setHubTab] = useState<HubTab | null>(null);
   const [debrief, setDebrief] = useState<Debrief | null>(null);
+  const [showCommission, setShowCommission] = useState(false);
   const onBridge = meta.timeline === 'bridge';
   const timeline: Timeline = meta.timeline === 'bridge' ? 'simulation' : meta.timeline;
   const scenario = scenarioFor(state.scenarioId);
@@ -253,6 +255,10 @@ export default function App() {
     const id = window.setTimeout(() => {
       if (r.kind === 'openArchive') setHubTab('archive');
       else if (r.kind === 'beginSim') beginTraining(r.id ?? TRAINING_ID);
+      else if (r.kind === 'acceptCommission') {
+        if (universe.dutyStatus() === 'pending') acceptCommission();
+        else bridgeSay([say('comms', 'dutyNoCommission')]);
+      }
       else if (r.kind === 'endSim') {
         setDebrief(null);
         goBridge(bridgeState(state.seed, 'ended'), 'Simulation ended. Back on the bridge.');
@@ -274,6 +280,41 @@ export default function App() {
     }, AMBIENT_MS);
     return () => window.clearTimeout(id);
   }, [onBridge, busy, hubTab, introRunning, state.nextLogId]);
+  /** Append crew / comms lines to the idle bridge (no-op elsewhere). */
+  const bridgeSay = (reports: Parameters<typeof appendReports>[2]) => {
+    const cur = stateRef.current;
+    if (cur.scenarioId !== 'bridge') return;
+    const next = appendReports(cur, scenarioFor(cur.scenarioId), reports);
+    dispatch({ type: 'replace', state: next });
+    stateRef.current = next;
+  };
+  const acceptCommission = () => {
+    universe.acceptCommission();
+    setShowCommission(false);
+    touch();
+    bridgeSay([say('comms', 'dutyCommissionComms'), say('xo', 'dutyCommissionXo')]);
+    flash('Commission accepted. You are on active duty.');
+  };
+  /** The Active Duty subscription changed (dev toggle). Off = reserve status, never misconduct. */
+  const onDuty = (on: boolean) => {
+    if (on) {
+      universe.setActiveDuty(true);
+      touch();
+      if (universe.dutyStatus() === 'pending') return setShowCommission(true);
+      bridgeSay([say('comms', 'dutyWelcomeBack')]);
+      return flash('Back on active duty. Your career is restored.');
+    }
+    const m = metaRef.current;
+    // A canonical mission under way is saved first; it resumes when the captain returns to duty.
+    if (m.timeline === 'canonical' && !stateRef.current.outcome) universe.saveCanonical(canonicalOf(m, stateRef.current));
+    const hadCareer = universe.canon() !== null;
+    universe.setActiveDuty(false);
+    setShowCommission(false);
+    touch();
+    if (m.timeline === 'canonical') goBridge(bridgeState(stateRef.current.seed), 'Reserve status: mission saved, canonical timeline frozen.');
+    else bridgeSay(hadCareer ? [say('comms', 'dutyReserve')] : []);
+    flash(hadCareer ? 'Reserve status. Your career is preserved; the canonical timeline is frozen.' : 'Active Duty off.');
+  };
   const titleFor = (archiveId: string) => universe.archive().find((e) => e.id === archiveId)?.title ?? kestrelScenario.title;
   const archiveActions = {
     onTrain: (id: string) => beginTraining(id),
@@ -288,12 +329,8 @@ export default function App() {
     },
   };
   const universeActions = {
-    onEnable: () => {
-      universe.setLivingUniverse(true);
-      universe.ensureCanon();
-      touch();
-      flash('Living Universe enabled (development toggle).');
-    },
+    onEnable: () => onDuty(true),
+    onShowCommission: () => setShowCommission(true),
     onStart: (offerId: string) => {
       const r = universe.startCanonical(offerId);
       if (!r.ok) return flash(r.reason === 'no-credits' ? 'No new canonical missions left today. Simulations are unlimited.' : 'That offer is not available.');
@@ -318,7 +355,8 @@ export default function App() {
   };
   const canonical = meta.timeline === 'canonical';
   const simMeta = meta.timeline === 'simulation' ? meta : null;
-  const luOn = universe.entitlements().livingUniverse;
+  const duty = universe.dutyStatus();
+  const luOn = duty === 'active';
   const left = luOn ? universe.creditsRemaining() : 0;
   void rev;
   /** Same conditions again (training seed, original snapshot or the same variation seed). */
@@ -394,6 +432,9 @@ export default function App() {
           <span className={`alert-pill alert-${state.alert}`} data-testid="alert-level">{state.alert.toUpperCase()} ALERT</span>
           <span className="clock" data-testid="mission-clock">{formatMissionClock(state.time)} · TURN {state.turn}</span>
           <span className="seed" data-testid="seed" title="Scenario seed — the same seed and orders reproduce a run exactly. Add ?seed=N to the URL to choose one.">SEED {state.seed}</span>
+          {(duty === 'active' || duty === 'reserve') && (
+            <span className={`duty-chip ${duty}`} data-testid="duty-status" data-duty={duty}>{duty === 'active' ? 'ACTIVE DUTY' : 'RESERVE'}</span>
+          )}
           {luOn && (
             <button className={`credits-chip ${left === 0 ? 'empty' : ''}`} onClick={() => setHubTab('universe')} data-testid="credits" data-remaining={left} title="New canonical missions you can start today">
               ◆ {left}/{universe.credits().dailyLimit} canonical
@@ -401,7 +442,7 @@ export default function App() {
           )}
         </div>
         <nav className="controls" aria-label="Simulation controls">
-          <button className="btn hub-btn" onClick={() => setHubTab(luOn ? 'universe' : 'archive')} data-testid="open-hub" title="Living Universe, Mission Archive, Captain's Record">Hub</button>
+          <button className="btn hub-btn" onClick={() => setHubTab(luOn ? 'universe' : 'archive')} data-testid="open-hub" title="Active Duty, Mission Archive, Captain's Record">Hub</button>
           {introRunning && (
             <button className="btn ghost" onClick={() => dispatch({ type: 'skipIntro' })} data-testid="skip-intro">Skip intro</button>
           )}
@@ -417,20 +458,21 @@ export default function App() {
           </button>
           {simMeta && <button className="btn ghost" onClick={onEndSim} data-testid="end-sim" title="End the simulation and return to the bridge">End sim</button>}
           <button className="btn save" onClick={onSave} disabled={onBridge} data-testid="save" title={onBridge ? 'Nothing to save on the idle bridge' : undefined}>Save</button>
-          <button className="btn load" onClick={onLoad} disabled={!hasSave || canonical} data-testid="load" title={canonical ? 'Canonical missions resume from the Living Universe board' : 'Load the saved simulation'}>Load</button>
+          <button className="btn load" onClick={onLoad} disabled={!hasSave || canonical} data-testid="load" title={canonical ? 'Canonical missions resume from Active Duty' : 'Load the saved simulation'}>Load</button>
           <button className="btn restart" onClick={onRestart} disabled={canonical || onBridge} data-testid="restart" title={canonical ? 'Canonical history cannot be restarted. Replay it as a simulation from the Mission Archive.' : 'Restart this scenario with the same seed'}>Restart</button>
           <button className="btn ghost" onClick={onNewScenario} disabled={canonical} data-testid="new-scenario" title={canonical ? 'Leave via the Hub; this mission stays saved' : 'Start a fresh scenario with a random seed'}>New</button>
         </nav>
       </header>
 
-      <ModeBanner timeline={timeline} bridge={onBridge} conditions={meta.timeline === 'simulation' ? meta.conditions : undefined} title={meta.title} />
+      <ModeBanner timeline={timeline} bridge={onBridge} duty={duty} conditions={meta.timeline === 'simulation' ? meta.conditions : undefined} title={meta.title} />
       {toast && <div className="toast" role="status" data-testid="toast">{toast}</div>}
+      {showCommission && duty === 'pending' && <CommissionCeremony onAccept={acceptCommission} onLater={() => { setShowCommission(false); flash('Fleet Command will wait. Answer from the Active Duty tab, or say "I accept the commission".'); }} />}
       {hubTab && (
         <Hub tab={hubTab} onTab={setHubTab} onClose={() => setHubTab(null)} tabs={['universe', 'archive', 'record', 'settings']}>
           {hubTab === 'universe' && <UniversePanel key={rev} universe={universe} actions={universeActions} />}
           {hubTab === 'archive' && <ArchivePanel key={rev} entries={universe.archive()} actions={{ ...archiveActions, onResume: universeActions.onResume }} />}
           {hubTab === 'record' && <RecordPanel key={rev} canon={universe.canon()} familiarity={universe.familiarity()} />}
-          {hubTab === 'settings' && <SettingsPanel key={rev} universe={universe} onChange={(msg) => { touch(); flash(msg); }} />}
+          {hubTab === 'settings' && <SettingsPanel key={rev} universe={universe} onChange={(msg) => { touch(); flash(msg); }} onDuty={onDuty} />}
         </Hub>
       )}
 
@@ -461,7 +503,7 @@ export default function App() {
               {canonical ? (
                 <div className="outcome-actions">
                   <span className="tag canon">Recorded in canonical history</span>
-                  <button className="btn" onClick={() => setHubTab('universe')} data-testid="outcome-universe">Living Universe</button>
+                  <button className="btn" onClick={() => setHubTab('universe')} data-testid="outcome-universe">Active Duty</button>
                   <button className="btn save" onClick={() => archiveActions.onReplayOriginal(meta.missionId)} data-testid="outcome-replay">Replay as simulation</button>
                 </div>
               ) : (
@@ -495,7 +537,7 @@ export default function App() {
         </aside>
       </main>
       <footer className="footer">
-        Project Starbridge v{APP_VERSION} · Simulation Mode & Living Universe foundation · Original fiction and artwork · Typed orders always available; voice where supported.
+        Project Starbridge v{APP_VERSION} · Simulation Mode & Active Duty · Original fiction and artwork · Typed orders always available; voice where supported.
       </footer>
     </div>
   );

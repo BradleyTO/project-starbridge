@@ -34,7 +34,7 @@ const T: Record<string, TemplateFn> = {
   // ---- system / meta
   simEnded: (_v, s) =>
     s.provenance.timeline === 'canonical'
-      ? 'This mission has ended and is part of canonical history. Replay it as a simulation from the Mission Archive, or return to the Living Universe.'
+      ? 'This mission has ended and is part of canonical history. Replay it as a simulation from the Mission Archive, or return to Active Duty.'
       : 'This simulation has ended. Restart, start a new seed, or load a save.',
   shipLost: () => 'The Halcyon has been lost.',
   help: () =>

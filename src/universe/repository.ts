@@ -191,7 +191,7 @@ export const defaultFamiliarity = (): FamiliarityMemory => ({
   training: { simRuns: 0, drilled: {}, outcomes: {}, simulatedCasualties: 0 },
 });
 export const defaultSims = (): SimulationStoreState => ({ schema: 'starbridge.sim', version: UNIVERSE_SCHEMA_VERSION, runs: [], nextSeq: 1 });
-export const defaultEntitlements = (): Entitlements => ({ schema: 'starbridge.entitlements', version: UNIVERSE_SCHEMA_VERSION, simulation: true, livingUniverse: false, source: 'default' });
+export const defaultEntitlements = (): Entitlements => ({ schema: 'starbridge.entitlements', version: UNIVERSE_SCHEMA_VERSION, simulation: true, activeDuty: false, source: 'default' });
 
 export interface UniverseRepository {
   canon: CanonStore;

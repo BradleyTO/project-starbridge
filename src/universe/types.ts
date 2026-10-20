@@ -1,5 +1,5 @@
 /**
- * Living Universe / Simulation data model (store schema v1).
+ * Active Duty (formerly Living Universe) / Simulation data model (store schema v1).
  *
  * Two timelines share one simulation engine but never share mutable state:
  *
@@ -40,7 +40,7 @@ export type OfferClass = 'voluntary' | 'distress' | 'directive';
 /** How a mission is played: on the bridge (a ScenarioModule) or resolved by an event model. */
 export type MissionKind = { kind: 'bridge'; scenarioId: string } | { kind: 'event'; model: string };
 
-/** An assignment on the Living Universe board. Viewing it is always free. */
+/** An assignment on the Active Duty board. Viewing it is always free. */
 export interface MissionOffer {
   id: string;
   classification: OfferClass;
@@ -200,6 +200,8 @@ export interface CanonicalState {
   discipline: DisciplinaryCase[];
   /** News that reaches the Halcyon: delivered into the next canonical mission's log as evidence. */
   news: { eventId: string; text: string; deliveredTo: string | null }[];
+  /** v0.5: the captain's commission to active duty (absent on pre-v0.5 careers, which count as commissioned). */
+  commission?: { at: CanonMinutes; atIso: string; ship: string; by: string };
   provenance: Provenance;
 }
 
@@ -250,7 +252,10 @@ export interface Entitlements {
   schema: 'starbridge.entitlements';
   version: typeof UNIVERSE_SCHEMA_VERSION;
   simulation: boolean;
-  livingUniverse: boolean;
+  /** v0.5: the Active Duty subscription (formerly "Living Universe"; stored as livingUniverse before v0.5). */
+  activeDuty: boolean;
+  /** Legacy (v0.4) name for activeDuty. Read for migration, mirrored for compatibility, never authoritative. */
+  livingUniverse?: boolean;
   /** 'dev-toggle' locally; future: 'store', 'subscription', 'server'. */
   source: 'default' | 'dev-toggle';
 }

@@ -117,12 +117,52 @@ export class Universe {
 
   // ---------------------------------------------------------- entitlements --
 
+  /** Entitlements, migrated: v0.4 stored the Active Duty flag as `livingUniverse`. */
   entitlements(): Entitlements {
-    return this.repo.entitlements.read();
+    const e = this.repo.entitlements.read();
+    const activeDuty = e.activeDuty ?? e.livingUniverse ?? false;
+    return { ...e, activeDuty, livingUniverse: activeDuty };
   }
-  /** Local development toggle standing in for a real subscription. */
+  /** Local development toggle standing in for the Active Duty subscription. Turning it off never touches the career. */
+  setActiveDuty(on: boolean): Entitlements {
+    this.repo.entitlements.update((e) => {
+      const { livingUniverse: _legacy, ...rest } = e;
+      void _legacy;
+      return { ...rest, activeDuty: on, source: 'dev-toggle' };
+    });
+    return this.entitlements();
+  }
+  /** @deprecated v0.4 name for setActiveDuty. */
   setLivingUniverse(on: boolean): Entitlements {
-    return this.repo.entitlements.update((e) => ({ ...e, livingUniverse: on, source: 'dev-toggle' }));
+    return this.setActiveDuty(on);
+  }
+
+  /**
+   * Duty status:
+   *   simulation — never commissioned, no subscription (Simulation Mode)
+   *   pending    — subscribed, commission not yet accepted (Fleet Command is waiting)
+   *   active     — on active duty; the canonical timeline runs
+   *   reserve    — subscription inactive; career preserved, canonical timeline frozen (never misconduct)
+   */
+  dutyStatus(): 'simulation' | 'pending' | 'active' | 'reserve' {
+    const on = this.entitlements().activeDuty;
+    const c = this.canon();
+    if (on) return c ? 'active' : 'pending';
+    return c ? 'reserve' : 'simulation';
+  }
+
+  /** Accept the commission (first activation): the canonical career begins. */
+  acceptCommission(): DeepReadonly<CanonicalState> | null {
+    if (!this.entitlements().activeDuty) return null;
+    const c = this.ensureCanon();
+    if (!c) return null;
+    if (c.commission) return c;
+    const atIso = this.now().toISOString();
+    return this.repo.canon.commit(this.ctx(), (d) => {
+      d.commission = { at: d.clock, atIso, ship: 'CSV Halcyon', by: 'Admiral Odessa Kaine, Concord Fleet Command' };
+      d.captain.career.push({ id: `career-commission`, at: d.clock, missionId: null, eventId: null, text: 'Commissioned to active duty in command of the CSV Halcyon, Tessarine border survey.' });
+      return d;
+    });
   }
 
   // --------------------------------------------------------------- credits --
@@ -150,9 +190,9 @@ export class Universe {
     return openCanonicalContext(this.entitlements());
   }
 
-  /** Create the canonical profile on first entry to the Living Universe. */
+  /** Create the canonical profile on first entry to Active Duty. */
   ensureCanon(): DeepReadonly<CanonicalState> | null {
-    if (!this.entitlements().livingUniverse) return null;
+    if (!this.entitlements().activeDuty) return null;
     const cur = this.canon();
     if (cur) return cur;
     const seed = Math.floor((this.now().getTime() / 1000) % 1_000_000);
@@ -166,7 +206,7 @@ export class Universe {
 
   /** Start a NEW canonical mission from an offer. The only thing that costs a credit. */
   startCanonical(offerId: string): StartResult {
-    if (!this.entitlements().livingUniverse) return { ok: false, reason: 'not-entitled' };
+    if (!this.entitlements().activeDuty) return { ok: false, reason: 'not-entitled' };
     const c = this.ensureCanon();
     const offer = c?.offers.find((o) => o.id === offerId);
     if (!c || !offer) return { ok: false, reason: 'unknown' };
@@ -203,7 +243,7 @@ export class Universe {
   /** Decline / ignore / question / refuse / disobey: always free. */
   respond(offerId: string, response: OfferResponse, reason = ''): DeepReadonly<CanonicalState> {
     const c = this.ensureCanon();
-    if (!c) throw new Error('Living Universe is not enabled.');
+    if (!c) throw new Error('Active Duty is not enabled (reserve status: the canonical timeline is frozen).');
     return this.repo.canon.commit(this.ctx(), (d) => {
       world.respondToOffer(d, offerId, response, reason, this.appVersion);
       replenish(d, this.appVersion);

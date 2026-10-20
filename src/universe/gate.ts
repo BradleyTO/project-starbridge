@@ -3,7 +3,7 @@
  *
  * The ONLY way to change canonical data is CanonStore.commit(ctx, …), and the
  * only way to obtain a CanonicalContext is openCanonicalContext(), which
- * requires the Living Universe entitlement. Simulation code only ever holds a
+ * requires the Active Duty entitlement (v0.4: "Living Universe"). Simulation code only ever holds a
  * SimulationContext, which the gate rejects both at compile time (the types
  * differ) and at run time (contexts are registered in a private WeakSet, so an
  * object literal that merely claims timeline: 'canonical' is refused too).
@@ -29,8 +29,8 @@ export class TimelineViolation extends Error {
   }
 }
 
-export function openCanonicalContext(ent: Pick<Entitlements, 'livingUniverse'>): CanonicalContext {
-  if (!ent.livingUniverse) throw new TimelineViolation('Living Universe is not enabled for this profile.');
+export function openCanonicalContext(ent: Partial<Pick<Entitlements, 'activeDuty' | 'livingUniverse'>>): CanonicalContext {
+  if (!(ent.activeDuty ?? ent.livingUniverse)) throw new TimelineViolation('Active Duty is not enabled for this profile.');
   const ctx = Object.freeze({ timeline: 'canonical' as const }) as CanonicalContext;
   issued.add(ctx);
   return ctx;

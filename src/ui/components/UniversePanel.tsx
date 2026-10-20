@@ -12,6 +12,7 @@ const CLASS: Record<string, { label: string; cls: string; note: string }> = {
 
 export interface UniverseActions {
   onEnable(): void;
+  onShowCommission(): void;
   onStart(offerId: string): void;
   onRespond(offerId: string, response: 'decline' | 'ignore' | 'question' | 'refuse' | 'disobey', reason?: string): void;
   onResume(missionId: string): void;
@@ -20,13 +21,54 @@ export interface UniverseActions {
 
 export function UniversePanel({ universe, actions }: { universe: Universe; actions: UniverseActions }) {
   const [reasons, setReasons] = useState<Record<string, string>>({});
-  if (!universe.entitlements().livingUniverse)
+  const duty = universe.dutyStatus();
+  if (duty === 'pending')
+    return (
+      <div className="universe locked" data-testid="lu-pending">
+        <h3>Active Duty · commission pending</h3>
+        <p>Fleet Command's transmission is waiting for your answer.</p>
+        <button className="btn" onClick={actions.onShowCommission} data-testid="lu-show-commission">Answer Fleet Command</button>
+      </div>
+    );
+  if (duty === 'reserve') {
+    const r = universe.canon();
+    const done = r ? Object.values(r.missions).filter((m) => m.status === 'completed').length : 0;
+    const under = r ? Object.values(r.missions).filter((m) => m.status === 'active').length : 0;
+    return (
+      <div className="universe locked reserve" data-testid="lu-reserve">
+        <h3>Reserve status · inactive duty</h3>
+        <p>Your career is preserved exactly as you left it: {done} completed {done === 1 ? 'mission' : 'missions'}{under ? `, ${under} under way (saved)` : ''}, your ship, your crew, your history and your archive.</p>
+        <p>The canonical timeline is frozen while you are in reserve: nothing out there moves on without you. Simulation Mode stays fully available, with unlimited simulations.</p>
+        <p className="muted small">Inactive duty is not misconduct and is never recorded as a refusal. Returning to active duty restores the same career.</p>
+        <button className="btn" onClick={actions.onEnable} data-testid="lu-enable">Return to active duty (dev)</button>
+      </div>
+    );
+  }
+  if (duty === 'simulation')
     return (
       <div className="universe locked" data-testid="lu-locked">
-        <h3>Living Universe · premium ($9.99/month)</h3>
-        <p>A persistent galaxy: canonical missions, factions, characters and history that carry forward, with a daily allowance of new canonical missions. Every canonical mission you begin also becomes replayable in your simulation archive.</p>
-        <p className="muted small">Development build: no payments. The toggle below (and in Settings) stands in for a subscription.</p>
-        <button className="btn" onClick={actions.onEnable} data-testid="lu-enable">Enable Living Universe (dev)</button>
+        <h3>Products</h3>
+        <div className="products" data-testid="products">
+          <div className="product">
+            <h4>Simulation Mode · $10 one-time</h4>
+            <p>The bridge, your crew and the simulation archive: training scenarios, seeded variations and unlimited replays. Nothing in a simulation changes the real universe.</p>
+            <p className="muted small">Included in this build.</p>
+          </div>
+          <div className="product">
+            <h4>Active Duty · $9.99/month</h4>
+            <ul>
+              <li>Everything in Simulation Mode</li>
+              <li>A persistent canonical universe — your career is real</li>
+              <li>Dynamic missions that arise from what is happening out there</li>
+              <li>History and consequences that carry forward</li>
+              <li>A daily allowance of new canonical starts</li>
+              <li>Future AI crew and characters</li>
+              <li>Every canonical mission auto-archived for replay as a simulation</li>
+            </ul>
+          </div>
+        </div>
+        <p className="muted small">Development build: there are no payments. The button below (and the toggle in Settings) stands in for a subscription.</p>
+        <button className="btn" onClick={actions.onEnable} data-testid="lu-enable">Activate Active Duty (dev)</button>
       </div>
     );
   const c = universe.ensureCanon();

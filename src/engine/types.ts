@@ -362,5 +362,5 @@ export interface WorldState {
   /** v0.5: the science officer's survey of systems within exploration range (idle bridge). */
   survey?: SurveyState;
   /** v0.5: a bridge command asked the app to do something (open the archive, begin / end a simulation). */
-  uiRequest?: { kind: 'openArchive' | 'beginSim' | 'endSim'; id?: string; seq: number } | null;
+  uiRequest?: { kind: 'openArchive' | 'beginSim' | 'endSim' | 'acceptCommission'; id?: string; seq: number } | null;
 }

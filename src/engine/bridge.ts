@@ -23,7 +23,7 @@ export const IDLE_BRIDGE_ID = 'bridge';
 export const isIdleBridge = (s: WorldState) => s.scenarioId === IDLE_BRIDGE_ID;
 
 export interface UiRequest {
-  kind: 'openArchive' | 'beginSim' | 'endSim';
+  kind: 'openArchive' | 'beginSim' | 'endSim' | 'acceptCommission';
   id?: string;
   seq: number;
 }
@@ -61,6 +61,9 @@ export function reduceBridge(s: WorldState, action: BridgeAction, hooks: Scenari
       s = request(s, 'endSim');
       reports.push(say('computer', 'bridgeSimEnding'));
       return { state: s, reports };
+    case 'acceptCommission':
+      // The app knows whether Fleet Command is waiting for an answer; it replies in character.
+      return { state: request(s, 'acceptCommission'), reports };
     case 'survey':
       if (hooks.bridge) return hooks.bridge(s, action, rng);
       return { state: s, reports: [say('sensors', 'bridgeSurveyBusy')] };
