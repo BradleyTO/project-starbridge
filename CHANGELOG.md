@@ -35,7 +35,7 @@ Starbridge will ship with 30 training simulations. This release adds the multi-s
 ### Changed
 - Shared engine code no longer assumes the Kestrel. A scenario declares its cast through `WorldState.slots` (the leads, an optional passenger, and what "repair their …" means) and `Ship.aliases`. A scenario that declares nothing gets exactly the old behaviour, so the Kestrel Incident is unchanged and all its tests pass as before.
 - Seeded scenario-specific choices live in `ScenarioVariant.extra`.
-- The bridge debrief after a simulation no longer names the Kestrel. It now says "Say \"list simulations\" to choose another, or open the archive."
+- The bridge debrief after a simulation no longer names the Kestrel. It now says "Say "list simulations" to choose another, or open the archive."
 - The footer reads "v0.6.0 (training simulations)".
 
 ### Tests
