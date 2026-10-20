@@ -7,6 +7,7 @@
  * refused. Each refusal is recorded with its reasons so "why?" can be answered.
  */
 import type { Report, SpeakerRole } from './report';
+import { leadOf } from './state';
 import { say } from './report';
 import type { ShipId, WorldState } from './types';
 
@@ -22,7 +23,8 @@ export interface RoeVerdict {
 
 export function lifeSignsAboard(s: WorldState, id: ShipId): number {
   // (The idle bridge reuses the Kestrel world shape but has no hidden passenger.)
-  const extra = s.scenarioId !== 'bridge' && s.characters.passenger?.ship === id && s.characters.passenger.status !== 'dead' ? 1 : 0;
+  const p = s.scenarioId !== 'bridge' ? leadOf(s, 'passenger') : undefined;
+  const extra = p && p.ship === id && p.status !== 'dead' ? 1 : 0;
   return Math.max(0, s.ships[id].souls) + extra;
 }
 

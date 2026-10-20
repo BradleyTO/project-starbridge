@@ -230,7 +230,7 @@ function orderLabel(s: WorldState, a: ProposedAction): string | null {
     case 'transport':
       return `Transport ${a.payload}`;
     case 'repair':
-      return `Repair ${a.system}${a.ship === 'kestrel' ? ' (Kestrel)' : ''}`;
+      return `Repair ${a.system}${a.ship === 'kestrel' ? ` (${s.ships.kestrel.name})` : ''}`;
     case 'jump':
       return a.mode === 'engage' ? 'Engage jump drive' : a.mode === 'charge' ? 'Charge jump drive' : 'Withdraw';
     case 'improvise':

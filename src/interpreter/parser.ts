@@ -15,6 +15,8 @@
  * `unparsed`: the hook for a future AI fallback interpreter.
  */
 import { routeComms } from './dialogue';
+import { setVocabulary, withAliases } from './vocabulary';
+import { SIMULATION_NAME_PATTERN } from '../scenarios/catalogue';
 import type { Interpretation, ProposedActionInput, CommIntent, TradeOffer, ManeuverIntentT } from '../engine/schema';
 import { InterpretationSchema } from '../engine/schema';
 import { planConflict } from '../engine/standing';
@@ -85,8 +87,11 @@ export function normalise(input: string): string {
 
 // --------------------------------------------------------------- lexicon ---
 
-const KESTREL = /\b(kestrel|freighter|civilian( ship| vessel)?|disabled (ship|vessel)|derelict|arden|stricken (ship|vessel)|distressed (ship|vessel)|transport ship|cargo ship|merchant( ship)?)\b/;
-const CRUISER = /\b(cruiser|warship|war ship|directorate|tessarine|ashen|covenant|vane|prefect|enemy|hostile (ship|vessel|contact)|the hostile|attacker|second contact|other ship|that ship|battleship|man o' war)\b/;
+const KESTREL_BASE = /\b(kestrel|freighter|civilian( ship| vessel)?|disabled (ship|vessel)|derelict|arden|stricken (ship|vessel)|distressed (ship|vessel)|transport ship|cargo ship|merchant( ship)?)\b/;
+const CRUISER_BASE = /\b(cruiser|warship|war ship|directorate|tessarine|ashen|covenant|vane|prefect|enemy|hostile (ship|vessel|contact)|the hostile|attacker|second contact|other ship|that ship|battleship|man o' war)\b/;
+/** v0.6: the built-in ship words plus the active scenario's (vocabulary.ts); identical to the base for the Kestrel. */
+let KESTREL = KESTREL_BASE;
+let CRUISER = CRUISER_BASE;
 const BORDER = /\b(border|agency space|isa space|agency territory|concord space|our space|friendly space|home space|safe space|our side|the line|our territory)\b/;
 /** "the two ships", "both", "2 ships", "those vessels", "each other". */
 const PAIR = /\b(the |those |these |both )?(2|both) (ships|vessels|contacts|of them|craft)\b|\bboth (of them|ships|vessels|contacts)\b|\bthem both\b|\beach other\b|\b(those|these|the) (ships|vessels|contacts)\b|\bboth\b/;
@@ -374,6 +379,12 @@ const RULES: Rule[] = [
     build: () => ({ kind: 'action', action: { type: 'weapons', mode: 'arm' } }),
   },
   {
+    // v0.6: medical improvisation (isolation wards, screened transport) — the scenario decides what it achieves.
+    name: 'improviseMedical',
+    test: /\b(isolation|quarantine|biohazard) (ward|bay|area|deck|zone|field)\b|\bisolat(e|ion) (them|the (sick|patients|infected|team|exposed))\b|\bfield hospital\b|\bbio-? ?filters?\b|\bdecontaminat\w*\b|\bscreen (the )?(transport|beam|transporters?)\b/,
+    build: (c) => ({ kind: 'action', action: { type: 'improvise', method: 'other', description: c } }),
+  },
+  {
     name: 'tractor',
     test: /\btractor\b|\btow\b|\btowing\b/,
     build: (c) => ({
@@ -384,7 +395,7 @@ const RULES: Rule[] = [
   {
     name: 'repairKestrel',
     test: /\b(stabili[sz]e|patch|seal|shore up|contain)\b.*\b(reactor|containment|core|kestrel|freighter|her|it)\b|\b(engineering|engineers?|damage control) (team|crew|party)\b|\bfix (the|their|her) (reactor|containment)\b/,
-    build: () => ({ kind: 'action', action: { type: 'repair', ship: 'kestrel', system: 'reactor' } }),
+    build: (_c, ctx) => ({ kind: 'action', action: { type: 'repair', ship: 'kestrel', system: (ctx.contactRepair ?? 'reactor') as never } }),
   },
   {
     name: 'transport',
@@ -404,7 +415,9 @@ const RULES: Rule[] = [
     test: /\b(repair|fix|restore|patch up|damage control)\b/,
     build: (c, ctx) => {
       const sys = systemsIn(c).filter((x) => x.id !== 'reactor' || /\bour reactor\b/.test(c));
-      if (/\b(their|kestrel|freighter|containment)\b/.test(c) || (/\breactor\b/.test(c) && !/\bour\b/.test(c))) return { kind: 'action', action: { type: 'repair', ship: 'kestrel', system: 'reactor' } };
+      const contactWords = withAliases(/\b(their|kestrel|freighter|containment)\b/, 'kestrel');
+      const repairWords = withAliases(/(?!)/, 'repair');
+      if (contactWords.test(c) || repairWords.test(c) || (!ctx.contactRepair && /\breactor\b/.test(c) && !/\bour\b/.test(c))) return { kind: 'action', action: { type: 'repair', ship: 'kestrel', system: (ctx.contactRepair ?? 'reactor') as never } };
       const id = sys[0]?.id ?? ctx.mostDamaged;
       if (!id) return { kind: 'action', action: { type: 'query', topic: 'systems' } };
       return { kind: 'action', action: { type: 'repair', ship: 'halcyon', system: id as never } };
@@ -622,8 +635,11 @@ interface Parsed {
   refs: ReturnType<typeof refsIn>;
 }
 
-const OPTIONS_CONTACTS = ['the Kestrel', 'the cruiser'];
-const REF_LABEL: Record<Ref, string> = { kestrel: 'the Kestrel', cruiser: 'the cruiser', border: 'the border' };
+const BASE_LABELS = { kestrel: 'the Kestrel', cruiser: 'the cruiser' };
+/** v0.6: how clarifying questions name the two contacts (the scenario's ship names; the Kestrel's words by default). */
+let OPTIONS_CONTACTS = [BASE_LABELS.kestrel, BASE_LABELS.cruiser];
+let REF_LABEL: Record<Ref, string> = { ...BASE_LABELS, border: 'the border' };
+const whichContact = () => `${OPTIONS_CONTACTS[0]} or ${OPTIONS_CONTACTS[1]}`;
 type Clar = { question: string; options: string[]; clause: string };
 
 /** Maneuvers that need a target, and the default when none is given. */
@@ -689,7 +705,7 @@ function resolveTargets(parsed: Parsed[], ctx: InterpreterContext): { actions: P
     const unresolved = !!pronoun && p.refs.singular && !target && pairVisible && p.refs.refs.length === 0;
     if (unresolved && d.needs && d.needs !== 'system' && !(d.needs === 'nav' && (a.intent === 'interpose' || NO_TARGET.includes(a.intent as ManeuverIntentT) || OPTIONAL_TARGET.includes(a.intent as ManeuverIntentT)))) {
       const verb = d.needs === 'commTarget' ? 'Open a channel to' : d.needs === 'nav' ? verbFor(a.intent as ManeuverIntentT) : a.type === 'scan' ? 'Scan' : 'Target';
-      clarify = clarify ?? { question: `${verb} which contact, Captain — the Kestrel or the cruiser?`, options: OPTIONS_CONTACTS, clause: p.clause };
+      clarify = clarify ?? { question: `${verb} which contact, Captain — ${whichContact()}?`, options: OPTIONS_CONTACTS, clause: p.clause };
       return;
     }
 
@@ -717,7 +733,7 @@ function resolveTargets(parsed: Parsed[], ctx: InterpreterContext): { actions: P
         else if (/\b(cargo|compartment|hold)\b/.test(p.clause) && ctx.visible.includes('kestrel')) target = 'kestrel';
       }
       if (!target) {
-        clarify = clarify ?? { question: 'Open a channel to which vessel, Captain — the Kestrel, the cruiser, or both?', options: [...OPTIONS_CONTACTS, 'both ships'], clause: p.clause };
+        clarify = clarify ?? { question: `Open a channel to which vessel, Captain — ${OPTIONS_CONTACTS[0]}, ${OPTIONS_CONTACTS[1]}, or both?`, options: [...OPTIONS_CONTACTS, 'both ships'], clause: p.clause };
         return;
       }
       a.target = target;
@@ -746,7 +762,7 @@ function resolveTargets(parsed: Parsed[], ctx: InterpreterContext): { actions: P
         if (pairRefs.length < 2) {
           const x = pairRefs[0] ?? null;
           if (!x) {
-            clarify = clarify ?? { question: 'Between which two, Captain?', options: ['the Kestrel and the cruiser'], clause: p.clause };
+            clarify = clarify ?? { question: 'Between which two, Captain?', options: [`${OPTIONS_CONTACTS[0]} and ${OPTIONS_CONTACTS[1]}`], clause: p.clause };
             return;
           }
           const others = (['kestrel', 'cruiser', 'border'] as Ref[]).filter((r) => r !== x && (r === 'border' || ctx.visible.includes(r)));
@@ -774,7 +790,7 @@ function resolveTargets(parsed: Parsed[], ctx: InterpreterContext): { actions: P
       }
       if (!ref && pluralMeansPair) {
         // "close on them" with both in view: ambiguous.
-        clarify = clarify ?? { question: `${verbFor(intent)} which contact, Captain — the Kestrel or the cruiser?`, options: OPTIONS_CONTACTS, clause: p.clause };
+        clarify = clarify ?? { question: `${verbFor(intent)} which contact, Captain — ${whichContact()}?`, options: OPTIONS_CONTACTS, clause: p.clause };
         return;
       }
       // "Approach the cruiser but stay at 20,000 km": a range order with no name refers to the contact just named.
@@ -785,7 +801,7 @@ function resolveTargets(parsed: Parsed[], ctx: InterpreterContext): { actions: P
       if (!ref && /\btransport(er)? range\b/.test(p.clause) && ctx.visible.includes('kestrel')) ref = 'kestrel';
       if (!ref && !OPTIONAL_TARGET.includes(intent)) ref = defaultNavTarget(intent, p.clause, ctx);
       if (!ref && !OPTIONAL_TARGET.includes(intent)) {
-        clarify = clarify ?? { question: `${verbFor(intent)} which contact, Captain — the Kestrel or the cruiser?`, options: OPTIONS_CONTACTS, clause: p.clause };
+        clarify = clarify ?? { question: `${verbFor(intent)} which contact, Captain — ${whichContact()}?`, options: OPTIONS_CONTACTS, clause: p.clause };
         return;
       }
       if (ref) {
@@ -814,7 +830,7 @@ function resolveTargets(parsed: Parsed[], ctx: InterpreterContext): { actions: P
       }
       if (!contact) {
         const verb = type === 'scan' ? 'Scan' : a.mode === 'fire' ? 'Fire on' : 'Target';
-        clarify = clarify ?? { question: `${verb} which contact, Captain — the Kestrel or the cruiser?`, options: OPTIONS_CONTACTS, clause: p.clause };
+        clarify = clarify ?? { question: `${verb} which contact, Captain — ${whichContact()}?`, options: OPTIONS_CONTACTS, clause: p.clause };
         return;
       }
       a.target = contact;
@@ -1089,6 +1105,7 @@ function sentencePiece(raw: string, ctx: InterpreterContext, prior: { contact: C
 
 export function interpretSync(input: string, ctx: InterpreterContext): Interpretation {
   const source = 'offline-parser';
+  applyScenarioVocabulary(ctx);
   const teach = TEACH.exec(input.trim());
   if (teach) {
     const phrase = teach[1].toLowerCase().replace(/[^a-z0-9' -]/g, '').trim();
@@ -1116,8 +1133,10 @@ export function interpretSync(input: string, ctx: InterpreterContext): Interpret
 
 const SIM_WORD = '(?:simulation|sim|simulator|drill|exercise|training(?: simulation| run| exercise)?|holo(?:gram|deck)?(?: program(?:me)?)?|(?:simulation|training|holo) program(?:me)?)';
 const LEAD = "^(?:(?:computer|ship|ops|xo|number one|first officer|commander|marrow)[,:]?\\s+)?(?:please\\s+)?(?:(?:can|could|would) you\\s+)?(?:let'?s\\s+)?";
-const BEGIN_SIM = new RegExp(`${LEAD}(?:begin|start|run|load|launch|initiate|commence|play|engage|activate|set up|give me|i want|i'd like|we'?ll (?:run|do))\\s+(?:up\\s+)?(?:the\\s+|a\\s+|another\\s+|new\\s+)*(?:(.{0,40}?)\\s+)?${SIM_WORD}\\b(?:\\s+(?:of|called|named|for)\\s+(.+))?|${LEAD}(?:begin|start|run|load|launch|play)\\s+(?:the\\s+)?(kestrel(?: incident)?)\\b`);
+const BEGIN_SIM = new RegExp(`${LEAD}(?:begin|start|run|load|launch|initiate|commence|play|engage|activate|set up|give me|i want|i'd like|we'?ll (?:run|do))\\s+(?:up\\s+)?(?:the\\s+|a\\s+|another\\s+|new\\s+)*(?:(.{0,40}?)\\s+)?${SIM_WORD}\\b(?:\\s+(?:of|called|named|for)\\s+(.+)|\\s+(?:number\\s+|no\\.?\\s+|#\\s*)?(\\d{1,3}|one|two|three|four|five|six|seven|eight|nine|ten)\\b)?|${LEAD}(?:begin|start|run|load|launch|play)\\s+(?:the\\s+)?(${SIMULATION_NAME_PATTERN})\\b`);
 const END_SIM = new RegExp(`${LEAD}(?:end|stop|terminate|exit|abort|cancel|quit|close|leave|freeze)\\s+(?:the\\s+|this\\s+)?${SIM_WORD}\\b|^(?:computer[,:]?\\s+)?(?:end|exit) program(?:me)?\\b`);
+/** "List simulations", "what simulations are available?", "which training simulations do we have?" */
+const LIST_SIMS = new RegExp(`${LEAD}(?:list|name|read(?: out)?|tell me)\\s+(?:the\\s+|all\\s+|our\\s+|the available\\s+)*(?:training\\s+)?(?:simulations|sims|training (?:simulations|programs?|programmes?))\\b|\\b(?:what|which)\\s+(?:training\\s+)?(?:simulations|sims)\\b(?:.*\\b(?:available|have|are there|on file|can (?:i|we) (?:run|play|do)|do we))?|\\bhow many (?:training )?simulations\\b`);
 const OPEN_ARCHIVE = new RegExp(`${LEAD}(?:open|show(?: me)?|display|bring up|pull up|access|list|go to)\\s+(?:the\\s+|my\\s+|our\\s+)?(?:simulation|mission|training|sim)?\\s*(?:archive|library|records?|simulations|missions list)\\b`);
 const SURVEY = /\b(?:what|which|any|list|show(?: me)?|tell me about)\b.*\b(?:systems?|stars?|worlds?|planets?)\b.*\b(?:exploration|survey|sensor|jump)? ?(?:range|nearby|near us|in reach|around us|close by|within reach)\b|\b(?:survey|chart) (?:the )?(?:local |nearby )?(?:systems|neighbou?rhood|area)\b/;
 
@@ -1158,7 +1177,7 @@ function respondOf(t0: string): string | null {
   return null;
 }
 
-type BridgeOp = { type: 'bridge'; op: 'openArchive' | 'beginSim' | 'endSim' | 'survey' | 'acceptCommission' | 'civs' | 'course' | 'patrol' | 'respond'; scenario?: string; hours?: number; text?: string };
+type BridgeOp = { type: 'bridge'; op: 'openArchive' | 'beginSim' | 'endSim' | 'listSims' | 'survey' | 'acceptCommission' | 'civs' | 'course' | 'patrol' | 'respond'; scenario?: string; hours?: number; text?: string };
 
 function bridgeCommand(input: string, ctx?: InterpreterContext): BridgeOp | null {
   const t = input.trim().toLowerCase().replace(/[?!.]+$/, '').replace(/\s+/g, ' ');
@@ -1180,9 +1199,10 @@ function bridgeCommand(input: string, ctx?: InterpreterContext): BridgeOp | null
   }
   if (CIVS.test(t) && !/\b(hail|fire|lock|approach)\b/.test(t)) return { type: 'bridge', op: 'civs' };
   if (END_SIM.test(t)) return { type: 'bridge', op: 'endSim' };
+  if (LIST_SIMS.test(t)) return { type: 'bridge', op: 'listSims' };
   const b = BEGIN_SIM.exec(t);
   if (b) {
-    const name = (b[3] ?? b[2] ?? b[1] ?? '').replace(/\b(the|a|new|another)\b/g, '').trim();
+    const name = (b[4] ?? b[3] ?? b[2] ?? b[1] ?? '').replace(/\b(the|a|new|another)\b/g, '').trim();
     return { type: 'bridge', op: 'beginSim', ...(name ? { scenario: name } : {}) };
   }
   if (OPEN_ARCHIVE.test(t)) return { type: 'bridge', op: 'openArchive' };
@@ -1283,13 +1303,24 @@ function safe(result: Interpretation, input: string): Interpretation {
   return r;
 }
 
+/** v0.6: switch to the scenario's names for the contact slots (no-op for the Kestrel, which declares none). */
+function applyScenarioVocabulary(ctx: InterpreterContext): void {
+  setVocabulary(ctx.names ? { kestrel: ctx.names.kestrel, cruiser: ctx.names.cruiser, repair: ctx.contactRepairWords ?? [] } : undefined);
+  KESTREL = withAliases(KESTREL_BASE, 'kestrel');
+  CRUISER = withAliases(CRUISER_BASE, 'cruiser');
+  const labels = ctx.labels ?? BASE_LABELS;
+  OPTIONS_CONTACTS = [labels.kestrel, labels.cruiser];
+  REF_LABEL = { ...labels, border: 'the border' };
+  if (ctx.names) protectWords([...ctx.names.kestrel, ...ctx.names.cruiser].flatMap((w) => w.split(/\s+/)).filter((w) => w.length > 2));
+}
+
 // ------------------------------------------------------------- spelling ---
 
 let protectedNames = new Set<string>(['arden', 'vane', 'venn', 'maras', 'ivet', 'lysa', 'teo', 'szabo', 'varga', 'rask', 'okafor', 'adeyemi', 'marrow', 'osei', 'halcyon', 'tessarine', 'calloway']);
 let spell: SpellCorrector | null = null;
 function SPELL(): SpellCorrector {
   if (!spell) {
-    const sources: (RegExp | string)[] = [KESTREL, CRUISER, PASSENGER, BORDER, PAIR, COMPARTMENT, SPEECH, ON_SCREEN, ALL_TARGETS, SPEED_SLOW, SPEED_HALF, NEGATED_HOSTILITY, PEACEFUL, ASSERTIVE, ADDRESSEES, ...SYSTEMS.map((x) => x[1]), ...RULES.map((r) => r.test), 'shields weapons transporter tractor channel freighter cruiser kestrel position between hostile hail aggressive threatening'];
+    const sources: (RegExp | string)[] = [KESTREL_BASE, CRUISER_BASE, PASSENGER, BORDER, PAIR, COMPARTMENT, SPEECH, ON_SCREEN, ALL_TARGETS, SPEED_SLOW, SPEED_HALF, NEGATED_HOSTILITY, PEACEFUL, ASSERTIVE, ADDRESSEES, ...SYSTEMS.map((x) => x[1]), ...RULES.map((r) => r.test), 'shields weapons transporter tractor channel freighter cruiser kestrel position between hostile hail aggressive threatening'];
     spell = new SpellCorrector(vocabularyFrom(sources));
   }
   return spell;

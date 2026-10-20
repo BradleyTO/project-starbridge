@@ -12,7 +12,7 @@ import { say, sys } from './report';
 import type { ShipId, WorldState } from './types';
 import { weaponRange } from './combat';
 import { TRACTOR_RANGE, efficiency, km, range, systemLabel, transportRange, usable } from './rules';
-import { knows } from './state';
+import { knows, slotsOf, leadOf } from './state';
 import { COMMS_SECONDS, channelOf, commsOf, openChannel } from './comms';
 import { dot, effectivePerf, len, sub } from './kinematics';
 import { assessFire } from './roe';
@@ -68,7 +68,7 @@ export function validate(s: WorldState, action: ProposedAction): Validation {
       if (action.target === 'area' || action.target === 'halcyon') return ok(action, action.target === 'halcyon' ? 0 : 1);
       if (action.target === 'compartment') {
         if (!knows(s, 'compartment_exists')) return no(action, [say('sensors', 'noCompartmentKnown')]);
-        if (s.ships.kestrel.destroyed) return no(action, [say('sensors', 'targetDestroyed', { ship: 'Kestrel' })]);
+        if (s.ships.kestrel.destroyed) return no(action, [say('sensors', 'targetDestroyed', { ship: s.ships.kestrel.name })]);
         return ok(action, 1);
       }
       if (!present(s, action.target)) return no(action, [say('sensors', 'noContact', { target: action.target })]);
@@ -79,8 +79,8 @@ export function validate(s: WorldState, action: ProposedAction): Validation {
       const talk = (a: ProposedAction): Validation => ({ status: 'accepted', action: a, reasons: [], timeCost: 0, seconds: action.intent === 'open' ? COMMS_SECONDS.hail : COMMS_SECONDS.legacyMessage });
       if (!usable(h, 'comms', 0.1)) return no(action, [say('comms', 'systemUnavailable', { system: 'communications', status: h.systems.comms.status })]);
       if (action.target === 'passenger') {
-        const p = s.characters.passenger;
-        if (!knows(s, 'passenger_identity')) return no(action, [say('comms', 'unknownPassenger')]);
+        const p = leadOf(s, 'passenger');
+        if (!p || !knows(s, 'passenger_identity')) return no(action, [say('comms', 'unknownPassenger')]);
         if (p.status === 'dead') return no(action, [say('xo', 'passengerDead', { name: p.name })]);
         if (p.status === 'stasis') return no(action, [say('comms', 'passengerStasis', { name: p.name })]);
         return talk(action);
@@ -93,9 +93,9 @@ export function validate(s: WorldState, action: ProposedAction): Validation {
       // v0.5: on the idle bridge the contact slot is empty unless first contact is under way.
       if (s.scenarioId === 'bridge' && !s.ships[action.target].detected) return no(action, [say('comms', 'bridgeNobodyToHail')]);
       if (action.target === 'kestrel') {
-        const arden = s.characters.arden;
-        if (arden.status === 'dead') return no(action, [say('comms', 'nobodyAnswers', { ship: 'Kestrel' })]);
-        if (arden.ship === 'kestrel' && s.ships.kestrel.systems.comms.health <= 0) return no(action, [say('comms', 'nobodyAnswers', { ship: 'Kestrel' })]);
+        const lead = leadOf(s, 'kestrel');
+        if (!lead || lead.status === 'dead') return no(action, [say('comms', 'nobodyAnswers', { ship: s.ships.kestrel.name })]);
+        if (lead.ship === 'kestrel' && s.ships.kestrel.systems.comms.health <= 0) return no(action, [say('comms', 'nobodyAnswers', { ship: s.ships.kestrel.name })]);
         return talk(action);
       }
       if (!present(s, 'cruiser')) return no(action, [say('comms', 'noContact', { target: 'cruiser' })]);
@@ -233,7 +233,7 @@ export function validate(s: WorldState, action: ProposedAction): Validation {
     case 'transport': {
       if (!usable(h, 'transporter', 0.2)) return no(action, [say('xo', 'systemUnavailable', { system: 'transporter', status: h.systems.transporter.status })]);
       const k = s.ships.kestrel;
-      if (k.destroyed) return no(action, [say('xo', 'targetDestroyed', { ship: 'Kestrel' })]);
+      if (k.destroyed) return no(action, [say('xo', 'targetDestroyed', { ship: k.name })]);
       const tr = transportRange(s);
       const d = range(s, 'halcyon', 'kestrel');
       if (d > tr) return no(action, [say('xo', 'transportRange', { km: km(d), need: km(tr) })]);
@@ -244,11 +244,11 @@ export function validate(s: WorldState, action: ProposedAction): Validation {
           if (k.souls - (s.counters.trapped ?? 0) <= 0) return no(action, [say('xo', 'crewTrapped', { n: s.counters.trapped })]);
           return ok(action, 1);
         case 'passenger': {
-          const p = s.characters.passenger;
-          if (!knows(s, 'compartment_exists') && !knows(s, 'passenger_identity')) return no(action, [say('xo', 'unknownPassenger')]);
+          const p = leadOf(s, 'passenger');
+          if (!p || (!knows(s, 'compartment_exists') && !knows(s, 'passenger_identity'))) return no(action, [say('xo', 'unknownPassenger')]);
           if (p.status === 'dead') return no(action, [say('xo', 'passengerDead', { name: p.name })]);
           if (p.ship !== 'kestrel') return no(action, [say('xo', 'passengerAlreadyMoved')]);
-          if (!s.flags.compartmentOpen && s.characters.arden.trust < 30) return no(action, [say('xo', 'compartmentShielded')]);
+          if (!s.flags.compartmentOpen && (leadOf(s, 'kestrel')?.trust ?? 0) < 30) return no(action, [say('xo', 'compartmentShielded')]);
           return ok(action, 1);
         }
         case 'cargo':
@@ -267,8 +267,8 @@ export function validate(s: WorldState, action: ProposedAction): Validation {
     case 'repair': {
       if (action.ship === 'kestrel') {
         const k = s.ships.kestrel;
-        if (k.destroyed) return no(action, [say('engineering', 'targetDestroyed', { ship: 'Kestrel' })]);
-        if (action.system !== 'reactor') return no(action, [say('engineering', 'kestrelRepairScope')]);
+        if (k.destroyed) return no(action, [say('engineering', 'targetDestroyed', { ship: k.name })]);
+        if (action.system !== slotsOf(s).kestrelRepair) return no(action, [say('engineering', 'kestrelRepairScope')]);
         if (s.flags.kestrelStable) return no(action, [say('engineering', 'kestrelAlreadyStable')]);
         if (!usable(h, 'transporter', 0.2)) return no(action, [say('engineering', 'systemUnavailable', { system: 'transporter', status: h.systems.transporter.status })]);
         const d = range(s, 'halcyon', 'kestrel');
@@ -300,13 +300,13 @@ export function validate(s: WorldState, action: ProposedAction): Validation {
       if (m === 'sensorGhost' && !usable(h, 'sensors', 0.3)) return no(action, [say('sensors', 'systemUnavailable', { system: 'sensors', status: h.systems.sensors.status })]);
       if (m === 'shieldExtend') {
         if (!usable(h, 'shields', 0.3)) return no(action, [say('tactical', 'systemUnavailable', { system: 'shields', status: h.systems.shields.status })]);
-        if (s.ships.kestrel.destroyed) return no(action, [say('tactical', 'targetDestroyed', { ship: 'Kestrel' })]);
+        if (s.ships.kestrel.destroyed) return no(action, [say('tactical', 'targetDestroyed', { ship: s.ships.kestrel.name })]);
         const d = range(s, 'halcyon', 'kestrel');
         if (d > 2500) return no(action, [say('tactical', 'extendRange', { km: km(d) })]);
       }
       if (m === 'ejectCore') {
         const k = s.ships.kestrel;
-        if (k.destroyed) return no(action, [say('engineering', 'targetDestroyed', { ship: 'Kestrel' })]);
+        if (k.destroyed) return no(action, [say('engineering', 'targetDestroyed', { ship: k.name })]);
         if (s.flags.kestrelStable) return no(action, [say('engineering', 'kestrelAlreadyStable')]);
         const d = range(s, 'halcyon', 'kestrel');
         if (d > transportRange(s)) return no(action, [say('engineering', 'teamRange', { km: km(d) })]);

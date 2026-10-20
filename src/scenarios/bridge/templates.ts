@@ -13,7 +13,7 @@ export const BRIDGE_SCENARIO_TEMPLATES: Record<string, TemplateFn> = {
   bridgeHelp: () =>
     'You are on the bridge. Talk to your crew: "First Officer, give me a status report", "Science, what systems are within exploration range?", "Computer, open the simulation archive", or "Computer, begin the Kestrel Incident simulation". Ordinary orders (helm, shields, scans) work here too.',
   simDebriefNarr: (v) => `SIMULATION ENDED — ${v.title}. ${v.summary} The holographic overlay dissolves; the bridge of the Halcyon returns around you.`,
-  simDebriefXo: (v) => `Debrief, Captain: ${v.objectives}. It was a simulation — nothing out there has changed. Say "begin the Kestrel Incident simulation" to run another, or open the archive.`,
+  simDebriefXo: (v) => `Debrief, Captain: ${v.objectives}. It was a simulation — nothing out there has changed. Say "list simulations" to choose another, or open the archive.`,
   simEndedByOrder: () => 'The simulation ends at your order. The holographic overlay dissolves; the bridge of the Halcyon returns around you.',
   simEndedByOrderXo: () => 'Simulation ended, Captain. Nothing from it was recorded. We are back on station.',
   dutyCommissionComms: () => 'Priority transmission from Fleet Command, Captain. Admiral Kaine has confirmed your commission. We are on active duty.',

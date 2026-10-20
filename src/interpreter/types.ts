@@ -6,6 +6,7 @@
  */
 import type { Clarification, Interpretation } from '../engine/schema';
 import type { WorldState } from '../engine/types';
+import { leadOf } from '../engine/state';
 
 export interface InterpreterContext {
   visible: ('kestrel' | 'cruiser')[];
@@ -29,6 +30,13 @@ export interface InterpreterContext {
   recentRefusal?: boolean;
   /** v0.5: on the idle bridge — live (Active Duty) or not, whether a call awaits an answer, survey place names. */
   duty?: { live: boolean; incoming: boolean; places: string[] } | null;
+  /** v0.6: the scenario's own words for the two contact slots (absent: the Kestrel's built-in words only). */
+  names?: { kestrel: string[]; cruiser: string[] } | null;
+  /** v0.6: how clarifying questions name the two contacts ("the Mercy of Ilun"). */
+  labels?: { kestrel: string; cruiser: string } | null;
+  /** v0.6: the contact-A system an engineering team fixes, and words naming it (absent: the Kestrel's reactor). */
+  contactRepair?: string | null;
+  contactRepairWords?: string[];
 }
 
 export interface Interpreter {
@@ -40,7 +48,7 @@ export interface Interpreter {
 export function contextFrom(s: WorldState): InterpreterContext {
   const visible = (['kestrel', 'cruiser'] as const).filter((id) => s.ships[id].detected && !s.ships[id].destroyed && !(id === 'cruiser' && s.flags.cruiserGone));
   const known = !!s.facts.passenger_identity?.known;
-  const p = s.characters.passenger;
+  const p = leadOf(s, 'passenger');
   const damaged = Object.entries(s.ships.halcyon.systems)
     .filter(([id, v]) => v.health > 0 && v.health < 100 && id !== 'reactor')
     .sort((a, b) => a[1].health - b[1].health);
@@ -50,15 +58,30 @@ export function contextFrom(s: WorldState): InterpreterContext {
     lastCommTarget: (['kestrel', 'cruiser', 'passenger'] as const)[(s.counters.lastCommTarget ?? 0) - 1] ?? null,
     pending: s.clarification,
     passengerKnown: known,
-    passengerAwake: p.status === 'active' || p.status === 'injured',
-    passengerNames: known ? p.name.toLowerCase().replace(/^dr\.?\s*/, '').split(/\s+/).filter((w) => w.length > 2) : [],
+    passengerAwake: !!p && (p.status === 'active' || p.status === 'injured'),
+    passengerNames: known && p ? p.name.toLowerCase().replace(/^dr\.?\s*/, '').split(/\s+/).filter((w) => w.length > 2) : [],
     mostDamaged: damaged[0]?.[0] ?? null,
     weaponsTarget: s.ships.halcyon.weapons.target === 'kestrel' || s.ships.halcyon.weapons.target === 'cruiser' ? s.ships.halcyon.weapons.target : null,
     channel: activeChannel(s),
     held: (s.comms?.channels ?? []).filter((c) => c.state === 'hold').map((c) => c.party),
     recentRefusal: (s.refusals ?? []).some((r) => r.turn >= s.turn - 3),
+    ...(s.slots ? { names: { kestrel: namesFor(s, 'kestrel'), cruiser: namesFor(s, 'cruiser') }, labels: { kestrel: `the ${s.ships.kestrel.name}`, cruiser: `the ${s.ships.cruiser.name}` }, contactRepair: s.slots.kestrelRepair, contactRepairWords: s.slots.kestrelRepairWords } : {}),
     duty: s.scenarioId === 'bridge' ? { live: !!s.duty?.live, incoming: !!s.duty?.incoming, places: (s.survey?.systems ?? []).map((x) => x.name.toLowerCase()) } : null,
   };
+}
+
+/** A slot's words: its ship's declared aliases plus its lead character's name (surname, full name). */
+function namesFor(s: WorldState, slot: 'kestrel' | 'cruiser'): string[] {
+  const out = new Set((s.ships[slot].aliases ?? []).map((w) => w.toLowerCase()));
+  out.add(s.ships[slot].name.toLowerCase());
+  const lead = leadOf(s, slot);
+  if (lead) {
+    const n = lead.name.toLowerCase().replace(/^(capt\.?|captain|cmdr\.?|commander|dr\.?|warden-commander|warden|prefect|lt\.?)\s+/, '');
+    out.add(n);
+    const last = n.split(/\s+/).pop();
+    if (last && last.length > 2) out.add(last);
+  }
+  return [...out].filter(Boolean);
 }
 
 function activeChannel(s: WorldState): InterpreterContext['channel'] {

@@ -5,6 +5,7 @@
  */
 import type { DeepReadonly } from './freeze';
 import type { CanonicalState, OfferClass, SimRunRecord, SimulationStoreState } from './types';
+import { SIMULATIONS } from '../scenarios/catalogue';
 
 export interface TrainingMission {
   id: string;
@@ -13,14 +14,8 @@ export interface TrainingMission {
   blurb: string;
 }
 
-export const TRAINING: TrainingMission[] = [
-  {
-    id: 'TRN-kestrel',
-    title: 'Training Simulation 001: The Kestrel Incident',
-    scenarioId: 'kestrel-incident',
-    blurb: 'A crippled freighter, a Directorate cruiser and a hidden passenger. Seeded: every run can differ.',
-  },
-];
+/** One entry per catalogued training simulation (src/scenarios/catalogue.ts), in catalogue order. */
+export const TRAINING: TrainingMission[] = SIMULATIONS.map((x) => ({ id: x.trainingId, title: x.title, scenarioId: x.scenarioId, blurb: x.blurb }));
 
 export interface ArchiveEntry {
   id: string;

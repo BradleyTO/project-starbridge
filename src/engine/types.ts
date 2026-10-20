@@ -62,6 +62,8 @@ export interface Ship {
   perf: { maxSpeed: number; accel: number; turnRate: number };
   /** Active guidance behaviour (helm order for the Halcyon, agent decision for NPCs). */
   nav: NavGoal | null;
+  /** v0.6: lower-case words the captain may use for this ship ("the liner", "Thornwake", "the warden"). */
+  aliases?: string[];
 }
 
 export type ManeuverIntent =
@@ -300,6 +302,11 @@ export interface ScenarioVariant {
   reactorTurns: number;
   complication: 'none' | 'ionStorm' | 'coolantLeak' | 'trappedCrew';
   reinforcementTurn: number;
+  /**
+   * v0.6: scenario-specific seeded choices for scenarios other than the Kestrel Incident
+   * (whose fields above are kept for save compatibility; other scenarios fill them with neutral values).
+   */
+  extra?: Record<string, string | number | boolean>;
 }
 
 /** Short-lived visual effects from the last resolved turn (for the viewscreen). */
@@ -368,6 +375,25 @@ export interface WorldState {
   uiRequest?: { kind: UiRequestKind; id?: string; hours?: number; response?: string; seq: number } | null;
   /** v0.5: the Active Duty bridge (live survey, the call waiting for an answer, first contact under way). */
   duty?: DutyBridge;
+  /** v0.6: who and what fills the generic contact slots (absent = the Kestrel Incident's cast; see slotsOf). */
+  slots?: ContactSlots;
+}
+
+/**
+ * v0.6 multi-scenario support. The engine has three ship slots with historical ids: 'halcyon'
+ * (the player), 'kestrel' (contact A, usually the vessel in trouble) and 'cruiser' (contact B,
+ * usually the other power). A scenario names its own cast for them here; ids stay as they are
+ * so saves and the action schema are unchanged.
+ */
+export interface ContactSlots {
+  /** Character who answers hails to contact A / contact B. */
+  kestrelLead: string;
+  cruiserLead: string;
+  /** Character id of the passenger slot (someone the crew can bring aboard and talk to in person), or null. */
+  passenger: string | null;
+  /** The contact-A system an engineering team can fix ("stabilise their reactor"), and words that name it. */
+  kestrelRepair: SystemId;
+  kestrelRepairWords: string[];
 }
 
 export type UiRequestKind = 'openArchive' | 'beginSim' | 'endSim' | 'acceptCommission' | 'patrol' | 'respond' | 'course' | 'firstContact';

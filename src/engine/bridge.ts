@@ -4,6 +4,7 @@
  *   openArchive — "Computer, open the simulation archive"
  *   beginSim    — "Computer, begin the Kestrel Incident simulation" (only from the idle bridge)
  *   endSim      — "Computer, end the simulation" (only inside a simulation)
+ *   listSims    — "Computer, list simulations" / "what simulations are available?" (catalogue)
  *   survey      — "Science, what systems are within exploration range?" (scenario hook)
  *   chat        — small talk with an officer ("Okafor, how are the engines?")
  *   civs        — "Science, show me the civilizations we've detected but haven't contacted"
@@ -21,6 +22,7 @@ import type { Rng } from './rng';
 import type { WorldState } from './types';
 import type { Applied, ScenarioHooks } from './reduce';
 import { officerFrom } from './roe';
+import { SIMULATIONS, simulationByName } from '../scenarios/catalogue';
 
 export type BridgeAction = Extract<ProposedAction, { type: 'bridge' }>;
 export const IDLE_BRIDGE_ID = 'bridge';
@@ -33,11 +35,15 @@ export function request(s: WorldState, kind: UiRequest['kind'], id?: string, ext
   return { ...s, uiRequest: { kind, ...(id ? { id } : {}), ...extra, seq } };
 }
 
-/** Which simulation a spoken name refers to (only one exists today). */
+/** Which simulation a spoken name refers to (the catalogue decides; nothing named → simulation 001). */
 export function simulationFor(name: string | undefined): { id: string; title: string } | null {
-  const t = (name ?? '').toLowerCase();
-  if (!t || /\b(kestrel|incident|training|001|one|first|default|a|the)\b/.test(t)) return { id: 'TRN-kestrel', title: 'Training Simulation 001: The Kestrel Incident' };
-  return null;
+  const sim = simulationByName(name);
+  return sim ? { id: sim.trainingId, title: sim.title } : null;
+}
+
+/** "Training Simulation 001: The Kestrel Incident; Training Simulation 002: …" for the computer to read out. */
+export function simulationList(): string {
+  return SIMULATIONS.map((x) => `${String(x.number).padStart(3, '0')}, ${x.name}`).join('; ');
 }
 
 export function reduceBridge(s: WorldState, action: BridgeAction, hooks: ScenarioHooks, rng: Rng): Applied {
@@ -47,6 +53,8 @@ export function reduceBridge(s: WorldState, action: BridgeAction, hooks: Scenari
       s = request(s, 'openArchive');
       reports.push(say('computer', 'bridgeArchiveOpen'));
       return { state: s, reports };
+    case 'listSims':
+      return { state: s, reports: [say('computer', 'bridgeSimList', { n: SIMULATIONS.length, list: simulationList(), example: SIMULATIONS[SIMULATIONS.length - 1].name })] };
     case 'beginSim': {
       const sim = simulationFor(action.scenario);
       if (!sim) return { state: s, reports: [say('computer', 'bridgeNoSuchSim', { name: action.scenario ?? '' })] };
@@ -111,7 +119,8 @@ export function crewChat(s: WorldState, action: BridgeAction, rng: Rng): Report[
 export const BRIDGE_TEMPLATES: Record<string, (v: Record<string, string | number>) => string> = {
   bridgeArchiveOpen: () => 'Simulation archive open on your display, Captain.',
   bridgeSimLoading: (v) => `Loading ${v.title}. Holographic overlay engaging — this is a simulation; nothing in it changes the real universe.`,
-  bridgeNoSuchSim: (v) => `There is no simulation called "${v.name}" in the archive. Say "open the simulation archive" to see what is available.`,
+  bridgeNoSuchSim: (v) => `There is no simulation called "${v.name}" in the archive. Say "list simulations" to hear what is available.`,
+  bridgeSimList: (v) => `${v.n} training simulation${Number(v.n) === 1 ? '' : 's'} on file: ${v.list}. Say, for example, "begin the ${v.example} simulation".`,
   bridgeSimRunning: () => 'A simulation is already running. Say "end the simulation" first.',
   bridgeSimOnDuty: () => 'Not while we are on a live mission, Captain. Simulations can wait until we are back on station.',
   bridgeNoSim: () => 'No simulation is running, Captain. We are on the real bridge.',

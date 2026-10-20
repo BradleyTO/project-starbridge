@@ -11,6 +11,7 @@
  * action, and the order parser never sees speech segments.
  */
 import type { DemandKind, DialogueIntent, Interpretation, Party, PromiseKind, ProposedActionInput, TradeOffer } from '../engine/schema';
+import { aliasAlternation, vocabulary } from './vocabulary';
 import type { InterpreterContext } from './types';
 import { wordsToDigits } from './numbers';
 import { commIntent } from './parser';
@@ -21,8 +22,14 @@ type Topic = NonNullable<Speak['topic']>;
 
 const CREW_VOC =
   /^(computer|number one|first officer|xo|helm|helmsman|navigation|conn|tactical|weapons officer|sensors|science|comms|communications|ops|operations|engineering|chief( okafor)?|okafor|commander( marrow)?|marrow|lieutenant( \w+)?|lt\.? cmdr\.? \w+|varga|szabo|ensign( \w+)?|adeyemi|mr\.? \w+|ms\.? \w+|rask|everyone|bridge|doctor|doc|osei)\s*[,:]\s*/;
-const RELAY =
+const RELAY_BASE =
   /^(?:please\s+|now\s+|go ahead and\s+)?(tell|ask|inform|remind|warn|advise|notify|let|assure|reassure|request|beg)\s+(him|her|them|the prefect|prefect vane|prefect|vane|the captain|captain arden|arden|the kestrel|the freighter|the cruiser|the warship|the directorate|the ashen covenant|the other ship|the other captain|the passenger)(?:\s+know)?\b[,:]?\s*(?:that\s+)?(.*)$/;
+/** v0.6: the relay pattern with the active scenario's names for the contact slots ("tell the warden that…"). */
+function RELAY_RE(): RegExp {
+  const extra = [aliasAlternation('kestrel'), aliasAlternation('cruiser')].filter(Boolean).join('|');
+  if (!extra) return RELAY_BASE;
+  return new RegExp(RELAY_BASE.source.replace('|the passenger)', `|the passenger|(?:the )?(?:${extra}))`), RELAY_BASE.flags);
+}
 // "send" only as "send word / a message / this" — "send a rescue team" is an order.
 const SAY = /^(?:please\s+)?(?:say|relay|transmit|send (?=word\b|a message\b|the message\b|this\b|the following\b|them\b|him\b|her\b)(?:(?:them|him|her)\s+)?(?:word|a message|the message|the following)?)\b(?:\s+(?:to|this to)\s+(him|her|them|the prefect|the captain|the kestrel|the cruiser))?\s*[,:]?\s*(?:that\s+)?(.+)$/;
 const CLOSE = /\b(close|cut|end|terminate|drop|kill|break)\s+(?:the\s+|that\s+|this\s+|our\s+)?(channel|transmission|link|connection|comms?|commlink|call|feed|line)\b|\bhalcyon out\b|\bend (?:of )?transmission\b|\bsign(?:ing)? off\b|^(?:just\s+)?cut (?:him|her|them) off[.!]*$/; // "cut them off before they reach the freighter" is an intercept
@@ -50,13 +57,16 @@ function partyOf(ref: string, ctx: InterpreterContext): Party | null {
   if (/^(him|her|them|they|it|the other (ship|captain))$/.test(r)) return ctx.channel?.party ?? ctx.held?.[0] ?? null;
   if (/^(the )?captain$/.test(r)) return ctx.channel?.party === 'cruiser' ? 'cruiser' : 'kestrel';
   for (const p of ['cruiser', 'kestrel', 'passenger'] as Party[]) if (PARTY_WORDS[p].test(r)) return p;
+  const bare = r.replace(/^the /, '');
+  for (const p of ['cruiser', 'kestrel'] as const) if (vocabulary()[p].includes(bare)) return p;
   if (ctx.passengerNames.some((n) => r.includes(n))) return 'passenger';
   return null;
 }
 
 /** "Prefect, …" / "…, Prefect." — speech addressed by name. */
 function vocative(t: string, ctx: InterpreterContext): { party: Party; rest: string } | null {
-  const lead = /^((?:prefect|captain|vane|arden|sorel|captain arden|prefect vane|prefect sorel vane|kestrel|halcyon to \w+)(?: \w+)?)\s*[,:]\s*(.*)$/.exec(t);
+  const extra = [aliasAlternation('kestrel'), aliasAlternation('cruiser')].filter(Boolean).join('|');
+  const lead = new RegExp(`^((?:prefect|captain|vane|arden|sorel|captain arden|prefect vane|prefect sorel vane|kestrel|halcyon to \\w+${extra ? `|${extra}` : ''})(?: \\w+)?)\\s*[,:]\\s*(.*)$`).exec(t);
   if (lead) {
     const party = lead[1].startsWith('halcyon to ') ? partyOf(lead[1].slice(11), ctx) : partyOf(lead[1], ctx);
     if (party && !(lead[1] === 'captain' && !ctx.channel)) return { party, rest: lead[2] };
@@ -227,7 +237,7 @@ type Piece = { kind: 'speech'; party: Party; text: string; meaning: LineMeaning;
 function channelOp(t: string, ctx: InterpreterContext): ProposedActionInput | null {
   const p = PRIVATE_OPEN.exec(t);
   if (p) {
-    const ref = /\b(kestrel|freighter|arden|cruiser|warship|prefect|vane|passenger)\b/.exec(p[1] ?? '');
+    const ref = partyRefRe().exec(p[1] ?? '');
     const party = ref ? partyOf(ref[1], ctx) : (ctx.channel?.party ?? null);
     return party ? { type: 'channel', op: 'open', party, private: true } : null;
   }
@@ -239,8 +249,13 @@ function channelOp(t: string, ctx: InterpreterContext): ProposedActionInput | nu
   return null;
 }
 
+function partyRefRe(): RegExp {
+  const extra = [aliasAlternation('kestrel'), aliasAlternation('cruiser')].filter(Boolean).join('|');
+  return extra ? new RegExp(`\\b(kestrel|freighter|arden|cruiser|warship|prefect|vane|passenger|${extra})\\b`) : /\b(kestrel|freighter|arden|cruiser|warship|prefect|vane|passenger)\b/;
+}
+
 function partyArg(t: string, ctx: InterpreterContext, held = false): { party?: Party } {
-  const ref = /\b(kestrel|freighter|arden|cruiser|warship|prefect|vane|passenger)\b/.exec(t);
+  const ref = partyRefRe().exec(t);
   if (ref) {
     const p = partyOf(ref[1], ctx);
     if (p) return { party: p };
@@ -270,20 +285,20 @@ function classifySegment0(seg: string, ctx: InterpreterContext, core: Core): Pie
   const raw = seg.trim();
   let t = raw.toLowerCase().replace(/[.!]+$/, '').trim();
   const op = channelOp(t, ctx);
-  if (op && !RELAY.test(t)) return [{ kind: 'channel', action: op }];
+  if (op && !RELAY_RE().test(t)) return [{ kind: 'channel', action: op }];
   // "Hail the cruiser" is always a comms order (the officer reports if the channel is already open).
   if (/^(?:(?:communications|comms|lieutenant|szabo|ensign)[,:]?\s+)?(?:please\s+)?(hail|re-?hail|contact|signal|call)\b/.test(t)) return [{ kind: 'command', text: raw }];
   // Crew vocative: an order to the bridge, unless it is "Communications, tell him …".
   const voc = CREW_VOC.exec(t);
   if (voc) {
     const rest = t.slice(voc[0].length);
-    if (!RELAY.test(rest) && !SAY.test(rest)) {
+    if (!RELAY_RE().test(rest) && !SAY.test(rest)) {
       const op2 = channelOp(rest, ctx);
       return op2 ? [{ kind: 'channel', action: op2 }] : [{ kind: 'command', text: raw }];
     }
     t = rest;
   }
-  const relay = RELAY.exec(t);
+  const relay = RELAY_RE().exec(t);
   if (relay) {
     const party = partyOf(relay[2], ctx);
     if (party) return [speechPiece(restoreCase(raw, relay[3]), party, relay[1], true)];

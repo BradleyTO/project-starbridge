@@ -14,7 +14,7 @@ import { clamp, efficiency, km, range, systemLabel } from './rules';
 import { addOrder, getOrder, goalLabel, refName, updateOrder } from './orders';
 import { estimateEta, guidanceFor, headingOf, sub } from './kinematics';
 import { etaText, roundEta } from './motion';
-import { addTension, adjustTrust, knows, patchCharacter, patchShip, patchSystem, setCounter, setFlag } from './state';
+import { addTension, adjustTrust, knows, patchCharacter, patchShip, patchSystem, setCounter, setFlag, slotsOf, leadOf } from './state';
 import type { DialogueProvider } from './dialogue';
 import { channelOf, closeChannel, commsOf, declare, openChannel, openChannelTo, patchComms, recordLine, setChannelState } from './comms';
 import { explainRefusal } from './roe';
@@ -252,7 +252,7 @@ export function applyAction(s: WorldState, action: ProposedAction, rng: Rng, hoo
     case 'repair': {
       if (action.ship === 'kestrel') {
         const chance = 0.6 + (s.ships.kestrel.containment > 15 ? 0.15 : 0) - (s.variant.complication === 'coolantLeak' ? 0.15 : 0);
-        s = adjustTrust(s, 'arden', 10);
+        s = adjustTrust(s, slotsOf(s).kestrelLead, 10);
         if (rng.next() < chance) {
           s = setFlag(s, 'kestrelStable');
           s = patchShip(s, 'kestrel', (k) => ({ containment: Math.max(k.containment, 20) }));
@@ -322,19 +322,22 @@ function transport(s: WorldState, action: Extract<ProposedAction, { type: 'trans
       s = patchShip(s, 'kestrel', { souls: k.souls - moved });
       s = patchShip(s, 'halcyon', { souls: h.souls + moved });
       s = setCounter(s, 'rescued', (s.counters.rescued ?? 0) + moved);
-      s = adjustTrust(s, 'arden', 15);
+      const lead = slotsOf(s).kestrelLead;
+      s = adjustTrust(s, lead, 15);
       const left = s.ships.kestrel.souls;
-      if (left - (s.counters.trapped ?? 0) <= 0 && s.characters.arden.ship === 'kestrel' && left === 0) s = patchCharacter(s, 'arden', { ship: 'halcyon' });
+      if (left - (s.counters.trapped ?? 0) <= 0 && s.characters[lead]?.ship === 'kestrel' && left === 0) s = patchCharacter(s, lead, { ship: 'halcyon' });
       if (left === 0) s = patchShip(s, 'kestrel', { disposition: 'evacuated' });
       reports.push(say('xo', left === 0 ? 'evacComplete' : 'evacPartial', { moved, left, trapped: s.counters.trapped ?? 0 }));
       return { state: s, reports };
     }
     case 'passenger': {
       const watched = cruiserWatching();
-      s = patchCharacter(s, 'passenger', (p) => ({ ship: 'halcyon', status: 'active', memory: { ...p.memory, awake: 1 } }));
+      const pid = slotsOf(s).passenger;
+      if (!pid || !s.characters[pid]) return { state: s, reports: [say('xo', 'unknownPassenger')] };
+      s = patchCharacter(s, pid, (p) => ({ ship: 'halcyon', status: 'active', memory: { ...p.memory, awake: 1 } }));
       s = setFlag(s, 'passengerAboard');
       if (watched) s = setFlag(s, 'vaneSawPassengerMoved');
-      reports.push(say('xo', 'passengerAboard', { name: s.characters.passenger.name, watched: watched ? 1 : 0 }));
+      reports.push(say('xo', 'passengerAboard', { name: s.characters[pid].name, watched: watched ? 1 : 0 }));
       return { state: s, reports };
     }
     case 'cargo':
@@ -347,7 +350,7 @@ function transport(s: WorldState, action: Extract<ProposedAction, { type: 'trans
       return { state: s, reports: [say('xo', ok ? 'trappedFreed' : 'trappedNotYet')] };
     }
     case 'medicalTeam':
-      s = adjustTrust(s, 'arden', 10);
+      s = adjustTrust(s, slotsOf(s).kestrelLead, 10);
       s = setFlag(s, 'medicalSent');
       return { state: s, reports: [say('medical', 'medicalTeam')] };
   }
@@ -358,9 +361,9 @@ function commReachable(s: WorldState, t: 'kestrel' | 'cruiser'): boolean {
   const sh = s.ships[t];
   if (!sh.detected || sh.destroyed || (t === 'cruiser' && s.flags.cruiserGone)) return false;
   if (t === 'kestrel') {
-    const arden = s.characters.arden;
-    if (!arden || arden.status === 'dead') return false;
-    if (arden.ship === 'kestrel' && sh.systems.comms.health <= 0) return false;
+    const lead = leadOf(s, 'kestrel');
+    if (!lead || lead.status === 'dead') return false;
+    if (lead.ship === 'kestrel' && sh.systems.comms.health <= 0) return false;
   }
   return true;
 }

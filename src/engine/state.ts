@@ -1,4 +1,4 @@
-import type { Character, LogChannel, Ship, ShipId, SystemId, WorldState } from './types';
+import type { Character, ContactSlots, LogChannel, Ship, ShipId, SystemId, WorldState } from './types';
 import { deriveStatus, clamp } from './rules';
 
 /** Pure state helpers. Each returns a new WorldState and never mutates its input. */
@@ -80,4 +80,20 @@ export function formatMissionClock(seconds: number): string {
 export function formatRange(km: number): string {
   if (km >= 10000) return `${Math.round(km / 1000).toLocaleString('en-US')},000 km`;
   return `${Math.round(km).toLocaleString('en-US')} km`;
+}
+
+/** The Kestrel Incident's cast, used by any WorldState that does not declare its own (older saves included). */
+export const DEFAULT_SLOTS: ContactSlots = { kestrelLead: 'arden', cruiserLead: 'vane', passenger: 'passenger', kestrelRepair: 'reactor', kestrelRepairWords: [] };
+export function slotsOf(s: WorldState): ContactSlots {
+  return s.slots ?? DEFAULT_SLOTS;
+}
+/** The character who answers for a contact slot (or the passenger), if the scenario has one. */
+export function leadOf(s: WorldState, slot: 'kestrel' | 'cruiser' | 'passenger'): Character | undefined {
+  const sl = slotsOf(s);
+  const id = slot === 'kestrel' ? sl.kestrelLead : slot === 'cruiser' ? sl.cruiserLead : sl.passenger;
+  return id ? s.characters[id] : undefined;
+}
+export function leadId(s: WorldState, slot: 'kestrel' | 'cruiser' | 'passenger'): string | null {
+  const sl = slotsOf(s);
+  return slot === 'kestrel' ? sl.kestrelLead : slot === 'cruiser' ? sl.cruiserLead : sl.passenger;
 }

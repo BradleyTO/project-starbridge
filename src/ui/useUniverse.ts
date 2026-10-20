@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import type { StorageLike } from '../engine/persistence';
-import { kestrelScenario } from '../scenarios/kestrel';
+import { TRAINING_SCENARIOS } from '../scenarios/registry';
 import { Universe } from '../universe/controller';
 import { defaultLedger } from '../universe/credits';
 import { localRepository, memoryStorage } from '../universe/repository';
@@ -19,7 +19,7 @@ function storage(): StorageLike {
 
 /** One Universe service per page, plus a revision counter so views re-read the stores after changes. */
 export function useUniverse(appVersion: string): { universe: Universe; rev: number; touch: () => void } {
-  const universe = useMemo(() => new Universe({ repo: localRepository(storage(), () => defaultLedger()), appVersion, scenarios: { [kestrelScenario.id]: kestrelScenario } }), [appVersion]);
+  const universe = useMemo(() => new Universe({ repo: localRepository(storage(), () => defaultLedger()), appVersion, scenarios: TRAINING_SCENARIOS }), [appVersion]);
   const [rev, setRev] = useState(0);
   const touch = useCallback(() => setRev((n) => n + 1), []);
   return { universe, rev, touch };
