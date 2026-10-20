@@ -2,6 +2,52 @@
 
 All notable changes to Project Starbridge are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.5.0] — 2026-10-19 — Milestone 3.1: the bridge experience, Active Duty & two-way communications
+
+No AI is used in this milestone. Everything below is deterministic and offline, and runs in the browser.
+
+### Added
+- **Bridge-first startup** (`src/scenarios/bridge/`, `src/engine/bridge.ts`):
+  - The app opens on the idle bridge of the Halcyon: green alert, no contacts, no objectives.
+  - The crew can be talked to before any mission: status, systems, small talk with named officers, routine ambient lines, and a science survey of nearby systems.
+  - A simulation starts only on an explicit request (`Computer, begin the Kestrel Incident simulation`, typed or spoken; or from the archive).
+  - `Computer, end the simulation` returns to the bridge, and so does a simulation that reaches an ending, with a debrief card.
+- **Active Duty** (renamed from Living Universe):
+  - The products are described: Simulation Mode $10 one-time; Active Duty $9.99/mo. There are no payments; the dev toggles remain.
+  - A commission ceremony on first activation (Admiral Odessa Kaine), accepted on the card or by voice.
+  - Turning Active Duty off puts the captain on **reserve status**. Everything is preserved and canon is frozen; simulations stay unlimited; reactivation restores the same career. It is never misconduct.
+  - Stored `livingUniverse` entitlements migrate to `activeDuty`, and pre-v0.5 careers count as commissioned.
+- **Organic mission delivery** (`src/universe/delivery.ts`, `src/dutyBridge.ts`):
+  - There is no mission menu. Fleet hails, distress calls, colony requests, science readings and bulletins reach the bridge as canonical time passes (`continue the patrol`).
+  - What arrives is seeded and depends on galaxy time, location, hull, faction standing, border tension and past decisions.
+  - Quiet periods: "nothing" is always a candidate, with a 3-hour quiet window after each delivery. Directives always get through.
+  - The captain answers by talking: accept (one credit, as before), question, refuse (with a reason), decline or ignore (free). Ignoring a directive is never silent; the XO asks for a formal answer.
+  - A waiting call is derived from canon, so it survives a reload.
+  - The board is now the secondary **Fleet Command offer log**.
+- **Science exploration and first contact** (`src/universe/exploration.ts`, `src/scenarios/bridge/contact.ts`, `src/engine/firstContact.ts`):
+  - A seeded survey per career lists three detected but uncontacted civilizations; a science reading can reveal a fourth.
+  - Dispositions are hidden (open, cautious, isolationist, guarded). **Not every civilization wants to join the Concord.**
+  - `Helm, set a course for …` travels in canonical time. A course to an uncontacted civilization is an investigation, charged once (credit rules unchanged).
+  - On arrival the civilization occupies the bridge's contact slot, so hails, persistent channels, clarification and ROE all apply.
+  - First contact is a multi-turn conversation whose outcome (peaceful, firm or threatening approach × disposition) is written once to canon as a world event and a career entry.
+- **Two-way comms** (Phase A): persistent channels with an indicator; hold, resume, mute and close; speech routed to the other party and orders to the crew; promises remembered and checked; clarification for unclear lines; channel-aware suggestions.
+- **Crew autonomy** (Phase A): officers refuse unlawful or unsafe orders (firing on civilians, on ships with life signs that have not fired, or on surrendered ships) and explain why when asked.
+- **Held-out evaluations:**
+  - Dialogue set 2: 26 items.
+  - Duty-bridge sets 1 and 2: 20 and 12 items.
+  - Every first run is kept in `tests/eval/RESULTS-*-firstrun.md`.
+- **Smoke** (`scripts/smoke.mjs`) now covers: the idle bridge on load, bridge commands, a voice-style simulation start, multi-turn comms, ending a simulation, the commission, organic events and quiet periods, the science investigation and first contact, reserve status, and the phone layout.
+
+### Changed (deliberate test expectation changes)
+- The smoke test enters every simulation from the bridge (v0.4 opened directly in a simulation).
+- The v0.4 "unknown order" smoke check: with a channel open, an unclear line now goes to the other party, who asks for clarification.
+- First Active Duty activation in the smoke test now goes through the commission.
+- Unit tests: the determinism script gained one `wait`; the e2e control test waits 7 turns twice; the corridor playthrough waits twice before evacuating. Talk now costs seconds rather than whole turns.
+- Talking costs seconds (speak 10 s, hail 15 s, channel operation 5 s, relay 15 s, legacy message 20 s) and ships move while you talk. See the README time-cost table.
+
+### Known limitations
+- See README → Known issues. Briefly: rule-based interpretation, a short first contact, no two-way channel with Fleet or distress callers, no galaxy time while talking, investigations not in the archive, voice not re-verified on a device.
+
 ## [0.4.0] — 2026-10-19 — Simulation Mode, Living Universe foundation & Mission Archive
 
 No AI is used in this milestone. Everything below is deterministic and offline, and runs in the browser.

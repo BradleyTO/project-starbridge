@@ -2,7 +2,82 @@
 
 A browser-based, AI-assisted **starship command simulator**. You command the exploration ship **CSV Halcyon** (Concord Exploration Service) and complete dynamic training missions by giving natural-language orders. The long-term goal is integration with a physical starship bridge, so the UI is built to scale from tablets to dedicated bridge consoles.
 
-> **Status: v0.4.0 (Milestone 3: Simulation Mode, Living Universe foundation and Mission Archive).** The page opens in **Simulation**, where training runs can be replayed without limit and never change anything. The **Living Universe** (Hub → Living Universe) is a persistent **canonical** timeline. Missions there are permanent history: they are archived, carry consequences forward (hull, crew deaths and injuries, trust, faction standings, world events) and can be replayed as simulations without altering the original. Orders are read by a rule-based **offline interpreter**. No AI is used yet (see [Roadmap](#roadmap)).
+> **Status: v0.5.0 (Milestone 3.1: the bridge experience, Active Duty and two-way communications).** The app opens on the **bridge of the Halcyon**, not in a mission. Talk to the crew, ask science what is out there, and start a training simulation only when you ask for one ("Computer, begin the Kestrel Incident simulation"). When a simulation ends you are back on the bridge with a debrief. **Active Duty** (formerly "Living Universe") is the persistent canonical career. There is no mission menu: hails, distress calls, requests and science readings reach the bridge as canonical time passes, and you answer them in your own words. Orders and speech are read by a rule-based **offline interpreter**. No AI is used yet (see [Roadmap](#roadmap)).
+
+## The bridge, Active Duty and two-way comms (v0.5 / M3.1)
+
+**The bridge is home.** On load the Halcyon holds station: green alert, no contacts, no objectives, no clock pressure. Routine lines come from the crew now and then. Things you can say:
+
+- `First Officer, give me a status report` · `Okafor, how are the engines?` (small talk, answered from the ship's state)
+- `Science, what systems are within exploration range?`
+- `Computer, open the simulation archive` · `Computer, begin the Kestrel Incident simulation` (typed or spoken). A simulation starts **only** on request.
+- Inside a simulation, `Computer, end the simulation` (or the End sim button) returns you to the bridge. A simulation that reaches an ending returns you to the bridge with a debrief card (run it again, new variation, archive).
+
+**Two products (described only; there are no payments):**
+
+| Product | Price (described) | What it is |
+|---|---|---|
+| Simulation Mode | $10 one-time | The bridge, the simulation archive, unlimited training runs. Nothing is ever recorded as history. |
+| Active Duty | $9.99 / month | A canonical career: a persistent galaxy, consequences, a captain's record, 10 new canonical starts per day. |
+
+In this build both are switched on with dev toggles (Settings → dev, or the Active Duty tab). **The first activation is a commission:** Admiral Odessa Kaine offers you command of the Halcyon. Accept on the card or say `I accept the commission`. Turning Active Duty off puts you on **reserve status**. Everything is preserved, the canonical timeline is frozen, simulations stay unlimited, and reactivating restores the same career. It is never treated as misconduct. Saves from v0.4 migrate: a stored `livingUniverse` entitlement reads as `activeDuty`, and pre-v0.5 careers count as already commissioned.
+
+**Organic missions (Active Duty).** Say `continue the patrol` (or `hold station for 4 hours`, `let a few hours go by`). Canonical time passes an hour at a time and stops when something reaches the bridge: a **Fleet hail**, a **distress call**, a **request** from a colony office, a **science reading** or a **bulletin** about events elsewhere. What arrives is decided deterministically (seeded) from the canonical world:
+
+- **Galaxy time:** Fleet only asks for volunteers once an offer has gone unanswered for 6 h, and science readings start 12 h into the commission.
+- **Location:** civilian maydays and colony requests reach the Halcyon only within 6 ly of the patrol area.
+- **Ship condition:** Fleet does not ask a ship below 50% hull.
+- **Faction standing:** poor standing with the independents makes colony requests rarer.
+- **Border tension:** high tension makes Fleet requests more frequent.
+- **Past decisions:** past rescues make distress calls likelier to be routed to you; past investigations make science readings likelier.
+- **Quiet periods:** "nothing" is always a candidate, and nothing new arrives within 3 h of the last delivery. The exception is a mandatory directive, which always gets through.
+
+You answer by talking:
+- **Accept:** `Acknowledged, we're on our way` · `Respond to the distress call` · `Sure, we can escort them`
+- **Ask:** `Request clarification` · `Ask the admiral why it has to be us`
+- **Refuse a directive:** `We refuse the directive, the ship is not fit for duty` (the stated reason goes to the review)
+- **Decline or ignore:** `Decline` · `Log it and continue`
+
+Accepting starts a canonical mission and costs one credit, exactly as before. Declining, ignoring and questioning are free. Ignoring a *directive* is never done silently: the XO tells you it would be failure to comply and asks you to acknowledge, question or refuse. Carrying on the patrol past a distress call logs it as ignored, and the emergency continues without you. The **Fleet Command offer log** (Hub → Active Duty) still lists open traffic as a secondary record.
+
+**Science and first contact (Active Duty).** `Science, show me the civilizations we've detected but haven't contacted` lists the systems with signs of a civilization: three on the first day, and a fourth can turn up later in a science reading. What each civilization wants is hidden until you meet it. `Helm, set a course for Merrow` travels there (1.25 h per light year of canonical time). A course to an uncontacted civilization is an **investigation**: a new canonical start, charged once. On arrival, science confirms who is there, and their station or ship appears on sensors. `Hail them` opens a persistent channel. They ask why you have come; you can ask questions first, and they answer and ask again. Your answer is classified as peaceful, firm or threatening, and that meets their hidden disposition:
+
+| Disposition | Peaceful | Firm | Threatening |
+|---|---|---|---|
+| open | asks to open talks on **joining the Concord** | wary contact | warned off |
+| cautious | trade and contact, **will not join** | wary contact | warned off |
+| isolationist | **declines contact**, asks you to leave | declines | warned off |
+| guarded | wary contact | warned off | hostile |
+
+**Not every civilization wants to join the Concord.** Only an open people approached peacefully does. The outcome is written once to canon (a world event and an entry in the captain's record). Rask will not fire on a civilian station or on a ship that has not fired. The survey and the civilizations are seeded per career (four original peoples: the Ossari, Kethren, Lumae and Drassk).
+
+**Naming note.** The M3.1 brief spoke of civilizations joining the "Directorate". In Starbridge the player's own faction is the **Concord** (the Halcyon belongs to the Concord Exploration Service). The **Tessarine Directorate** is the rival power on the border. So civilizations here are invited to join the Concord.
+
+**Two-way comms.** A hail opens a persistent channel (the indicator shows who you are talking to). Lines of speech go to the other party; orders addressed to the crew go to the crew, even with a channel open. Promises you make ("our weapons stay down") are remembered and checked. Anything unclear gets a clarifying question from the other party. You can hold, resume, mute or close channels.
+
+### Time costs
+
+There are two linked clocks. The **tactical clock** runs inside any bridge session (a mission, a simulation or the idle bridge). One turn is 60 s. Talking costs seconds, and the seconds add up: every full minute the world acts, and ships keep moving while you talk. The **galaxy clock** is the canonical time of Active Duty. It moves only when the captain lets it.
+
+| Action | Tactical clock | Galaxy clock (Active Duty) |
+|---|---|---|
+| Crew order (helm, tactical, scans, repairs…) or `wait` | 1 turn (60 s) | — |
+| Speak on an open channel | 10 s | — |
+| Hail / open a channel | 15 s | — |
+| Relayed line (`tell the Prefect…`) | 15 s | — |
+| One-shot message (`warn the cruiser`, no channel) | 20 s | — |
+| Hold / resume / mute / close a channel | 5 s | — |
+| Small talk with an officer | 5 s | — |
+| Survey / civilizations list | 10 s | — |
+| Archive, begin/end a simulation, the commission, answering a call | 0 s | 0 |
+| `Continue the patrol` | 0 s | 1 h steps, up to 6 h by default (or as said, max 24 h); stops early when something arrives |
+| Quiet window after any delivery | — | at least 3 h (directives excepted) |
+| `Set a course for …` | 0 s | 1.25 h per light year (minimum 1 h) |
+| Canonical bridge mission | its turns | 1 min per turn + 1 h to stand down |
+| Event mission (e.g. the hauler) | — | until its seeded resolution + 1 h |
+| Offer log "Continue patrol" button | — | 6 h |
+| First-contact conversation, crew chat on the bridge | seconds as above | 0 (the galaxy clock does not move) |
+| No credits left today | — | paused (no in-universe penalty) |
 
 All names, ships, factions and artwork are original. The interface is *inspired by* classic sci-fi console design but uses no copyrighted artwork, fonts or names.
 
@@ -87,7 +162,7 @@ Type `help` or `options` in the command bar, or tap a suggestion chip.
 
 ## Architecture
 
-### Timelines (v0.4)
+### Timelines (v0.4–v0.5)
 
 ```
 src/universe/
@@ -106,9 +181,15 @@ src/universe/
   models.ts        Seeded event models (ore hauler, escort, Kestrel unattended)
   world.ts         Offer responses, discipline reviews, time advance, consequences, bulletins,
                    bridge preparation from canon and carry-over after a mission
+  exploration.ts   v0.5: seeded survey, civilizations (hidden dispositions), travel, first contact record
+  delivery.ts      v0.5: organic traffic — what reaches the bridge, when, and why (weights + quiet window)
+src/dutyBridge.ts  v0.5: carries out bridge requests (patrol, answer a call, course, first contact)
+                   through the Universe API; derives the waiting call / contact from canon
+src/engine/bridge.ts, src/scenarios/bridge/   the idle bridge (commands, survey, small talk,
+                   first-contact dialogue provider); src/engine/comms.ts, dialogue.ts: channels
 ```
 
-Simulation is the default and is never written to canon. A canonical mission writes its outcome once, through the commit gate, and the archive keeps it unchanged however many times it is replayed.
+The idle bridge and every simulation are never written to canon (the Active Duty bridge changes canon only through the Universe API: patrol, travel, answering a call, first contact). A canonical mission writes its outcome once, through the commit gate, and the archive keeps it unchanged however many times it is replayed.
 
 **Credits:** 10 new canonical starts per local day. Only starting a *new* canonical mission costs one. Viewing, declining or ignoring offers, saving, resuming, finishing and every simulation are free. At zero, canonical starts are disabled and canonical time pauses, so nothing happens in your absence, but simulations, the archive and your record stay available. **The ledger lives in the browser's localStorage, so it is not tamper-proof.** Real enforcement needs a server-side account, which is future work. There are no payments; the entitlement switches in Settings (dev) are for development only.
 
@@ -226,7 +307,7 @@ The app deploys to Vercel as a Vite static site plus serverless functions in `ap
 - **Voice (confirmed on a real device):** as of v0.1.1, Bradley Ockrant confirmed on his own phone that voice-to-text (speech recognition) and text-to-speech (spoken crew/comms responses) both work. Automated tests still use stubbed speech APIs, because headless browsers have no microphone or audio output.
 - **v0.2.0 voice not re-verified on a device yet.** The speech code is unchanged except that the captain's own orders are no longer read back aloud. Automated checks use stubs.
 - **The offline interpreter is rule-based.** It covers a wide vocabulary (the parser test table, 20+ paraphrases of the v0.3 order, spatial-intent tests and fuzzing), but unusual wording can be misread or not recognised. On a held-out set of 42 orders written before tuning, the v0.3 held-out set now passes **40/42** (it was 33/42 at v0.3, when it was first run). On the fresh v0.4b set the first result was **12/20, 3 unsafe**; after the safety fixes it is **15/20, 0 unsafe**. Those fixes were made after seeing the set, so this is no longer a clean held-out measure. See `tests/eval/RESULTS*.md`. Parts of an order it cannot read are reported and left as `unparsed`, and the rest still executes. It handles one clarifying question at a time.
-- **Living Universe is local and single-player.** Canon, credits and the archive live in this browser's localStorage. Clearing site data resets them, and the credits are not tamper-proof.
+- **Active Duty (formerly Living Universe) is local and single-player.** Canon, credits and the archive live in this browser's localStorage. Clearing site data resets them, and the credits are not tamper-proof.
 - **Event missions resolve instantly** from seeded models. They are not played on the bridge.
 - **The Kestrel's arming is a simple point-defence rule** (locks or the cruiser coming too close).
 - **Kinematics are simplified 2D.** There are no collisions or gravity, a single border line, and one helm goal at a time.
@@ -234,6 +315,11 @@ The app deploys to Vercel as a Vite static site plus serverless functions in `ap
 - **The Prefect will not fire on the ship he believes carries his quarry** unless you start a fight. If the Kestrel is lost with crew aboard, the run ends, unless the Halcyon has already opened fire; in that case the battle continues.
 - **Old v0.1 and v0.2 saves cannot be loaded.** The save format changed to v3 (ship kinematics and tracked orders), and the app reports this instead of loading them.
 - **Small UI issues:** tactical labels can still crowd when several ships sit close together at "Fit all" zoom (use "Local"), and on phones the toast briefly covers the bottom of the command area.
+- **v0.5 voice not re-verified on a device.** The speech code is unchanged. Spoken bridge commands ("Computer, begin the Kestrel Incident simulation") are tested with stubbed recognition only.
+- **v0.5 interpreter coverage (duty bridge).** Answering calls, patrol, courses and the civilization list are rule-based. On held-out duty phrasings the first runs were **11/20** (set 1) and **4/12** (set 2, written after set 1 was tuned), both with **0 unsafe**. After fixes both pass, but they are no longer clean measures. See `tests/eval/RESULTS-duty*.md`. A refused directive is transmitted at once: there is no "are you sure?" step.
+- **v0.5 first contact is short.** It is one exchange that decides the outcome, after any number of questions. Civilizations do not yet follow up, send envoys or change the wider galaxy (faction standing and tension are unaffected). Investigations are not listed in the Mission Archive and cannot be replayed as simulations.
+- **Fleet hails and distress calls are not two-way channels.** You answer them in words (accept, question, refuse, decline, ignore), but you cannot hold a conversation with Fleet Command or the hauler's crew.
+- **Canonical time moves only on patrol, travel and missions.** Waiting on the bridge, chatting, or a long first-contact conversation does not advance the galaxy clock.
 - Not yet tested in desktop Safari or Firefox, or on dedicated tablets/bridge consoles.
 
 ## Roadmap
@@ -241,6 +327,7 @@ The app deploys to Vercel as a Vite static site plus serverless functions in `ap
 - [x] **Milestone 1** — Complete interface and scripted demonstration, deployed preview.
 - [x] **Milestone 2** — Ship systems model, persistent world state, NPC agents, seeded RNG, offline command interpretation and validation.
 - [x] **Milestone 3 (v0.4)** — Simulation Mode, Living Universe foundation, Mission Archive, daily credits, world events and consequences, crew memory, standing orders and restrictions.
+- [x] **Milestone 3.1 (v0.5)** — Bridge-first startup, Active Duty (commission, reserve), organic mission delivery, science exploration and first contact, persistent two-way comms, crew autonomy and ROE refusals.
 - [ ] **Next** — Server-side AI narration and character responses with schema validation, timeouts, usage limits and template fallback; server-side accounts and credits.
 - [ ] **Milestone 4** — Branching outcomes, mission evaluation, full save/resume, voice controls.
 - [ ] **Milestone 5** — Multi-playthrough testing, state-consistency fixes, stable release.

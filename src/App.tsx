@@ -39,7 +39,7 @@ import './App.css';
 
 const BEAT_MS = 3500;
 const VOICE_KEY = 'starbridge.voice';
-const APP_VERSION = '0.4.0';
+const APP_VERSION = '0.5.0';
 const TRAINING_ID = TRAINING[0].id;
 const AMBIENT_MS = 22000;
 const interpreter = new OfflineInterpreter();
@@ -576,7 +576,7 @@ export default function App() {
         </aside>
       </main>
       <footer className="footer">
-        Project Starbridge v{APP_VERSION} · Simulation Mode & Active Duty · Original fiction and artwork · Typed orders always available; voice where supported.
+        Project Starbridge v{APP_VERSION} (M3.1) · Simulation Mode & Active Duty · Original fiction and artwork · Typed orders always available; voice where supported.
       </footer>
     </div>
   );
