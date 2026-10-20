@@ -2,7 +2,7 @@
 
 A browser-based, AI-assisted **starship command simulator**. You command the exploration ship **ISV Halcyon** of the **Intergalactic Star Agency** (ISA), the service of the player's faction, **the Agency**, and complete dynamic training missions by giving natural-language orders. The long-term goal is integration with a physical starship bridge, so the UI is built to scale from tablets to dedicated bridge consoles.
 
-> **Status: v0.5.1 (Milestone 3.1: the bridge experience, Active Duty and two-way communications).** The app opens on the **bridge of the Halcyon**, not in a mission. Talk to the crew, ask science what is out there, and start a training simulation only when you ask for one ("Computer, begin the Kestrel Incident simulation"). When a simulation ends you are back on the bridge with a debrief. **Active Duty** (formerly "Living Universe") is the persistent canonical career. There is no mission menu: hails, distress calls, requests and science readings reach the bridge as canonical time passes, and you answer them in your own words. Orders and speech are read by a rule-based **offline interpreter**. No AI is used yet (see [Roadmap](#roadmap)).
+> **Status: v0.6.0 (training simulations: multi-scenario support and simulation #2, Quarantine at Tallis Gate).** The plan is 30 training simulations ([roadmap](docs/SCENARIO_ROADMAP.md)); two are playable. The app opens on the **bridge of the Halcyon**, not in a mission. Talk to the crew, ask science what is out there, and start a training simulation only when you ask for one ("Computer, list simulations", "Computer, begin the Kestrel Incident simulation"). When a simulation ends you are back on the bridge with a debrief. **Active Duty** (formerly "Living Universe") is the persistent canonical career. There is no mission menu: hails, distress calls, requests and science readings reach the bridge as canonical time passes, and you answer them in your own words. Orders and speech are read by a rule-based **offline interpreter**. No AI is used yet (see [Roadmap](#roadmap)).
 
 ## The bridge, Active Duty and two-way comms (v0.5 / M3.1)
 
@@ -10,7 +10,7 @@ A browser-based, AI-assisted **starship command simulator**. You command the exp
 
 - `First Officer, give me a status report` · `Okafor, how are the engines?` (small talk, answered from the ship's state)
 - `Science, what systems are within exploration range?`
-- `Computer, open the simulation archive` · `Computer, begin the Kestrel Incident simulation` (typed or spoken). A simulation starts **only** on request.
+- `Computer, open the simulation archive` · `Computer, list simulations` (or `what simulations are available`) · `Computer, begin the Kestrel Incident simulation` · `Computer, begin the Tallis Gate simulation` · `run simulation two` (typed or spoken). A simulation starts **only** on request; `begin the simulation` with no name starts #1.
 - Inside a simulation, `Computer, end the simulation` (or the End sim button) returns you to the bridge. A simulation that reaches an ending returns you to the bridge with a debrief card (run it again, new variation, archive).
 
 **Two products (described only; there are no payments):**
@@ -81,7 +81,36 @@ There are two linked clocks. The **tactical clock** runs inside any bridge sessi
 
 All names, ships, factions and artwork are original. The interface is *inspired by* classic sci-fi console design but uses no copyrighted artwork, fonts or names.
 
-## The scenario — The Kestrel Incident
+## Training simulations
+
+| # | Simulation | Status |
+|---|---|---|
+| 1 | **The Kestrel Incident** | playable |
+| 2 | **Quarantine at Tallis Gate** | playable (v0.6.0) |
+| 3–30 | see [docs/SCENARIO_ROADMAP.md](docs/SCENARIO_ROADMAP.md) | planned, one per day |
+
+Every simulation is listed in the Mission Archive and by `Computer, list simulations`, and can be started by name or number. How to write one is in [docs/SCENARIO_GUIDE.md](docs/SCENARIO_GUIDE.md).
+
+### #2 — Quarantine at Tallis Gate
+
+The pilgrim liner **Mercy of Ilun** (Captain Juno Sabeth, 120–168 aboard) is stopped at the quarantine line of the independent colony **Tallis Gate** with a sickness spreading among the passengers. The colony's picket cutter **Thornwake** (Warden-Commander Isolde Marr) will fire on any ship that crosses the line. The colony lost a generation to a plague, and Marr means it. Sabeth's people are dying and her patience is running out.
+
+The seed decides:
+
+- **what the sickness is:** a contagious fever (a cure can be made), toxin in the water recycler (fix it), or an allergic reaction to incense that looks like plague (prove it);
+- **the Warden's temperament:** strict, fearful or humane. This decides what persuades her and whether she will fire through the Halcyon;
+- **whether her brother is aboard the liner;**
+- **when Sabeth runs the line,** the number aboard and the number sick.
+
+Scan the liner up close to learn what is wrong. Medical teams sent before the cause is known can bring the fever aboard the Halcyon, unless you improvise ("set up an isolation ward", "screen the transport with biofilters"). Talk to both captains: hidden facts come out when you ask the right question or show the evidence.
+
+Endings:
+- **Success:** **The Cure** (treat the fever aboard or with the colony's antiviral), **Line Lifted** (persuade Marr with evidence), **Agency Care** (tow or evacuate the liner to an Agency hospital without crossing the line).
+- **Failure or partial:** **Fire at the Gate** (the liner is destroyed), **Outbreak at Tallis Gate**, **Fever Aboard** (the Halcyon is quarantined), **Incident at Tallis Gate** (you fire on the colony's picket), **Liner Abandoned**, **The Long Road** (an untreated fever on a six-hour tow), **The Gate Run** (Sabeth forces the line), **Stalemate**, **Halcyon Lost**.
+
+Rask will not fire on the liner. Every ending is reached by a scripted test (see `tests/sim02/`).
+
+## Simulation #1 — The Kestrel Incident
 
 The Halcyon arrives at the edge of the **Calloway Reach**, space disputed between the Agency and the **Tessarine Directorate**. A civilian freighter, the **Kestrel**, is adrift with a failing reactor and 23 crew. A Directorate heavy cruiser is closing fast. The Kestrel is hiding something.
 
@@ -234,6 +263,9 @@ src/
                        ships", "them") → clarifying questions; leftovers returned as `unparsed`
                        (the hook for a future AI interpreter); output validated by zod
     numbers.ts         "ten thousand", "10,000", "10k" → numbers
+  scenarios/catalogue.ts  The training simulation list (number, ids, name, launch words); archive and bridge read it
+  scenarios/registry.ts   scenarioId → ScenarioModule
+  scenarios/tallis/       Simulation #2 (same file layout as kestrel/, plus dialogue.ts)
   scenarios/kestrel/
     setup.ts           Seeded scenario generation (variants, crew, NPCs, facts)
     hooks.ts           Scan / communicate / improvise / query semantics
@@ -245,6 +277,7 @@ src/
 api/command.ts         Serverless stub (no AI calls, no secrets); reserved for M3
 tests/                 Vitest: parser table, validator, reducer, NPCs, determinism, playthroughs, fuzz
 tests/universe/        Timeline isolation, archive, credits, world events / consequences
+tests/sim02/           Simulation #2: setup, every ending, seed sweep, fuzz, catalogue/launch/archive/saves
 tests/v04/             The M3 critical interpreter regressions (before and after triggers)
 tests/eval/            Held-out order sets (v0.3, v0.4, v0.4b) + report-only evaluators
 scripts/smoke.mjs      Headless Playwright smoke test: v0.2–v0.4 incl. canonical → archive → sim replay,
@@ -320,6 +353,7 @@ The app deploys to Vercel as a Vite static site plus serverless functions in `ap
 - **v0.5 first contact is short.** It is one exchange that decides the outcome, after any number of questions. Civilizations do not yet follow up, send envoys or change the wider galaxy (faction standing and tension are unaffected). Investigations are not listed in the Mission Archive and cannot be replayed as simulations.
 - **Fleet hails and distress calls are not two-way channels.** You answer them in words (accept, question, refuse, decline, ignore), but you cannot hold a conversation with Fleet Command or the hauler's crew.
 - **Canonical time moves only on patrol, travel and missions.** Waiting on the bridge, chatting, or a long first-contact conversation does not advance the galaxy clock.
+- **v0.6 multi-scenario limits.** The engine has three ship slots (the Halcyon and two contacts), and the viewscreen draws them with the freighter and warship silhouettes in every simulation. The interpreter's built-in words "freighter" and "cruiser" still refer to the two contacts. The "Halcyon Lost" ending of #2 is tested by forcing the ship's destruction, not by a scripted playthrough. Voice launch of #2 is tested with stubbed recognition only.
 - Not yet tested in desktop Safari or Firefox, or on dedicated tablets/bridge consoles.
 
 ## Roadmap
@@ -328,6 +362,7 @@ The app deploys to Vercel as a Vite static site plus serverless functions in `ap
 - [x] **Milestone 2** — Ship systems model, persistent world state, NPC agents, seeded RNG, offline command interpretation and validation.
 - [x] **Milestone 3 (v0.4)** — Simulation Mode, Living Universe foundation, Mission Archive, daily credits, world events and consequences, crew memory, standing orders and restrictions.
 - [x] **Milestone 3.1 (v0.5)** — Bridge-first startup, Active Duty (commission, reserve), organic mission delivery, science exploration and first contact, persistent two-way comms, crew autonomy and ROE refusals.
+- [x] **v0.6** — Multi-scenario training simulations: catalogue, launch by name or number, simulation #2 (Quarantine at Tallis Gate), authoring guide and 30-simulation roadmap.
 - [ ] **Next** — Server-side AI narration and character responses with schema validation, timeouts, usage limits and template fallback; server-side accounts and credits.
 - [ ] **Milestone 4** — Branching outcomes, mission evaluation, full save/resume, voice controls.
 - [ ] **Milestone 5** — Multi-playthrough testing, state-consistency fixes, stable release.

@@ -2,6 +2,55 @@
 
 All notable changes to Project Starbridge are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.6.0] — 2026-10-19 — Training simulations: multi-scenario support and simulation #2
+
+Starbridge will ship with 30 training simulations. This release adds the multi-scenario foundation and simulation #2. No AI is used; everything is deterministic, seeded and offline.
+
+### Added
+- **Simulation #2: Quarantine at Tallis Gate** (`src/scenarios/tallis/`). The pilgrim liner *Mercy of Ilun* is held at the quarantine line of the colony Tallis Gate with sickness aboard. The colony picket *Thornwake* will fire on her if she crosses.
+  - **Two NPCs with their own goals and seeded breaking points:** Captain Juno Sabeth and Warden-Commander Isolde Marr.
+  - **Hidden information:** the cause, the Warden's history and her family.
+  - **Comms sessions with both captains.**
+  - **Seed variation:**
+    - the cause (contagious fever, toxin in the water recycler, or an allergic panic);
+    - the Warden's temperament (strict, fearful or humane);
+    - whether her brother is aboard;
+    - Sabeth's patience, the numbers aboard and the numbers sick.
+  - **Improvised ideas that work:** an isolation ward, biofiltered transport, interposing the Halcyon, extended shields, and asking the colony for its antiviral.
+  - **Endings:**
+    - 3 success: The Cure, Line Lifted, Agency Care;
+    - 9 failure or partial: Fire at the Gate, Outbreak at Tallis Gate, Fever Aboard, Incident at Tallis Gate, Liner Abandoned, The Long Road, The Gate Run, Stalemate, Halcyon Lost.
+- **The simulation catalogue** (`src/scenarios/catalogue.ts`): one entry per simulation (number, ids, name, launch words). The bridge, the Mission Archive, saves, "run it again" and "New scenario" all read it.
+- **New bridge commands:**
+  - `Computer, list simulations` (also `what simulations are available`);
+  - start a simulation by name or number (`begin the Tallis Gate simulation`, `run simulation two`, `simulation 002`). `Begin the simulation` with no name still starts #1.
+- **Interpreter:**
+  - Each scenario's ships answer to their own names and aliases ("the liner", "Sabeth", "the picket", "the Warden").
+  - Clarifying questions name the scenario's own ships.
+  - New improvised medical orders: isolation ward, field hospital, biofilters, decontaminate, screen the transport.
+- **Docs:**
+  - `docs/SCENARIO_GUIDE.md`: how to author a simulation, the required tests, and the daily checklist.
+  - `docs/SCENARIO_ROADMAP.md`: the plan for #1–#30. #1 is done; #2 is marked in progress until this release is verified.
+
+### Changed
+- Shared engine code no longer assumes the Kestrel. A scenario declares its cast through `WorldState.slots` (the leads, an optional passenger, and what "repair their …" means) and `Ship.aliases`. A scenario that declares nothing gets exactly the old behaviour, so the Kestrel Incident is unchanged and all its tests pass as before.
+- Seeded scenario-specific choices live in `ScenarioVariant.extra`.
+- The bridge debrief after a simulation no longer names the Kestrel. It now says "Say \"list simulations\" to choose another, or open the archive."
+- The footer reads "v0.6.0 (training simulations)".
+
+### Tests
+- **`tests/sim02/`:**
+  - 17 ending tests: every listed ending is reached by a scripted natural-language playthrough. The exception is Halcyon Lost, which is reached by forcing the Halcyon's destruction.
+  - 14 scenario tests:
+    - setup, determinism and variation;
+    - a 60-seed sweep with at least 3 distinct endings including a success, and do-nothing seeds failing in more than one way;
+    - hidden information and evidence gating;
+    - crew refusal to fire on the liner;
+    - interposing and biofilters;
+    - a 40-game fuzz with every invariant checked after every order and no Kestrel names leaking.
+  - 11 catalogue tests: launch by name and number, list simulations, archive listing, simulation history filed under #2, save round-trip, and canonical storage byte-identical after a #2 run.
+- **The smoke test:** it lists simulations, checks the archive, launches #2 by name, plays seed 5 to "Line Lifted", restarts with New scenario, checks the phone layout and ends the simulation.
+
 ## [0.5.1] — 2026-10-19 — Naming: the Agency and the Intergalactic Star Agency
 
 ### Changed

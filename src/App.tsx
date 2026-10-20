@@ -8,8 +8,8 @@ import { completeIntro, playIntroBeat, processOrders } from './engine/turn';
 import type { Timeline } from './engine/types';
 import { loadGame, peekSave, saveGame } from './engine/persistence';
 import { formatMissionClock } from './engine/state';
-import { kestrelScenario } from './scenarios/kestrel';
 import { scenarioFor } from './scenarios/registry';
+import { simulationById, simulationForScenario } from './scenarios/catalogue';
 import { BRIDGE_TITLE, ambientLine, createBridge } from './scenarios/bridge';
 import { appendReports } from './engine/turn';
 import { narrate, say } from './engine/report';
@@ -39,7 +39,7 @@ import './App.css';
 
 const BEAT_MS = 3500;
 const VOICE_KEY = 'starbridge.voice';
-const APP_VERSION = '0.5.1';
+const APP_VERSION = '0.6.0';
 const TRAINING_ID = TRAINING[0].id;
 const AMBIENT_MS = 22000;
 const interpreter = new OfflineInterpreter();
@@ -243,11 +243,17 @@ export default function App() {
   };
   const returnToBridge = useRef<typeof goBridge | null>(null);
   returnToBridge.current = goBridge;
+  /** v0.6: archive titles and training ids come from the catalogue (any number of simulations). */
+  const titleFor = (archiveId: string) => universe.archive().find((e) => e.id === archiveId)?.title ?? simulationById(archiveId)?.title ?? 'Training simulation';
+  /** A training id for an archive id: itself if it is a training mission, else the training mission of the same scenario. */
+  const trainingOf = (archiveId: string) => (simulationById(archiveId) ? archiveId : simulationForScenario(universe.archive().find((e) => e.id === archiveId)?.scenarioId ?? '')?.trainingId ?? TRAINING_ID);
+  /** The training simulation being played (for "New scenario": same simulation, new seed). */
+  const currentTraining = () => (metaRef.current.timeline === 'simulation' ? trainingOf(metaRef.current.archiveId) : simulationForScenario(stateRef.current.scenarioId)?.trainingId ?? TRAINING_ID);
   /** Start a training simulation from the bridge (spoken, typed or from the archive). */
   const beginTraining = (id: string) => {
     const seed = nextSimSeed.current ?? randomSeed();
     nextSimSeed.current = null;
-    enter(universe.startTraining(id, seed), universe.archive().find((e) => e.id === id)?.title ?? kestrelScenario.title, `Training simulation, seed ${seed}.`);
+    enter(universe.startTraining(id, seed), titleFor(id), `Training simulation, seed ${seed}.`);
   };
   // v0.5: bridge commands ask the app to act (open the archive, begin / end a simulation).
   const handledRequest = useRef<WorldState['uiRequest']>(null);
@@ -350,7 +356,6 @@ export default function App() {
     }
     flash(hadCareer ? 'Reserve status. Your career is preserved; the canonical timeline is frozen.' : 'Active Duty off.');
   };
-  const titleFor = (archiveId: string) => universe.archive().find((e) => e.id === archiveId)?.title ?? kestrelScenario.title;
   const archiveActions = {
     onTrain: (id: string) => beginTraining(id),
     onReplayOriginal: (id: string) => enter(universe.replayOriginal(id), titleFor(id), 'Simulation: original canonical conditions restored.'),
@@ -402,7 +407,7 @@ export default function App() {
     const m = from ?? metaRef.current;
     if (m.timeline === 'simulation' && m.conditions === 'original') return universe.replayOriginal(m.archiveId);
     if (m.timeline === 'simulation' && m.conditions === 'variation') return universe.replayVariation(m.archiveId, Number(seed));
-    return universe.startTraining(TRAINING_ID, seed);
+    return universe.startTraining(m.timeline === 'simulation' ? trainingOf(m.archiveId) : TRAINING_ID, seed);
   };
   const onSave = () => {
     if (meta.timeline === 'bridge') return flash('Nothing to save on the bridge. Simulations and Active Duty missions save while they run.');
@@ -423,7 +428,7 @@ export default function App() {
     if (!res || !res.ok) return flash(res?.ok === false && res.reason === 'legacy' ? 'That save is from an older version and cannot be loaded.' : 'No valid save found.');
     // The simulation slot only ever holds simulations.
     const loaded: WorldState = { ...res.state, provenance: { ...res.state.provenance, timeline: 'simulation' } };
-    const m: SessionMeta = { timeline: 'simulation', archiveId: loaded.provenance.archiveId ?? TRAINING_ID, runId: `loaded-${Date.now()}`, conditions: 'training', title: scenarioFor(loaded.scenarioId).title };
+    const m: SessionMeta = { timeline: 'simulation', archiveId: loaded.provenance.archiveId ?? simulationForScenario(loaded.scenarioId)?.trainingId ?? TRAINING_ID, runId: `loaded-${Date.now()}`, conditions: 'training', title: scenarioFor(loaded.scenarioId).title };
     setDebrief(null);
     setMeta(m);
     metaRef.current = m;
@@ -438,7 +443,8 @@ export default function App() {
     if (!confirmLoss()) return;
     const seed = randomSeed();
     nextSimSeed.current = null;
-    enter(universe.startTraining(TRAINING_ID, seed), kestrelScenario.title, `New simulation — seed ${seed}.`);
+    const tid = currentTraining();
+    enter(universe.startTraining(tid, seed), titleFor(tid), `New simulation — seed ${seed}.`);
   };
   const onEndSim = () => {
     if (!simMeta) return;
@@ -549,7 +555,7 @@ export default function App() {
                 <div className="outcome-actions">
                   <span className="tag sim">Simulated outcome</span>
                   <button className="btn restart" onClick={() => enter(rerun(state.seed), meta.title, `Restarted with the same seed (${state.seed}).`)} data-testid="outcome-same">Same seed</button>
-                  <button className="btn ghost" onClick={() => { const seed = randomSeed(); enter(universe.startTraining(TRAINING_ID, seed), kestrelScenario.title, `New scenario — seed ${seed}.`); }}>New scenario</button>
+                  <button className="btn ghost" onClick={() => { const seed = randomSeed(); const tid = currentTraining(); enter(universe.startTraining(tid, seed), titleFor(tid), `New scenario — seed ${seed}.`); }} data-testid="outcome-new">New scenario</button>
                   <button className="btn load" onClick={() => setHubTab('archive')} data-testid="outcome-archive">Mission Archive</button>
                 </div>
               )}
@@ -565,7 +571,7 @@ export default function App() {
             onCommand={onCommand}
             suggestions={suggestions}
             disabled={!!state.outcome}
-            placeholderIdle={onBridge ? 'Talk to your crew, e.g. "Computer, begin the Kestrel Incident simulation"' : undefined}
+            placeholderIdle={onBridge ? 'Talk to your crew, e.g. "Computer, list simulations"' : undefined}
             busy={busy}
             clarification={state.clarification}
           />
@@ -576,7 +582,7 @@ export default function App() {
         </aside>
       </main>
       <footer className="footer">
-        Project Starbridge v{APP_VERSION} (M3.1) · Simulation Mode & Active Duty · Original fiction and artwork · Typed orders always available; voice where supported.
+        Project Starbridge v{APP_VERSION} (training simulations) · Simulation Mode & Active Duty · Original fiction and artwork · Typed orders always available; voice where supported.
       </footer>
     </div>
   );
