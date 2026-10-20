@@ -1098,7 +1098,7 @@ export function interpretSync(input: string, ctx: InterpreterContext): Interpret
   // Answering a clarifying question goes straight to the clause parser (it knows the pending clause).
   if (ctx.pending) return interpretCore(input, ctx);
   // v0.5: bridge commands — the simulation archive, beginning / ending a simulation, the survey.
-  const bridge = bridgeCommand(input);
+  const bridge = bridgeCommand(input, ctx);
   if (bridge) return { kind: 'actions', actions: [bridge] as never, unparsed: [], notes: [], source };
   // v0.5: "why?" / "Rask, why did you refuse?" asks the officer to explain a refusal.
   const why = whyQuery(input, ctx);
@@ -1121,8 +1121,49 @@ const END_SIM = new RegExp(`${LEAD}(?:end|stop|terminate|exit|abort|cancel|quit|
 const OPEN_ARCHIVE = new RegExp(`${LEAD}(?:open|show(?: me)?|display|bring up|pull up|access|list|go to)\\s+(?:the\\s+|my\\s+|our\\s+)?(?:simulation|mission|training|sim)?\\s*(?:archive|library|records?|simulations|missions list)\\b`);
 const SURVEY = /\b(?:what|which|any|list|show(?: me)?|tell me about)\b.*\b(?:systems?|stars?|worlds?|planets?)\b.*\b(?:exploration|survey|sensor|jump)? ?(?:range|nearby|near us|in reach|around us|close by|within reach)\b|\b(?:survey|chart) (?:the )?(?:local |nearby )?(?:systems|neighbou?rhood|area)\b/;
 
-function bridgeCommand(input: string): { type: 'bridge'; op: 'openArchive' | 'beginSim' | 'endSim' | 'survey' | 'acceptCommission'; scenario?: string } | null {
+const CIVS = /\b(?:civili[sz]ations?|inhabited (?:systems?|worlds?|planets?)|intelligent life|alien (?:life|signals?|species)|(?:other |new )?species|cultures|peoples|first contact candidates?)\b/;
+const PATROL =
+  /^(?:(?:helm|xo|number one|first officer|commander|marrow|ensign|adeyemi)[,:]?\s+)?(?:(?:ok(?:ay)?|right|alright|all right)[,.]?\s+)?(?:let'?s\s+)?(?:continue|resume|carry on(?: with)?|proceed with|begin|start|go on with|get back to|return to|back to|keep up)\s+(?:the\s+|our\s+)?patrol\b|^(?:let'?s\s+)?patrol the (?:sector|area|border|reach|region)\b|\b(?:wait|hold (?:station|position)|stand by|keep station|hold here)\b.*?\b(\d+|an?|one|two|three|four|five|six|eight|ten|twelve|several|a few|a couple of) hours?\b|\blet (?:some )?time pass\b|^(?:carry on|as you were|steady as she goes)$/;
+const NUM: Record<string, number> = { a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, eight: 8, ten: 10, twelve: 12, several: 4, 'a few': 3, 'a couple of': 2 };
+const COURSE =
+  /^(?:(?:helm|ensign|adeyemi|mr\.? adeyemi|navigation|nav)[,:]?\s+)?(?:please\s+)?(?:(?:set|lay in|plot)(?: (?:a|our|the))? course (?:for|to)|take us(?: back)? to|head (?:for|to)|make for|go to|let'?s (?:go to|investigate|visit|check out|head to)|investigate|visit|move us to|return to|jump to|bring us (?:to|back to)|engage(?: a)? course (?:for|to))\s+(.+)$/;
+const ACCEPT =
+  /\b(?:accept(?:ed)?|we'?ll take it|take (?:the|that|this) (?:assignment|mission|job)|(?:we'?re |we are )?on our way|set (?:a )?course to assist|(?:respond|responding|answer|answering) (?:to )?(?:the|that|their|this) (?:call|distress(?: call)?|signal|mayday|hail)|let'?s help|we'?ll help|go to their aid|we'?ll do it|count us in|we'?ll go|affirmative|acknowledged|understood|we are responding|we'?re responding|help them|tell them we'?re coming|yes)\b/;
+const DECLINE = /\b(?:decline|pass on (?:it|this|that)|not this time|turn (?:it|them|that) down|we can'?t (?:help|take it|go|spare)|no,? thank you|no thanks|tell them no|say no|we'?ll pass)\b/;
+const IGNORE = /\b(?:ignore (?:it|them|that|the call|the signal|the hail)?|log it and (?:continue|carry on|move on)|no response|don'?t (?:answer|respond|reply)|let it go|disregard)\b/;
+const QUESTION = /\b(?:request (?:more )?(?:details|clarification|information|confirmation)|(?:question|query|challenge) (?:the|that|this) (?:order|directive)|ask (?:them|fleet|fleet command|the admiral|her|him) (?:for|to) (?:more )?(?:details|clarif\w+|explain|confirm)|more (?:details|information)|what (?:are|were) the details|tell me more)\b/;
+const REFUSE = /\b(?:refuse|we will not comply|we won'?t (?:comply|do it|go|obey)|i won'?t do (?:it|that)|we'?re not going)\b/;
+
+function respondOf(t: string): string | null {
+  if (QUESTION.test(t)) return 'question';
+  if (REFUSE.test(t)) return 'refuse';
+  if (DECLINE.test(t)) return 'decline';
+  if (IGNORE.test(t)) return 'ignore';
+  if (ACCEPT.test(t)) return 'accept';
+  return null;
+}
+
+type BridgeOp = { type: 'bridge'; op: 'openArchive' | 'beginSim' | 'endSim' | 'survey' | 'acceptCommission' | 'civs' | 'course' | 'patrol' | 'respond'; scenario?: string; hours?: number; text?: string };
+
+function bridgeCommand(input: string, ctx?: InterpreterContext): BridgeOp | null {
   const t = input.trim().toLowerCase().replace(/[?!.]+$/, '').replace(/\s+/g, ' ');
+  const duty = ctx?.duty;
+  if (duty && !ctx?.channel) {
+    // Answering the call waiting on the bridge (a hail, a distress call, a request).
+    if (duty.incoming && !PATROL.test(t)) {
+      const r = respondOf(t);
+      if (r) {
+        // A refusal can carry a reason Fleet's review will weigh.
+        const why = /\b(unfit|not fit|damage[ds]?|repairs?|hull)\b/.test(t) ? 'unfit' : /\b(accords?|treaty|illegal|unlawful|law)\b/.test(t) ? 'accords' : /\b(already (?:responding|committed)|another rescue|rescue under way)\b/.test(t) ? 'prior-rescue' : '';
+        return { type: 'bridge', op: 'respond', scenario: why ? `${r}:${why}` : r, text: input.slice(0, 300) };
+      }
+    }
+    const p = PATROL.exec(t);
+    if (p) return { type: 'bridge', op: 'patrol', hours: Math.min(24, Math.max(1, p[1] ? (NUM[p[1]] ?? Number(p[1])) || 6 : 6)) };
+    const c = COURSE.exec(t);
+    if (c && !/\b(kestrel|freighter|cruiser|warship|ashen|them|him|her|it)\b/.test(c[1])) return { type: 'bridge', op: 'course', scenario: c[1].replace(/\b(at (?:full|best) speed|immediately|now|please)\b/g, '').trim().slice(0, 80) };
+  }
+  if (CIVS.test(t) && !/\b(hail|fire|lock|approach)\b/.test(t)) return { type: 'bridge', op: 'civs' };
   if (END_SIM.test(t)) return { type: 'bridge', op: 'endSim' };
   const b = BEGIN_SIM.exec(t);
   if (b) {

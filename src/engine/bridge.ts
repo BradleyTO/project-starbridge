@@ -6,6 +6,10 @@
  *   endSim      — "Computer, end the simulation" (only inside a simulation)
  *   survey      — "Science, what systems are within exploration range?" (scenario hook)
  *   chat        — small talk with an officer ("Okafor, how are the engines?")
+ *   civs        — "Science, show me the civilizations we've detected but haven't contacted"
+ *   course      — "Helm, set a course for Veyra" (Active Duty: the app moves the Halcyon in canonical time)
+ *   patrol      — "Continue the patrol" (Active Duty: canonical hours pass until something reaches the bridge)
+ *   respond     — answering the hail / distress call / request waiting on the bridge
  *
  * The engine records a UI request on the WorldState; the app performs the transition (opening the
  * archive or loading a simulation). Nothing here touches the canonical universe.
@@ -22,15 +26,11 @@ export type BridgeAction = Extract<ProposedAction, { type: 'bridge' }>;
 export const IDLE_BRIDGE_ID = 'bridge';
 export const isIdleBridge = (s: WorldState) => s.scenarioId === IDLE_BRIDGE_ID;
 
-export interface UiRequest {
-  kind: 'openArchive' | 'beginSim' | 'endSim' | 'acceptCommission';
-  id?: string;
-  seq: number;
-}
+export type UiRequest = NonNullable<WorldState['uiRequest']>;
 
-function request(s: WorldState, kind: UiRequest['kind'], id?: string): WorldState {
+export function request(s: WorldState, kind: UiRequest['kind'], id?: string, extra: { hours?: number; response?: string } = {}): WorldState {
   const seq = (s.uiRequest?.seq ?? 0) + 1;
-  return { ...s, uiRequest: { kind, ...(id ? { id } : {}), seq } };
+  return { ...s, uiRequest: { kind, ...(id ? { id } : {}), ...extra, seq } };
 }
 
 /** Which simulation a spoken name refers to (only one exists today). */
@@ -64,6 +64,17 @@ export function reduceBridge(s: WorldState, action: BridgeAction, hooks: Scenari
     case 'acceptCommission':
       // The app knows whether Fleet Command is waiting for an answer; it replies in character.
       return { state: request(s, 'acceptCommission'), reports };
+    case 'patrol':
+      if (!s.duty?.live) return { state: s, reports: [say('xo', isIdleBridge(s) ? 'dutyPatrolTraining' : 'bridgeSimOnDuty')] };
+      return { state: request(s, 'patrol', undefined, { hours: action.hours ?? 6 }), reports: [] };
+    case 'respond':
+      if (!s.duty?.incoming) return { state: s, reports: [say('xo', 'dutyNothingWaiting')] };
+      return { state: request(s, 'respond', s.duty.incoming.offerId, { response: action.scenario ?? 'accept' }), reports: [] };
+    case 'course':
+      if (!isIdleBridge(s)) return { state: s, reports: [say('helm', 'bridgeSimOnDuty')] };
+      if (!s.duty?.live) return { state: s, reports: [say('helm', 'dutyCourseTraining')] };
+      return { state: request(s, 'course', undefined, { response: action.scenario ?? '' }), reports: [] };
+    case 'civs':
     case 'survey':
       if (hooks.bridge) return hooks.bridge(s, action, rng);
       return { state: s, reports: [say('sensors', 'bridgeSurveyBusy')] };
@@ -120,7 +131,7 @@ export const BRIDGE_TEMPLATES: Record<string, (v: Record<string, string | number
 
 /** Bridge actions never consume a turn; small talk and the survey take a few seconds. */
 export function bridgeSeconds(a: BridgeAction): number {
-  return a.op === 'chat' ? 5 : a.op === 'survey' ? 10 : 0;
+  return a.op === 'chat' ? 5 : a.op === 'survey' || a.op === 'civs' ? 10 : 0;
 }
 
 export { sys };

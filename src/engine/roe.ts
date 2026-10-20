@@ -21,7 +21,8 @@ export interface RoeVerdict {
 }
 
 export function lifeSignsAboard(s: WorldState, id: ShipId): number {
-  const extra = s.characters.passenger?.ship === id && s.characters.passenger.status !== 'dead' ? 1 : 0;
+  // (The idle bridge reuses the Kestrel world shape but has no hidden passenger.)
+  const extra = s.scenarioId !== 'bridge' && s.characters.passenger?.ship === id && s.characters.passenger.status !== 'dead' ? 1 : 0;
   return Math.max(0, s.ships[id].souls) + extra;
 }
 

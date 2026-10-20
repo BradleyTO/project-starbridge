@@ -17,6 +17,7 @@ import { explainRefusal } from '../../engine/roe';
 import { ROLE_HOLDERS, createScenario } from '../kestrel/setup';
 import { templates as kestrelTemplates } from '../kestrel/templates';
 import { BRIDGE_SCENARIO_TEMPLATES } from './templates';
+import { CONTACT_TEMPLATES, contactDialogue } from './contact';
 
 export const BRIDGE_TITLE = 'Bridge — CSV Halcyon';
 
@@ -75,17 +76,30 @@ function survey(s: WorldState): Applied {
   return { state: s, reports: [say('sensors', 'surveyReport', { n: systems.length, list })] };
 }
 
+/** "Science, show me the civilizations we've detected but haven't contacted." */
+function civs(s: WorldState): Applied {
+  if (!s.survey?.live) return { state: s, reports: [say('sensors', 'civsTraining')] };
+  const list = (s.survey.systems ?? []).filter((x) => x.signal !== 'none' && !x.contacted);
+  if (!list.length) return { state: s, reports: [say('sensors', 'civsNone')] };
+  const text = list.map((x) => `${x.name}, ${x.distanceLy} light years${x.investigated ? ' (investigated)' : ''}: ${x.note.replace(/[.\s]+$/, '')}`).join('; ');
+  return { state: s, reports: [say('sensors', 'civsList', { n: list.length, list: text })] };
+}
+
 function query(s: WorldState, topic: Parameters<ScenarioHooks['query']>[1]): Applied {
   const h = s.ships.halcyon;
   switch (topic) {
     case 'status':
+      if (s.duty?.live)
+        return { state: s, reports: [say('xo', 'dutyStatusReport', { hull: Math.round(h.hull), shields: h.shields.raised ? 'up' : 'down', weapons: h.weapons.state, alert: s.alert, location: s.duty.location, waiting: s.duty.incoming ? s.duty.incoming.title : '', contact: s.duty.contact ? s.duty.contact.station : '' })] };
       return { state: s, reports: [say('xo', 'bridgeStatus', { hull: Math.round(h.hull), shields: h.shields.raised ? 'up' : 'down', weapons: h.weapons.state, alert: s.alert })] };
     case 'systems':
       return { state: s, reports: [say('engineering', 'systemsReport')] };
     case 'contacts':
+      if (s.duty?.contact) return { state: s, reports: [say('sensors', 'contactOnSensors', { station: s.duty.contact.station, people: s.duty.contact.people, system: s.duty.contact.system })] };
       return { state: s, reports: [say('sensors', 'bridgeNoContacts')] };
     case 'objectives':
-      return { state: s, reports: [say('xo', 'bridgeNoMission')] };
+      if (s.duty?.incoming) return { state: s, reports: [say('xo', 'dutyWaiting', { title: s.duty.incoming.title })] };
+      return { state: s, reports: [say('xo', s.duty?.live ? 'dutyNoMission' : 'bridgeNoMission')] };
     case 'options':
       return { state: s, reports: [say('xo', 'optionsReport', { options: suggestions(s).join('; ') })] };
     case 'help':
@@ -97,17 +111,26 @@ function query(s: WorldState, topic: Parameters<ScenarioHooks['query']>[1]): App
 
 const hooks: ScenarioHooks = {
   scan: (s, target) => (target === 'area' ? survey(s) : target === 'halcyon' ? { state: s, reports: [say('engineering', 'systemsReport')] } : { state: s, reports: [say('sensors', 'bridgeNoContacts')] }),
-  communicate: (s) => ({ state: s, reports: [say('comms', 'bridgeNobodyToHail')] }),
+  communicate: (s) => ({ state: s, reports: s.duty?.contact ? [] : [say('comms', 'bridgeNobodyToHail')] }),
+  dialogue: contactDialogue,
   improvise: (s) => ({ state: s, reports: [say('xo', 'bridgeNothingToDo')] }),
   query,
   bridge: (s, action, rng: Rng) => {
     if (action.op === 'survey') return survey(s);
+    if (action.op === 'civs') return civs(s);
     return { state: s, reports: crewChat(s, action, rng) };
   },
 };
 
 function suggestions(s: WorldState): string[] {
-  void s;
+  const d = s.duty;
+  if (d?.contact && d.contact.stage !== 'concluded') return ['Hail them', 'We come in peace. We are explorers from the Concord.', 'Who are your people?', 'Science, what do we know about them?'];
+  if (d?.incoming) {
+    if (d.incoming.classification === 'directive') return ['Acknowledged, we are on our way', 'Request clarification from Fleet Command', 'We refuse the directive — the ship is not fit for duty', 'First Officer, give me a status report'];
+    if (d.incoming.classification === 'distress') return ['Respond to the distress call', 'Log it and continue', 'Tell me more', 'First Officer, give me a status report'];
+    return ['Accept the assignment', 'Decline', 'Tell me more', 'First Officer, give me a status report'];
+  }
+  if (d?.live) return ['Continue the patrol', "Science, show me the civilizations we've detected but haven't contacted", 'Helm, set a course for the nearest of them', 'Computer, begin the Kestrel Incident simulation'];
   return ['Computer, begin the Kestrel Incident simulation', 'Computer, open the simulation archive', 'First Officer, give me a status report', 'Science, what systems are within exploration range?'];
 }
 
@@ -123,13 +146,13 @@ export const bridgeScenario: ScenarioModule = {
   create: (seed) => createBridge(seed),
   intro: [
     (s) => ({ state: s, reports: [narrate('bridgeIntro0')] }),
-    (s) => ({ state: s, reports: [say('xo', 'bridgeIntro1')] }),
+    (s) => ({ state: s, reports: [say('xo', s.duty?.live ? 'bridgeIntroDuty' : 'bridgeIntro1')] }),
   ],
   hooks,
   simulate,
   objectives: () => [],
   detectOutcome: () => null,
-  templates: { ...kestrelTemplates, ...BRIDGE_SCENARIO_TEMPLATES },
+  templates: { ...kestrelTemplates, ...BRIDGE_SCENARIO_TEMPLATES, ...CONTACT_TEMPLATES },
   roleHolders: ROLE_HOLDERS,
   suggestions,
   contactDetails: () => [],

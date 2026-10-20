@@ -9,7 +9,9 @@
  */
 import { addCareer, addEvent } from './canon';
 import { hashSeed } from './hash';
-import type { CanonicalState, Civilization, ContactOutcome, Disposition, Exploration, ExploredSystem } from './types';
+import { contactOutcome, type Approach } from '../engine/firstContact';
+export type { Approach };
+import type { CanonicalState, Civilization, ContactOutcome, Exploration, ExploredSystem } from './types';
 
 export const STATION = 'station';
 export const STATION_NAME = 'the Tessarine patrol station';
@@ -142,20 +144,6 @@ export function arrive(d: CanonicalState, e: Exploration, systemId: string, appV
     addEvent(d, { title: `Investigation: ${s.name}`, summary: `The Halcyon arrived at ${s.name} and confirmed a ${s.civ.people} civilization.`, ships: ['CSV Halcyon', s.civ.station], characters: [], factions: ['concord'], classification: 'exploration', authority: 'captain', status: 'active', missionId: null, decisions: [`Captain ordered a course to investigate ${s.name}.`], consequences: [], links: [] }, appVersion);
   }
   return s;
-}
-
-/** How the captain approached first contact. */
-export type Approach = 'peaceful' | 'firm' | 'hostile';
-
-/** What first contact settles: the civilization's hidden disposition meets the captain's approach. */
-export function contactOutcome(disposition: Disposition, approach: Approach): ContactOutcome {
-  const table: Record<Disposition, Record<Approach, ContactOutcome>> = {
-    open: { peaceful: 'membership-talks', firm: 'wary-contact', hostile: 'warned-off' },
-    cautious: { peaceful: 'trade-contact', firm: 'wary-contact', hostile: 'warned-off' },
-    isolationist: { peaceful: 'declined', firm: 'declined', hostile: 'warned-off' },
-    guarded: { peaceful: 'wary-contact', firm: 'warned-off', hostile: 'hostile' },
-  };
-  return table[disposition][approach];
 }
 
 export const OUTCOME_TEXT: Record<ContactOutcome, string> = {

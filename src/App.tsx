@@ -34,6 +34,7 @@ import { SettingsPanel } from './ui/components/SettingsPanel';
 import { TRAINING } from './universe/archive';
 import { expandAliases } from './universe/familiarity';
 import type { BridgeSession, CanonicalSession } from './universe/sessions';
+import { arriveOnBridge, handleDutyRequest, withDuty } from './dutyBridge';
 import './App.css';
 
 const BEAT_MS = 3500;
@@ -71,14 +72,16 @@ interface Debrief {
 }
 
 /** The idle bridge (optionally with a debrief of the simulation that just ended). */
-function bridgeState(seed: number | string, debrief?: { title: string; summary: string; objectives: string } | 'ended'): WorldState {
+function bridgeState(seed: number | string, debrief?: { title: string; summary: string; objectives: string; canonical?: boolean } | 'ended'): WorldState {
   const b = createBridge(seed);
   if (!debrief) return b;
   const done = completeIntro(b, scenarioFor(b.scenarioId));
   const reports =
     debrief === 'ended'
       ? [narrate('simEndedByOrder'), say('xo', 'simEndedByOrderXo')]
-      : [narrate('simDebriefNarr', { title: debrief.title, summary: debrief.summary }), say('xo', 'simDebriefXo', { objectives: debrief.objectives })];
+      : debrief.canonical
+        ? [narrate('dutyDebriefNarr', { title: debrief.title, summary: debrief.summary }), say('xo', 'dutyDebriefXo', { objectives: debrief.objectives })]
+        : [narrate('simDebriefNarr', { title: debrief.title, summary: debrief.summary }), say('xo', 'simDebriefXo', { objectives: debrief.objectives })];
   return appendReports({ ...done, log: [] }, scenarioFor(b.scenarioId), reports);
 }
 
@@ -117,7 +120,7 @@ export default function App() {
   const [firstSeed] = useState(() => initialSeed());
   const nextSimSeed = useRef<number | string | null>(new URLSearchParams(window.location.search).get('seed') ? firstSeed : null);
   const [meta, setMeta] = useState<SessionMeta>(() => ({ timeline: 'bridge', title: BRIDGE_TITLE }));
-  const [state, dispatch] = useReducer(reducer, undefined, () => bridgeState(firstSeed));
+  const [state, dispatch] = useReducer(reducer, undefined, () => withDuty(universe, bridgeState(firstSeed)));
   const [hubTab, setHubTab] = useState<HubTab | null>(null);
   const [debrief, setDebrief] = useState<Debrief | null>(null);
   const [showCommission, setShowCommission] = useState(false);
@@ -235,7 +238,7 @@ export default function App() {
     const m: SessionMeta = { timeline: 'bridge', title: BRIDGE_TITLE };
     setMeta(m);
     metaRef.current = m;
-    reset(next, msg);
+    reset(withDuty(universe, next), msg);
     touch();
   };
   const returnToBridge = useRef<typeof goBridge | null>(null);
@@ -262,8 +265,19 @@ export default function App() {
       else if (r.kind === 'endSim') {
         setDebrief(null);
         goBridge(bridgeState(state.seed, 'ended'), 'Simulation ended. Back on the bridge.');
+      } else if (r.kind === 'patrol' || r.kind === 'respond' || r.kind === 'course' || r.kind === 'firstContact') {
+        // v0.5 Active Duty: patrol, answer a call, travel, record first contact (through the Universe API).
+        if (stateRef.current.scenarioId !== 'bridge') return;
+        const out = handleDutyRequest(universe, stateRef.current, r);
+        touch();
+        if (out.enter) enter(out.enter.session, out.enter.title, `Canonical mission begun: ${out.enter.title}. 1 credit used.`);
+        else {
+          dispatch({ type: 'replace', state: out.state });
+          stateRef.current = out.state;
+          if (out.flash) flash(out.flash);
+        }
       }
-    }, r.kind === 'openArchive' ? 0 : 700);
+    }, r.kind === 'openArchive' ? 0 : r.kind === 'firstContact' ? 0 : 700);
     return () => window.clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.uiRequest]);
@@ -280,6 +294,22 @@ export default function App() {
     }, AMBIENT_MS);
     return () => window.clearTimeout(id);
   }, [onBridge, busy, hubTab, introRunning, state.nextLogId]);
+  /** Re-derive the Active Duty overlay on the idle bridge (and let priority traffic in on arrival). */
+  const refreshBridge = (arrive: boolean) => {
+    const cur = stateRef.current;
+    if (cur.scenarioId !== 'bridge') return;
+    const next = arrive ? arriveOnBridge(universe, cur) : withDuty(universe, cur);
+    if (next === cur) return;
+    dispatch({ type: 'replace', state: next });
+    stateRef.current = next;
+  };
+  // v0.5: once the bridge intro is done, anything waiting for the captain (a Fleet directive) comes in.
+  useEffect(() => {
+    if (!onBridge || introRunning) return;
+    const id = window.setTimeout(() => refreshBridge(true), 900);
+    return () => window.clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onBridge, introRunning, session]);
   /** Append crew / comms lines to the idle bridge (no-op elsewhere). */
   const bridgeSay = (reports: Parameters<typeof appendReports>[2]) => {
     const cur = stateRef.current;
@@ -293,6 +323,7 @@ export default function App() {
     setShowCommission(false);
     touch();
     bridgeSay([say('comms', 'dutyCommissionComms'), say('xo', 'dutyCommissionXo')]);
+    refreshBridge(true);
     flash('Commission accepted. You are on active duty.');
   };
   /** The Active Duty subscription changed (dev toggle). Off = reserve status, never misconduct. */
@@ -302,6 +333,7 @@ export default function App() {
       touch();
       if (universe.dutyStatus() === 'pending') return setShowCommission(true);
       bridgeSay([say('comms', 'dutyWelcomeBack')]);
+      refreshBridge(true);
       return flash('Back on active duty. Your career is restored.');
     }
     const m = metaRef.current;
@@ -312,7 +344,10 @@ export default function App() {
     setShowCommission(false);
     touch();
     if (m.timeline === 'canonical') goBridge(bridgeState(stateRef.current.seed), 'Reserve status: mission saved, canonical timeline frozen.');
-    else bridgeSay(hadCareer ? [say('comms', 'dutyReserve')] : []);
+    else {
+      bridgeSay(hadCareer ? [say('comms', 'dutyReserve')] : []);
+      refreshBridge(false);
+    }
     flash(hadCareer ? 'Reserve status. Your career is preserved; the canonical timeline is frozen.' : 'Active Duty off.');
   };
   const titleFor = (archiveId: string) => universe.archive().find((e) => e.id === archiveId)?.title ?? kestrelScenario.title;
@@ -338,18 +373,21 @@ export default function App() {
       if (r.session) enter(r.session, m.title, `Canonical mission begun: ${m.title}.`);
       else {
         touch();
+        refreshBridge(false);
         flash(`${m.title}: ${m.outcome?.title ?? 'under way'}.`);
       }
     },
     onRespond: (offerId: string, response: 'decline' | 'ignore' | 'question' | 'refuse' | 'disobey', reason?: string) => {
       universe.respond(offerId, response, reason);
       touch();
+      refreshBridge(false);
       flash(`Logged: ${response}. No credit used.`);
     },
     onResume: (missionId: string) => enter(universe.resumeCanonical(missionId), universe.canon()!.missions[missionId].title, 'Canonical mission resumed. No credit used.'),
     onAdvance: (hours: number) => {
       const r = universe.advanceTime(hours);
       touch();
+      refreshBridge(false);
       flash(r.ok ? `${hours} hours of canonical time pass.` : 'Canonical time is paused until the allowance resets.');
     },
   };
@@ -505,6 +543,7 @@ export default function App() {
                   <span className="tag canon">Recorded in canonical history</span>
                   <button className="btn" onClick={() => setHubTab('universe')} data-testid="outcome-universe">Active Duty</button>
                   <button className="btn save" onClick={() => archiveActions.onReplayOriginal(meta.missionId)} data-testid="outcome-replay">Replay as simulation</button>
+                  <button className="btn ghost" onClick={() => goBridge(bridgeState(state.seed, { title: state.outcome!.title, summary: state.outcome!.summary, objectives: `${state.objectives.filter((x) => x.status === 'complete').length} of ${state.objectives.length} objectives met`, canonical: true }), 'Back on the bridge. The mission is filed in canonical history.')} data-testid="outcome-bridge">Return to the bridge</button>
                 </div>
               ) : (
                 <div className="outcome-actions">

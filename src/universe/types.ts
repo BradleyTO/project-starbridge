@@ -211,7 +211,8 @@ export interface CanonicalState {
 // --------------------------------------------------------------- exploration --
 
 /** How a civilization feels about outsiders. Hidden from the captain until contact. Not every one wants the Concord. */
-export type Disposition = 'open' | 'cautious' | 'isolationist' | 'guarded';
+export type { Disposition, ContactOutcome, Approach } from '../engine/firstContact';
+import type { ContactOutcome, Disposition } from '../engine/firstContact';
 
 export interface Civilization {
   id: string;
@@ -223,8 +224,6 @@ export interface Civilization {
   disposition: Disposition;
 }
 
-/** What first contact settled (written once, through the commit gate). */
-export type ContactOutcome = 'membership-talks' | 'trade-contact' | 'wary-contact' | 'declined' | 'warned-off' | 'hostile';
 
 export interface ExploredSystem {
   id: string;

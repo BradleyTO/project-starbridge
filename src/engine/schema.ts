@@ -188,7 +188,7 @@ export const ProposedActionSchema = z.discriminatedUnion('type', [
   /** v0.5: channel operations (open / close / hold / resume / mute), handled by the comms officer. */
   z.object({ type: z.literal('channel'), op: z.enum(['open', 'close', 'hold', 'resume', 'mute', 'unmute']), party: PartySchema.optional(), private: z.boolean().default(false), ...base }),
   /** v0.5: bridge-level commands (archive, begin / end a simulation, survey, small talk). */
-  z.object({ type: z.literal('bridge'), op: z.enum(['openArchive', 'beginSim', 'endSim', 'survey', 'chat', 'acceptCommission']), scenario: z.string().max(80).optional(), officer: z.string().max(40).optional(), text: z.string().max(300).optional(), ...base }),
+  z.object({ type: z.literal('bridge'), op: z.enum(['openArchive', 'beginSim', 'endSim', 'survey', 'chat', 'acceptCommission', 'civs', 'course', 'patrol', 'respond']), scenario: z.string().max(80).optional(), hours: z.number().min(1).max(24).optional(), officer: z.string().max(40).optional(), text: z.string().max(300).optional(), ...base }),
   /** "When I say 'go dark', I mean …": teach the crew a phrase (stored as familiarity, not world state). */
   z.object({ type: z.literal('learn'), phrase: z.string().min(2).max(60), meaning: z.string().min(2).max(300), ...base }),
 ]);

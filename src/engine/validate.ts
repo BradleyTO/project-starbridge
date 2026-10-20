@@ -90,6 +90,8 @@ export function validate(s: WorldState, action: ProposedAction): Validation {
         if (!reachable.length) return no(action, [say('comms', 'nobodyToHail')]);
         return talk(action);
       }
+      // v0.5: on the idle bridge the contact slot is empty unless first contact is under way.
+      if (s.scenarioId === 'bridge' && !s.ships[action.target].detected) return no(action, [say('comms', 'bridgeNobodyToHail')]);
       if (action.target === 'kestrel') {
         const arden = s.characters.arden;
         if (arden.status === 'dead') return no(action, [say('comms', 'nobodyAnswers', { ship: 'Kestrel' })]);

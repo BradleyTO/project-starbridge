@@ -27,6 +27,8 @@ export interface InterpreterContext {
   held?: ('kestrel' | 'cruiser' | 'passenger')[];
   /** v0.5: an officer refused an order in the last few minutes (a bare "why?" asks them). */
   recentRefusal?: boolean;
+  /** v0.5: on the idle bridge — live (Active Duty) or not, whether a call awaits an answer, survey place names. */
+  duty?: { live: boolean; incoming: boolean; places: string[] } | null;
 }
 
 export interface Interpreter {
@@ -55,6 +57,7 @@ export function contextFrom(s: WorldState): InterpreterContext {
     channel: activeChannel(s),
     held: (s.comms?.channels ?? []).filter((c) => c.state === 'hold').map((c) => c.party),
     recentRefusal: (s.refusals ?? []).some((r) => r.turn >= s.turn - 3),
+    duty: s.scenarioId === 'bridge' ? { live: !!s.duty?.live, incoming: !!s.duty?.incoming, places: (s.survey?.systems ?? []).map((x) => x.name.toLowerCase()) } : null,
   };
 }
 

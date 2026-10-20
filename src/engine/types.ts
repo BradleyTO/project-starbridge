@@ -193,6 +193,8 @@ export interface SurveyState {
   systems: SurveySystem[];
   /** Systems the captain has ordered a course to (Active Duty investigation). */
   course: string | null;
+  /** v0.5: canonical survey (Active Duty) rather than the generic training-bridge one. */
+  live?: boolean;
 }
 
 export interface CommsState {
@@ -362,5 +364,41 @@ export interface WorldState {
   /** v0.5: the science officer's survey of systems within exploration range (idle bridge). */
   survey?: SurveyState;
   /** v0.5: a bridge command asked the app to do something (open the archive, begin / end a simulation). */
-  uiRequest?: { kind: 'openArchive' | 'beginSim' | 'endSim' | 'acceptCommission'; id?: string; seq: number } | null;
+  uiRequest?: { kind: UiRequestKind; id?: string; hours?: number; response?: string; seq: number } | null;
+  /** v0.5: the Active Duty bridge (live survey, the call waiting for an answer, first contact under way). */
+  duty?: DutyBridge;
+}
+
+export type UiRequestKind = 'openArchive' | 'beginSim' | 'endSim' | 'acceptCommission' | 'patrol' | 'respond' | 'course' | 'firstContact';
+
+/** A hail, distress call or request that reached the bridge and is waiting for the captain's answer. */
+export interface IncomingCall {
+  offerId: string;
+  channel: 'hail' | 'distress' | 'request';
+  classification: 'voluntary' | 'distress' | 'directive';
+  from: string;
+  title: string;
+  briefing: string;
+}
+
+/** First contact in progress at an investigated system (the civilization occupies the bridge's contact slot). */
+export interface FirstContactState {
+  systemId: string;
+  system: string;
+  people: string;
+  leader: string;
+  station: string;
+  disposition: 'open' | 'cautious' | 'isolationist' | 'guarded';
+  stage: 'arrived' | 'talking' | 'concluded';
+  asks: number;
+  approach: 'peaceful' | 'firm' | 'hostile' | null;
+  outcome: string | null;
+}
+
+export interface DutyBridge {
+  /** On active duty: the survey and traffic are canonical. False on the Simulation Mode / reserve bridge. */
+  live: boolean;
+  location: string;
+  incoming: IncomingCall | null;
+  contact: FirstContactState | null;
 }
