@@ -16,7 +16,7 @@ export const HELD_OUT_DIALOGUE_2: DialogueItem[] = [
   { setup: VANE, line: 'Who gave you the authority to stop a civilian ship?', kind: 'dialogue', to: 'cruiser', intents: ['ask', 'challenge'] },
   { setup: VANE, line: 'Fine. Our weapons stay powered down.', kind: 'dialogue', to: 'cruiser', intents: ['agree', 'promise'] },
   { setup: VANE, line: 'Release your target lock on the Kestrel.', kind: 'dialogue', to: 'cruiser', intents: ['demand'] },
-  { setup: VANE, line: 'Inform the Prefect that the Concord will hear of this.', kind: 'dialogue', to: 'cruiser', intents: ['warn', 'challenge'] },
+  { setup: VANE, line: 'Inform the Prefect that the Agency will hear of this.', kind: 'dialogue', to: 'cruiser', intents: ['warn', 'challenge'] },
   { setup: VANE, line: "I'm afraid we can't do that.", kind: 'dialogue', to: 'cruiser', intents: ['refuse'] },
   { setup: VANE, line: 'Perhaps we can work together on this.', kind: 'dialogue', to: 'cruiser', intents: ['offerCooperation', 'negotiate'] },
   { setup: VANE, line: 'My cat prefers the blue cushion.', kind: 'dialogue', to: 'cruiser', intents: ['unknown'], allowClarify: true },

@@ -21,7 +21,7 @@ const FIRM = new Set(['demand', 'refuse', 'negotiate']);
 const PEACEFUL = new Set(['declarePeaceful', 'greet', 'offerCooperation', 'humanitarian', 'appeal', 'promise', 'agree', 'legal', 'trade', 'requestAssist', 'offerAsylum']);
 /** Words that make an otherwise peaceful line an aggressive one ("we come in peace, but our guns are ready"). */
 const THREAT = /\b(or else|guns|weapons (are )?(ready|armed|hot)|destroy|surrender|submit|we will take|by force|annex|you will obey|comply or)\b/i;
-const FIRM_WORDS = /\b(we (demand|require|insist)|you (must|will) (let|allow|tell)|concord (territory|space|claim)|under concord (law|authority)|by order of)\b/i;
+const FIRM_WORDS = /\b(we (demand|require|insist)|you (must|will) (let|allow|tell)|(?:agency|isa|concord|intergalactic star agency) (territory|space|claim)|under (?:agency|isa|concord|intergalactic star agency) (law|authority)|by order of)\b/i;
 
 export function approachOf(line: SpeakAction): Approach | null {
   const I = new Set(line.intents);
@@ -46,7 +46,7 @@ function line(s: WorldState, key: string, vars: Record<string, string | number> 
   return { state: recordLine(s, { from: 'kestrel', intents: [], text: key }), report: comms('arden', key, vars) };
 }
 
-const SUGGEST = ['We come in peace. We are explorers from the Concord.', 'Who are your people?', 'We would like to establish contact.', 'Close the channel.'];
+const SUGGEST = ['We come in peace. We are explorers from the Agency.', 'Who are your people?', 'We would like to establish contact.', 'Close the channel.'];
 
 function conclude(s: WorldState, c: FirstContactState, approach: Approach, r: Report[]): Applied {
   const outcome = contactOutcome(c.disposition, approach);
@@ -117,12 +117,12 @@ export const CONTACT_TEMPLATES: Record<string, (v: Record<string, string | numbe
   contactPress_isolationist: () => 'We will not be studied. Your purpose.',
   contactPress_guarded: () => 'Last time: why are you here?',
   contactUnclear: (v) => ['We do not follow. Speak plainly: why have you come?', 'Your words do not translate well. Peace, trade, or something else?', 'We are waiting for your purpose, Halcyon.'][Number(v.v) % 3],
-  'contactOutcome_membership-talks': (v) => `Then you are welcome, Halcyon. The ${v.people} would hear what your Concord is — and what joining it would mean. Send your envoys; we will listen.`,
-  'contactOutcome_trade-contact': (v) => `Then we will trade knowledge, and perhaps goods. But understand: the ${v.people} will not join your Concord. We have seen what alliances cost.`,
+  'contactOutcome_membership-talks': (v) => `Then you are welcome, Halcyon. The ${v.people} would hear what your Agency is — and what joining it would mean. Send your envoys; we will listen.`,
+  'contactOutcome_trade-contact': (v) => `Then we will trade knowledge, and perhaps goods. But understand: the ${v.people} will not join your Agency. We have seen what alliances cost.`,
   'contactOutcome_wary-contact': (v) => `Words are easily spoken. The ${v.people} will watch what your ships do, not what you say. You may go.`,
-  contactOutcome_declined: () => 'Your courtesy is noted, Captain, and it is returned. Our answer is no. We want no contact with your Concord. Do not come back uninvited.',
+  contactOutcome_declined: () => 'Your courtesy is noted, Captain, and it is returned. Our answer is no. We want no contact with your Agency. Do not come back uninvited.',
   'contactOutcome_warned-off': () => 'Leave our system. Now. Do not mistake our patience for welcome.',
-  contactOutcome_hostile: (v) => `Then we understand each other. Leave — and tell your Concord the ${v.people} will be ready for the next ship.`,
+  contactOutcome_hostile: (v) => `Then we understand each other. Leave — and tell your Agency the ${v.people} will be ready for the next ship.`,
   contactAgain: () => 'We have said what we had to say, Halcyon.',
   contactFarewell: () => 'Go well, Halcyon.',
   contactCutOff: () => 'You came all this way to say nothing? Very well.',

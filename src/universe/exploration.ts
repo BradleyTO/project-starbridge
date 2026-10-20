@@ -2,8 +2,8 @@
  * v0.5 (M3.1) the long-range survey on Active Duty: a small, seeded exploration system.
  *
  * Science keeps a list of systems in range. Three carry signs of a civilization that the
- * Concord has never contacted; a fourth is found later by a routine science reading. Each
- * civilization has a hidden disposition: not every one wants to join the Concord. The captain
+ * Agency has never contacted; a fourth is found later by a routine science reading. Each
+ * civilization has a hidden disposition: not every one wants to join the Agency. The captain
  * can order a course to investigate (a new canonical start: one credit, like any other), and
  * what first contact settles is written once, through the commit gate.
  */
@@ -81,7 +81,7 @@ export function systemById(e: Exploration, id: string): ExploredSystem | undefin
 export function resolvePlace(e: Exploration, spoken: string): string | null {
   const t = spoken.toLowerCase().replace(/\b(the|system|star|planet|world)\b/g, ' ').replace(/\s+/g, ' ').trim();
   if (!t) return null;
-  if (/\b(station|patrol (area|route|station)|home|base|back|tessarine)\b/.test(t)) return STATION;
+  if (/\b(station|patrol (area|route|station)|home|base|back|tessarine|agency( space| survey space)?|isa space|concord( space| survey space)?)\b/.test(t)) return STATION;
   const hit = e.systems.find((x) => t.includes(x.name.toLowerCase()) || x.name.toLowerCase().includes(t));
   if (hit) return hit.id;
   const civ = e.systems.find((x) => x.civ && x.signal !== 'none' && t.includes(x.civ.people.toLowerCase()) && (x.investigated || x.contacted));
@@ -127,7 +127,7 @@ export function detectCivilization(d: CanonicalState, e: Exploration, systemId: 
   s.signal = 'possible';
   s.note = hint;
   s.detectedAt = d.clock;
-  addEvent(d, { title: `Science reading: possible civilization at ${s.name}`, summary: hint, ships: ['CSV Halcyon'], characters: ['Lt. Oona Varga'], factions: ['concord'], classification: 'exploration', authority: 'observed', status: 'active', missionId: null, decisions: [], consequences: [], links: [] }, appVersion);
+  addEvent(d, { title: `Science reading: possible civilization at ${s.name}`, summary: hint, ships: ['ISV Halcyon'], characters: ['Lt. Oona Varga'], factions: ['concord'], classification: 'exploration', authority: 'observed', status: 'active', missionId: null, decisions: [], consequences: [], links: [] }, appVersion);
   return s;
 }
 
@@ -141,18 +141,18 @@ export function arrive(d: CanonicalState, e: Exploration, systemId: string, appV
     s.signal = 'confirmed';
     s.note = `${s.civ.people} civilization confirmed. Their ${s.civ.stationClass.toLowerCase()} is in orbit: ${s.civ.station}.`;
     e.investigation.arrivedAt = d.clock;
-    addEvent(d, { title: `Investigation: ${s.name}`, summary: `The Halcyon arrived at ${s.name} and confirmed a ${s.civ.people} civilization.`, ships: ['CSV Halcyon', s.civ.station], characters: [], factions: ['concord'], classification: 'exploration', authority: 'captain', status: 'active', missionId: null, decisions: [`Captain ordered a course to investigate ${s.name}.`], consequences: [], links: [] }, appVersion);
+    addEvent(d, { title: `Investigation: ${s.name}`, summary: `The Halcyon arrived at ${s.name} and confirmed a ${s.civ.people} civilization.`, ships: ['ISV Halcyon', s.civ.station], characters: [], factions: ['concord'], classification: 'exploration', authority: 'captain', status: 'active', missionId: null, decisions: [`Captain ordered a course to investigate ${s.name}.`], consequences: [], links: [] }, appVersion);
   }
   return s;
 }
 
 export const OUTCOME_TEXT: Record<ContactOutcome, string> = {
-  'membership-talks': 'they asked to open talks on joining the Concord',
-  'trade-contact': 'they agreed to trade and keep talking, and made it clear they will not join the Concord',
-  'wary-contact': 'contact was made; they remain wary of the Concord',
+  'membership-talks': 'they asked to open talks on joining the Agency',
+  'trade-contact': 'they agreed to trade and keep talking, and made it clear they will not join the Agency',
+  'wary-contact': 'contact was made; they remain wary of the Agency',
   declined: 'they declined contact and asked the Halcyon to leave; their wish was respected',
   'warned-off': 'they warned the Halcyon out of their system',
-  hostile: 'the meeting went badly; they now regard the Concord as a threat',
+  hostile: 'the meeting went badly; they now regard the Agency as a threat',
 };
 
 export function recordContact(d: CanonicalState, e: Exploration, systemId: string, approach: Approach, appVersion: string): ContactOutcome {
@@ -162,7 +162,7 @@ export function recordContact(d: CanonicalState, e: Exploration, systemId: strin
   s.outcome = outcome;
   e.investigation = null;
   const text = `First contact with the ${s.civ!.people} at ${s.name}: ${OUTCOME_TEXT[outcome]}.`;
-  const ev = addEvent(d, { title: `First contact: the ${s.civ!.people}`, summary: text, ships: ['CSV Halcyon', s.civ!.station], characters: [s.civ!.leader], factions: ['concord'], classification: 'exploration', authority: 'captain', status: 'resolved', missionId: null, decisions: [`Captain's approach: ${approach}.`], consequences: [text], links: [] }, appVersion);
+  const ev = addEvent(d, { title: `First contact: the ${s.civ!.people}`, summary: text, ships: ['ISV Halcyon', s.civ!.station], characters: [s.civ!.leader], factions: ['concord'], classification: 'exploration', authority: 'captain', status: 'resolved', missionId: null, decisions: [`Captain's approach: ${approach}.`], consequences: [text], links: [] }, appVersion);
   addCareer(d, text, null, ev.id);
   return outcome;
 }

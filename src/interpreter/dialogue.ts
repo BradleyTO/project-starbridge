@@ -156,7 +156,7 @@ export function classifyLine(raw: string, opts: { relayVerb?: string; to?: Party
     break;
   }
   if (has(/\b(you have (my|our) word|i give you my word|i promise|we promise|i guarantee|on my honou?r|i swear)\b/)) out.add('promise');
-  if (has(/\b(lying|liar|lie to me|that'?s not true|you'?re wrong|nonsense|no right|not yours|no (authority|jurisdiction|claim)|that is false|i don'?t believe|prove it|neutral space|concord space|our space|why are you|how dare)\b/)) out.add('challenge');
+  if (has(/\b(lying|liar|lie to me|that'?s not true|you'?re wrong|nonsense|no right|not yours|no (authority|jurisdiction|claim)|that is false|i don'?t believe|prove it|neutral space|agency space|isa space|concord space|our space|why are you|how dare)\b/)) out.add('challenge');
   if (has(/\b(accords?|treaty|treaties|the law|illegal|jurisdiction|neutral space|interstellar law|convention|charter|evidence|proof|crimes?|atrocit(y|ies)|labou?r colon(y|ies)|recordings?)\b/)) out.add('legal');
   if (has(/\b(battle ?group|fleet is (on (the|its) way|right behind|coming|en route|inbound)|reinforcements are|warships? (are )?(inbound|en route|coming)|we are not alone|not alone out here|our fleet)\b/)) out.add('bluff');
   if (has(/\b(your (sister|brother|sibling|family|honou?r|conscience)|as an officer|as one (captain|officer) to another|for the sake of|ivet|you are better than this)\b/)) out.add('appeal');

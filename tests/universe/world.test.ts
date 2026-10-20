@@ -160,7 +160,7 @@ describe('mandatory directives and the disciplinary review', () => {
     expect(u.canon()!.discipline[0].finding).toBe('reprimand');
     expect(u.canon()!.captain.career.some((c) => /reprimand/.test(c.text))).toBe(true);
     const ev = eventOf(u, d.eventId);
-    expect(ev.consequences.join(' ')).toMatch(/no Concord ship in the Reach/);
+    expect(ev.consequences.join(' ')).toMatch(/no Agency ship in the Reach/);
     expect(u.canon()!.events.some((e) => e.classification === 'bulletin' && e.links.includes(d.eventId))).toBe(true);
   });
 

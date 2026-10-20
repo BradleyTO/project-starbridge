@@ -100,7 +100,7 @@ describe('guidance behaviours (every spatial intent)', () => {
     expect(d).toBeGreaterThan(0);
   });
 
-  it('flee: runs for the Concord border and crossing it ends the run as leaving the Reach', () => {
+  it('flee: runs for the Agency border and crossing it ends the run as leaving the Reach', () => {
     let s = act(start(9), { type: 'transport', payload: 'crew' });
     s = act(s, M('flee'));
     const y0 = s.ships.halcyon.position.y;

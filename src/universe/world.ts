@@ -39,7 +39,7 @@ export const ALLOWED_RESPONSES: Record<MissionOffer['classification'], OfferResp
 };
 
 export const FLEET_REPLY =
-  'Directive stands. The Kestrel reports reactor instability, and the Halcyon is the only Concord ship within six hours. The Border Accords rescue exemption (Art. 4) covers entry into the Reach to render aid. You are not authorised to initiate hostilities.';
+  'Directive stands. The Kestrel reports reactor instability, and the Halcyon is the only Agency ship within six hours. The Border Accords rescue exemption (Art. 4) covers entry into the Reach to render aid. You are not authorised to initiate hostilities.';
 
 export function scenarioVersion(sc: ScenarioModule): string {
   return sc.id === 'kestrel-incident' ? SCENARIO_VERSION : '1.0.0';
@@ -197,7 +197,7 @@ export function openReview(c: CanonicalState, o: MissionOffer, trigger: Discipli
   else rule = 'Reg. 7.1: a directive refused without a stated reason.';
   const ev = addEvent(
     c,
-    { missionId: null, title: `Disciplinary review: ${o.missionTitle}`, summary: `Fleet Command opened a review after the directive was ${trigger}.`, ships: ['CSV Halcyon'], characters: [], factions: ['concord'], classification: 'disciplinary', authority: 'fleet-command', decisions: [], consequences: [], links: [o.eventId], status: 'pending' },
+    { missionId: null, title: `Disciplinary review: ${o.missionTitle}`, summary: `Fleet Command opened a review after the directive was ${trigger}.`, ships: ['ISV Halcyon'], characters: [], factions: ['concord'], classification: 'disciplinary', authority: 'fleet-command', decisions: [], consequences: [], links: [o.eventId], status: 'pending' },
     appVersion,
   );
   const dc: DisciplinaryCase = { id: nextId(c, 'DSC'), eventId: ev.id, directiveOfferId: o.id, openedAt: c.clock, trigger, reason: reason || 'none', rule, evidence, finding: 'pending', resolvedAt: null };

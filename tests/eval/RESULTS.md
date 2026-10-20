@@ -39,7 +39,7 @@ Context: seed 42 after the intro (both contacts visible, no prior target).
 - `Get us closer to the frieghter`
 - `Back us away from that warship slowly`
 - `Match course and speed with the cruiser`
-- `Run for Concord space`
+- `Run for Agency space`
 - `Position us to block the cruiser's approach to the Kestrel`
 - `Ask the prefect what he wants`
 - `Prepare to jump out`

@@ -41,7 +41,7 @@ export const HELD_OUT: HeldOut[] = [
   { order: 'Get us closer to the frieghter', expect: [{ type: 'maneuver', intent: 'approach', target: 'kestrel' }] },
   { order: 'Back us away from that warship slowly', expect: [{ type: 'maneuver', intent: 'retreat', target: 'cruiser' }] },
   { order: 'Match course and speed with the cruiser', expect: [{ type: 'maneuver', intent: 'follow', target: 'cruiser' }] },
-  { order: 'Run for Concord space', expect: [{ type: 'maneuver', intent: 'flee' }] },
+  { order: 'Run for Agency space', expect: [{ type: 'maneuver', intent: 'flee' }] },
   { order: "Position us to block the cruiser's approach to the Kestrel", expect: [[{ type: 'maneuver', intent: 'block', target: 'cruiser' }, { type: 'maneuver', intent: 'interpose' }]] },
   { order: 'Ask the prefect what he wants', expect: [{ type: 'communicate', target: 'cruiser', intent: 'ask' }] },
   { order: 'Prepare to jump out', expect: [{ type: 'jump', mode: 'charge' }] },

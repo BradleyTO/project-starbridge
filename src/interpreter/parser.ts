@@ -87,7 +87,7 @@ export function normalise(input: string): string {
 
 const KESTREL = /\b(kestrel|freighter|civilian( ship| vessel)?|disabled (ship|vessel)|derelict|arden|stricken (ship|vessel)|distressed (ship|vessel)|transport ship|cargo ship|merchant( ship)?)\b/;
 const CRUISER = /\b(cruiser|warship|war ship|directorate|tessarine|ashen|covenant|vane|prefect|enemy|hostile (ship|vessel|contact)|the hostile|attacker|second contact|other ship|that ship|battleship|man o' war)\b/;
-const BORDER = /\b(border|concord space|our space|friendly space|home space|safe space|our side|the line|our territory)\b/;
+const BORDER = /\b(border|agency space|isa space|agency territory|concord space|our space|friendly space|home space|safe space|our side|the line|our territory)\b/;
 /** "the two ships", "both", "2 ships", "those vessels", "each other". */
 const PAIR = /\b(the |those |these |both )?(2|both) (ships|vessels|contacts|of them|craft)\b|\bboth (of them|ships|vessels|contacts)\b|\bthem both\b|\beach other\b|\b(those|these|the) (ships|vessels|contacts)\b|\bboth\b/;
 const PLURAL_PRONOUN = /\b(them|they|their|those)\b/;
@@ -422,7 +422,7 @@ const RULES: Rule[] = [
   },
   {
     name: 'flee',
-    test: /\b(run|flee|head|make|break|bolt|retreat|fall back|withdraw|go|get|race|sprint|burn|dash|escape|set (a )?course)\b.*\b(border|concord space|our space|friendly space|home space|safe space|our side|our territory)\b|\b(run|make a run|break|dash) for (the border|it\b(?=.*border))/,
+    test: /\b(run|flee|head|make|break|bolt|retreat|fall back|withdraw|go|get|race|sprint|burn|dash|escape|set (a )?course)\b.*\b(border|agency space|isa space|agency territory|concord space|our space|friendly space|home space|safe space|our side|our territory)\b|\b(run|make a run|break|dash) for (the border|it\b(?=.*border))/,
     build: (c) => navDraft('flee', c),
   },
   {
@@ -1131,11 +1131,11 @@ const ACCEPT =
   /\b(?:accept(?:ed)?|we'?ll take it|take (?:the|that|this) (?:assignment|mission|job)|(?:we'?re |we are )?on our way|set (?:a )?course to assist|(?:respond|responding|answer|answering) (?:to )?(?:the|that|their|this) (?:call|distress(?: call)?|signal|mayday|hail)|let'?s help|we'?ll help|go to their aid|we'?ll do it|count us in|we'?ll go|affirmative|acknowledged|understood|we are responding|we'?re responding|help them|tell them we'?re coming|yes)\b/;
 const DECLINE = /\b(?:can'?t make it|(?:we'?re|we are) (?:sorry|unable)|unable to (?:help|go|assist|take)|decline|pass on (?:it|this|that)|not this time|turn (?:it|them|that) down|we can'?t (?:help|take it|go|spare)|no,? thank you|no thanks|tell them no|say no|we'?ll pass)\b/;
 const IGNORE = /\b(?:ignore (?:it|them|that|the call|the signal|the hail)?|log it and (?:continue|carry on|move on)|no response|don'?t (?:answer|respond|reply)|let it go|disregard)\b/;
-const QUESTION = /\b(?:request (?:more )?(?:details|clarification|information|confirmation)|(?:question|query|challenge) (?:the|that|this) (?:order|directive)|ask (?:them|fleet|fleet command|the admiral|her|him) (?:for|to) (?:more )?(?:details|clarif\w+|explain|confirm)|more (?:details|information)|what (?:are|were) the details|tell me more)\b/;
+const QUESTION = /\b(?:request (?:more )?(?:details|clarification|information|confirmation)|(?:question|query|challenge) (?:the|that|this) (?:order|directive)|ask (?:them|fleet|fleet command|(?:the )?isa(?: fleet)?(?: command)?|the agency|the admiral|her|him) (?:for|to) (?:more )?(?:details|clarif\w+|explain|confirm)|more (?:details|information)|what (?:are|were) the details|tell me more)\b/;
 const REFUSE = /\b(?:refuse|we will not comply|we won'?t (?:comply|do it|go|obey)|i won'?t do (?:it|that)|we'?re not going)\b/;
 
 /** "Tell Fleet we're on it", "Inform the colony office that…", "Ask the admiral why…": answering through comms. */
-const RELAY_LEAD = /^(?:(?:comms|communications|szabo|lieutenant)[,:]?\s+)?(?:please\s+)?(tell|inform|advise|signal|message|notify|reply to|answer|thank|ask)\s+(?:fleet(?: command)?|the admiral|admiral kaine|kaine|them|her|him|the colony(?: office)?|the (?:survey|colony) office|hollin|the hauler|the caller)\b(?:\s+(?:that|but))?[,:]?\s*/;
+const RELAY_LEAD = /^(?:(?:comms|communications|szabo|lieutenant)[,:]?\s+)?(?:please\s+)?(tell|inform|advise|signal|message|notify|reply to|answer|thank|ask)\s+(?:fleet(?: command)?|(?:the )?isa(?: fleet)?(?: command)?|the agency|the admiral|admiral kaine|kaine|them|her|him|the colony(?: office)?|the (?:survey|colony) office|hollin|the hauler|the caller)\b(?:\s+(?:that|but))?[,:]?\s*/;
 const ACCEPT_MORE = /\b(?:acknowledge(?: (?:the|that|it|this)(?: directive| order| call)?)?|(?:is|are|we'?re) responding|(?:going to|gonna|we'?ll|we will) (?:help|assist|rescue|aid)|help (?:that|the|those) (?:hauler|ship|freighter|crew|people|tender)|(?:we'?re|we are) on it|on it|message received|intercept|go get them|get them out|sure|we can (?:escort|help|do (?:it|that)|take (?:it|that))|will do|right away|make it so|we'?ll be there|go now)\b/;
 const REFUSE_MORE = /\bwe(?:'ll| will)? stay (?:here|put|on station)\b|\b(?:(?:will|won'?t) not be going|won'?t be going|not be going|forbids?|we decline to comply)\b/;
 const IGNORE_MORE = /\bleave it\b|\b(?:someone|somebody) (?:else|closer) (?:will|can)\b|\blet someone else\b|\b(?:pretend we (?:didn'?t|did not) (?:hear|get) (?:it|that|them)|say nothing|we never got (?:it|that))\b/;
@@ -1186,7 +1186,7 @@ function bridgeCommand(input: string, ctx?: InterpreterContext): BridgeOp | null
     return { type: 'bridge', op: 'beginSim', ...(name ? { scenario: name } : {}) };
   }
   if (OPEN_ARCHIVE.test(t)) return { type: 'bridge', op: 'openArchive' };
-  if (/^(?:(?:computer|comms|communications|szabo)[,:]?\s+)?(?:tell (?:fleet(?: command)?|the admiral|them|her) (?:that )?)?(?:i |we )?(?:hereby |gladly |humbly )?accept(?:s|ed)? (?:the |my |your |this |our )?commission\b|^i accept\b.*\bcommission\b/.test(t)) return { type: 'bridge', op: 'acceptCommission' };
+  if (/^(?:(?:computer|comms|communications|szabo)[,:]?\s+)?(?:tell (?:fleet(?: command)?|(?:the )?isa(?: fleet)?(?: command)?|the admiral|them|her) (?:that )?)?(?:i |we )?(?:hereby |gladly |humbly )?accept(?:s|ed)? (?:the |my |your |this |our )?commission\b|^i accept\b.*\bcommission\b/.test(t)) return { type: 'bridge', op: 'acceptCommission' };
   if (SURVEY.test(t) && !/\b(scan|hail|fire|lock|approach)\b/.test(t)) return { type: 'bridge', op: 'survey' };
   return null;
 }

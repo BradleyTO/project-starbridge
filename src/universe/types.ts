@@ -28,6 +28,7 @@ export interface Provenance {
   contentVersion: string;
 }
 
+/** 'concord' is the internal id of the player's faction, shown as the Agency (v0.5.1); kept so saves load unchanged. */
 export type FactionId = 'concord' | 'directorate' | 'independent';
 
 /** Canonical galaxy time in minutes since the captain's first canonical day began. */
@@ -192,7 +193,7 @@ export interface CanonicalState {
   /** Halcyon condition carried between canonical missions (repairs over canonical time). */
   ship: { hull: number; updatedAt: CanonMinutes };
   factions: Record<FactionId, { standing: number }>;
-  /** Directorate–Concord border tension (0–100), shaped by canonical outcomes. */
+  /** Directorate–Agency border tension (0–100), shaped by canonical outcomes. */
   tension: number;
   offers: MissionOffer[];
   missions: Record<string, CanonicalMissionRecord>;
@@ -210,7 +211,7 @@ export interface CanonicalState {
 
 // --------------------------------------------------------------- exploration --
 
-/** How a civilization feels about outsiders. Hidden from the captain until contact. Not every one wants the Concord. */
+/** How a civilization feels about outsiders. Hidden from the captain until contact. Not every one wants the Agency. */
 export type { Disposition, ContactOutcome, Approach } from '../engine/firstContact';
 import type { ContactOutcome, Disposition } from '../engine/firstContact';
 

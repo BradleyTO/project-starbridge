@@ -85,7 +85,7 @@ export function createScenario(seedInput: number | string = 1): WorldState {
   const cv = headingVec(cruiserHeading);
   const ships: Record<ShipId, Ship> = {
     halcyon: ship('halcyon', {
-      name: 'CSV Halcyon',
+      name: 'ISV Halcyon',
       classification: 'Survey cruiser',
       faction: 'concord',
       position: { x: 0, y: 0 },
@@ -170,8 +170,8 @@ export function createScenario(seedInput: number | string = 1): WorldState {
     }),
     passenger: char('passenger', pp.name, 'Hidden passenger', 'kestrel', {
       status: 'stasis',
-      motivation: 'Reach Concord space alive.',
-      goals: ['escape the Directorate', 'reach Concord space'],
+      motivation: 'Reach Agency space alive.',
+      goals: ['escape the Directorate', 'reach Agency space'],
       knowledge: [pp.leverageFact],
       resources: ['intelligence'],
       trust: 0,

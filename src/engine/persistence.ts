@@ -1,4 +1,5 @@
 import type { WorldState } from './types';
+import { renameLegacyNames } from './naming';
 
 /**
  * Simulation save slot (format v4): the full authoritative WorldState (seed, RNG
@@ -65,7 +66,8 @@ export function isWorldState(v: unknown): v is WorldState {
  */
 export function migrateWorldState(raw: unknown): { state: WorldState; from: number } | null {
   if (!raw || typeof raw !== 'object') return null;
-  const r = raw as Record<string, unknown> & { version?: number };
+  // v0.5.1: the Concord / CSV display names are now the Agency / ISV (ids unchanged).
+  const r = renameLegacyNames(raw) as Record<string, unknown> & { version?: number };
   if (r.version === WORLD_STATE_VERSION) return isWorldState(r) ? { state: r as unknown as WorldState, from: 4 } : null;
   if (r.version === 3) {
     const up = {

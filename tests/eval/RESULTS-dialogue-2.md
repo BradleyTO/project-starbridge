@@ -13,7 +13,7 @@
 - [hail the cruiser] `Who gave you the authority to stop a civilian ship?`
 - [hail the cruiser] `Fine. Our weapons stay powered down.`
 - [hail the cruiser] `Release your target lock on the Kestrel.`
-- [hail the cruiser] `Inform the Prefect that the Concord will hear of this.`
+- [hail the cruiser] `Inform the Prefect that the Agency will hear of this.`
 - [hail the cruiser] `I'm afraid we can't do that.`
 - [hail the cruiser] `Perhaps we can work together on this.`
 - [hail the cruiser] `My cat prefers the blue cushion.`

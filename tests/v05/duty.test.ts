@@ -45,7 +45,7 @@ describe('commission', () => {
     expect(u.canon()).toBeNull();
     const c = u.acceptCommission()!;
     expect(u.dutyStatus()).toBe('active');
-    expect(c.commission?.ship).toBe('CSV Halcyon');
+    expect(c.commission?.ship).toBe('ISV Halcyon');
     expect(c.captain.career.map((e) => e.text).join(' ')).toMatch(/Commissioned to active duty/);
     // Idempotent.
     expect(u.acceptCommission()!.captain.career.filter((e) => /Commissioned/.test(e.text)).length).toBe(1);

@@ -202,7 +202,7 @@ describe('science: civilizations detected but not contacted', () => {
     n = t.mark();
     t.talk('Blorp the snarfwidget');
     expect(t.since(n)).toMatch(/do not follow|translate|waiting for your purpose/);
-    t.talk('We come in peace. We are explorers from the Concord.');
+    t.talk('We come in peace. We are explorers from the Agency.');
     const sys = t.u.exploration()!.systems.find((x) => x.id === open.id)!;
     expect(sys.contacted).toBe(true);
     expect(sys.outcome).toBe('membership-talks');
@@ -217,13 +217,13 @@ describe('science: civilizations detected but not contacted', () => {
     expect(t.u.creditsRemaining()).toBe(credits - 1);
   });
 
-  it('not every civilization wants to join the Concord', () => {
+  it('not every civilization wants to join the Agency', () => {
     const peaceful = (['open', 'cautious', 'isolationist', 'guarded'] as const).map((d) => contactOutcome(d, 'peaceful'));
     expect(peaceful.filter((o) => o === 'membership-talks')).toHaveLength(1);
     const t = setup();
     t.talk('We refuse the directive');
     const notOpen = t.u.exploration()!.systems.find((x) => x.civ && x.signal !== 'none' && x.civ.disposition !== 'open')!;
-    t.talk(`Set a course for ${notOpen.name}`, 'Hail them', 'We come in peace. We are explorers from the Concord.');
+    t.talk(`Set a course for ${notOpen.name}`, 'Hail them', 'We come in peace. We are explorers from the Agency.');
     expect(t.u.exploration()!.systems.find((x) => x.id === notOpen.id)!.outcome).not.toBe('membership-talks');
   });
 
@@ -236,7 +236,7 @@ describe('science: civilizations detected but not contacted', () => {
     t.talk('Tactical, fire on the station');
     expect(t.since(n)).toMatch(/won.t fire|will not fire|people aboard/i);
     expect(t.s.ships.kestrel.hull).toBe(100);
-    t.talk('Submit to the Concord or we will destroy you');
+    t.talk('Submit to the Agency or we will destroy you');
     expect(t.u.exploration()!.systems.find((x) => x.id === open.id)!.outcome).toBe('warned-off');
   });
 
@@ -305,6 +305,14 @@ describe('answering a waiting call: wording edge cases (safety)', () => {
     const { t, said } = answerOf('No. We stay here.');
     expect(said).toMatch(/Refusal transmitted/);
     expect(t.u.canon()!.discipline).toHaveLength(1);
+  });
+  it('v0.5.1: ISA Fleet Command is understood by its new name (and the old one)', () => {
+    const asked = answerOf('Ask ISA Fleet Command for more details');
+    expect(asked.said).toMatch(/Directive stands/);
+    const told = answerOf('Tell ISA Fleet Command we are on our way');
+    expect(told.t.entered).toEqual(['The Kestrel Incident']);
+    const old = answerOf('Tell Fleet Command we are on our way');
+    expect(old.t.entered).toEqual(['The Kestrel Incident']);
   });
   it('raising shields while a call waits is an order, not an answer', () => {
     const { t } = answerOf('Raise shields');

@@ -28,7 +28,7 @@ export interface HaulerParams {
   podSurvivors: number;
 }
 
-const OTHER_SHIPS = ['Tessarine freighter Ondine', 'Concord SAR cutter Wren', 'mining tug Halberd'];
+const OTHER_SHIPS = ['Tessarine freighter Ondine', 'Agency SAR cutter Wren', 'mining tug Halberd'];
 
 export function haulerParams(seed: number, t0: number, tension: number): HaulerParams {
   const h = (k: string) => hashSeed(seed, k);
@@ -93,8 +93,8 @@ export function kestrelUnattended(seed: number, t0: number): Stage {
   const v = createScenario(seed).variant;
   const at = t0 + 6 * H;
   if (v.temperament === 'hardliner')
-    return { at, kind: 'lost', final: true, text: "With no Concord ship in the Reach, the Ashen Covenant forced the Kestrel's hold open. Her reactor breached during the boarding; the Directorate reports recovering a handful of survivors." };
-  return { at, kind: 'rescued-other', final: true, text: `With no Concord ship in the Reach, the Ashen Covenant took the Kestrel's crew aboard before her reactor failed. They are held for questioning in Directorate space.` };
+    return { at, kind: 'lost', final: true, text: "With no Agency ship in the Reach, the Ashen Covenant forced the Kestrel's hold open. Her reactor breached during the boarding; the Directorate reports recovering a handful of survivors." };
+  return { at, kind: 'rescued-other', final: true, text: `With no Agency ship in the Reach, the Ashen Covenant took the Kestrel's crew aboard before her reactor failed. They are held for questioning in Directorate space.` };
 }
 
 // ------------------------------------------------- archive replay (simulated) --

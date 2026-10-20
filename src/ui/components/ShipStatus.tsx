@@ -26,7 +26,7 @@ export function ShipStatus({ ship, torpedoes, targetName }: { ship: Ship; torped
         <ShipGlyph />
         <div>
           <div className="ship-name">{ship.name}</div>
-          <div className="ship-reg">{ship.classification} · Concord Exploration Service</div>
+          <div className="ship-reg">{ship.classification} · Intergalactic Star Agency</div>
         </div>
       </div>
       <div className="nav-readout" data-testid="nav-readout">
@@ -72,7 +72,7 @@ export function ShipStatus({ ship, torpedoes, targetName }: { ship: Ship; torped
   );
 }
 
-/** Original top-down silhouette of the CSV Halcyon. */
+/** Original top-down silhouette of the ISV Halcyon. */
 export function ShipGlyph() {
   return (
     <svg className="ship-glyph" viewBox="0 0 64 64" aria-hidden="true">

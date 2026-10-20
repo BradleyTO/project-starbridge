@@ -12,6 +12,7 @@
  */
 import type { StorageLike } from '../engine/persistence';
 import { migrateWorldState } from '../engine/persistence';
+import { renameLegacyNames } from '../engine/naming';
 import type { WorldState } from '../engine/types';
 import { clone, deepFreeze, type DeepReadonly } from './freeze';
 import { TimelineViolation, assertCanonical, type CanonicalContext } from './gate';
@@ -48,7 +49,9 @@ class VersionedDoc<T extends { version: number }> {
   private schema: string;
   private migrations: Record<number, Migration>;
   private validate: (v: unknown) => boolean;
-  constructor(storage: StorageLike, key: string, schema: string, migrations: Record<number, Migration> = {}, validate: (v: unknown) => boolean = () => true) {
+  private transform: (v: Record<string, unknown>) => Record<string, unknown>;
+  constructor(storage: StorageLike, key: string, schema: string, migrations: Record<number, Migration> = {}, validate: (v: unknown) => boolean = () => true, transform: (v: Record<string, unknown>) => Record<string, unknown> = (v) => v) {
+    this.transform = transform;
     this.storage = storage;
     this.key = key;
     this.schema = schema;
@@ -74,6 +77,7 @@ class VersionedDoc<T extends { version: number }> {
         if (!m) throw new Error('no migration');
         doc = m(doc) as typeof doc;
       }
+      doc = this.transform(doc) as typeof doc;
       if (!this.validate(doc)) throw new Error('invalid');
       this.status = 'ok';
       return doc as unknown as T;
@@ -117,7 +121,7 @@ export class CanonStore {
   private doc: VersionedDoc<CanonicalState>;
   private cache: DeepReadonly<CanonicalState> | null | undefined;
   constructor(storage: StorageLike) {
-    this.doc = new VersionedDoc<CanonicalState>(storage, KEYS.canon, 'starbridge.canon', {}, isCanon);
+    this.doc = new VersionedDoc<CanonicalState>(storage, KEYS.canon, 'starbridge.canon', {}, isCanon, renameLegacyNames);
   }
   get status(): LoadStatus {
     return this.doc.status;
@@ -162,9 +166,9 @@ export class CanonStore {
 export class PlainStore<T extends { version: number }> {
   private doc: VersionedDoc<T>;
   private fallback: () => T;
-  constructor(storage: StorageLike, key: string, schema: string, fallback: () => T, validate?: (v: unknown) => boolean) {
+  constructor(storage: StorageLike, key: string, schema: string, fallback: () => T, validate?: (v: unknown) => boolean, transform?: (v: Record<string, unknown>) => Record<string, unknown>) {
     this.fallback = fallback;
-    this.doc = new VersionedDoc<T>(storage, key, schema, {}, validate);
+    this.doc = new VersionedDoc<T>(storage, key, schema, {}, validate, transform);
   }
   get status(): LoadStatus {
     return this.doc.status;
@@ -204,7 +208,7 @@ export interface UniverseRepository {
 export function localRepository(storage: StorageLike, defaultLedger: () => CreditLedger): UniverseRepository {
   return {
     canon: new CanonStore(storage),
-    sims: new PlainStore(storage, KEYS.sim, 'starbridge.sim', defaultSims),
+    sims: new PlainStore(storage, KEYS.sim, 'starbridge.sim', defaultSims, undefined, renameLegacyNames),
     familiarity: new PlainStore(storage, KEYS.familiarity, 'starbridge.familiarity', defaultFamiliarity),
     credits: new PlainStore(storage, KEYS.credits, 'starbridge.credits', defaultLedger),
     entitlements: new PlainStore(storage, KEYS.entitlements, 'starbridge.entitlements', defaultEntitlements),

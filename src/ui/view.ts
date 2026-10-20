@@ -28,7 +28,7 @@ export interface ContactView {
   details: string[];
 }
 
-const FACTION_LABEL: Record<string, string> = { concord: 'Concord', directorate: 'Tessarine Directorate', independent: 'Independent' };
+const FACTION_LABEL: Record<string, string> = { concord: 'The Agency', directorate: 'Tessarine Directorate', independent: 'Independent' };
 
 export function contactsView(s: WorldState, scenario: ScenarioModule): ContactView[] {
   const h = s.ships.halcyon;

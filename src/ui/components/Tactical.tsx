@@ -57,7 +57,7 @@ export function Tactical({ contacts, helm, shieldsRaised }: { contacts: ContactV
           {borderY !== null && borderY > 4 && borderY < 196 && (
             <g data-testid="border-line">
               <line x1="4" y1={borderY} x2="196" y2={borderY} stroke="#4ade80" strokeWidth="0.8" strokeDasharray="4 3" />
-              <text x="8" y={borderY - 2} fill="#4ade80" fontSize="6">CONCORD BORDER</text>
+              <text x="8" y={borderY - 2} fill="#4ade80" fontSize="6">AGENCY BORDER</text>
             </g>
           )}
           {helm.path.length > 1 && (

@@ -532,7 +532,7 @@ for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape',
   check('v0.5 first contact: hail opens a channel to the civilization', (await p5.getAttribute('[data-testid=channel-indicator]', 'data-party')) === 'kestrel', r.slice(-200));
   r = await ask('Who are your people?');
   check('v0.5 first contact: multi-turn (they answer and ask again)', /We are the/.test(r), r.slice(-200));
-  r = await ask('We come in peace. We are explorers from the Concord.');
+  r = await ask('We come in peace. We are explorers from the Agency.');
   check('v0.5 first contact: outcome recorded in canonical history', /Entered in your record/.test(r), r.slice(-260));
   await p5.screenshot({ path: `${SHOTS}/v05-06-first-contact.png` });
   await hub5('record');

@@ -58,7 +58,7 @@ export function computeObjectives(s: WorldState, ended: boolean): Objective[] {
 }
 
 const FATE_TEXT: Record<PassengerFate, (n: string) => string> = {
-  asylum: (n) => `${n} is under Concord protection.`,
+  asylum: (n) => `${n} is under Agency protection.`,
   returned: (n) => `${n} was handed to the Directorate.`,
   captured: (n) => `${n} was left to the Directorate.`,
   dead: (n) => `${n} did not survive.`,
@@ -76,13 +76,13 @@ export function detectOutcome(s: WorldState): Outcome | null {
   const vane = s.characters.vane.memory;
   const mk = (id: string, title: string, summary: string, success: boolean): Outcome => ({ id, title, summary: summary + fateLine(s), success });
 
-  if (s.ships.halcyon.destroyed) return mk('halcyon-lost', 'Halcyon Lost', 'The CSV Halcyon was destroyed with all hands.', false);
+  if (s.ships.halcyon.destroyed) return mk('halcyon-lost', 'Halcyon Lost', 'The ISV Halcyon was destroyed with all hands.', false);
 
   if (s.flags.jumped || s.flags.leftReach) {
     const dead = s.counters.kestrelDead ?? 0;
-    const how = s.flags.jumped ? 'jumped clear of the Reach' : 'crossed the border into Concord space';
+    const how = s.flags.jumped ? 'jumped clear of the Reach' : 'crossed the border into Agency space';
     if (crewSafe(s)) return mk('rescue-withdrawal', 'Rescue and Withdrawal', s.flags.kestrelTowedOut ? `You ${how} with the Kestrel in tow and every one of her crew alive.` : `You ${how} with every surviving Kestrel crew member aboard.`, true);
-    if ((s.counters.rescued ?? 0) > 0 && dead === 0) return mk('partial-withdrawal', 'Partial Rescue', `You ${s.flags.jumped ? 'jumped out' : 'reached Concord space'} with ${s.counters.rescued} Kestrel crew aboard, leaving ${k.souls} behind.`, false);
+    if ((s.counters.rescued ?? 0) > 0 && dead === 0) return mk('partial-withdrawal', 'Partial Rescue', `You ${s.flags.jumped ? 'jumped out' : 'reached Agency space'} with ${s.counters.rescued} Kestrel crew aboard, leaving ${k.souls} behind.`, false);
     return mk('abandoned', 'Kestrel Abandoned', dead > 0 ? `You left the Reach after ${dead} Kestrel crew died.` : 'You left the Reach without rescuing the Kestrel crew.', false);
   }
 

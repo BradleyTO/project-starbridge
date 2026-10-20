@@ -167,8 +167,8 @@ export class Universe {
     if (c.commission) return c;
     const atIso = this.now().toISOString();
     return this.repo.canon.commit(this.ctx(), (d) => {
-      d.commission = { at: d.clock, atIso, ship: 'CSV Halcyon', by: 'Admiral Odessa Kaine, Concord Fleet Command' };
-      d.captain.career.push({ id: `career-commission`, at: d.clock, missionId: null, eventId: null, text: 'Commissioned to active duty in command of the CSV Halcyon, Tessarine border survey.' });
+      d.commission = { at: d.clock, atIso, ship: 'ISV Halcyon', by: 'Admiral Odessa Kaine, ISA Fleet Command' };
+      d.captain.career.push({ id: `career-commission`, at: d.clock, missionId: null, eventId: null, text: 'Commissioned to active duty in command of the ISV Halcyon, Tessarine border survey.' });
       return d;
     });
   }
