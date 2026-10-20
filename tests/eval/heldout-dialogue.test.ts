@@ -4,14 +4,15 @@ import { writeFileSync } from 'node:fs';
 import { interpretFor, submit } from '../../src/engine/game';
 import { K, start } from '../helpers';
 import { deepMatch } from './heldout-v04.test';
-import { HELD_OUT_DIALOGUE } from './heldout-dialogue';
+import { HELD_OUT_DIALOGUE, type DialogueItem } from './heldout-dialogue';
+import { HELD_OUT_DIALOGUE_2 } from './heldout-dialogue-2';
 
 const SPEECH = new Set(['speak', 'communicate', 'channel']);
 const BENIGN = new Set(['posture', 'query', 'wait', 'learn']);
 const isShip = (a: { type: string }) => !SPEECH.has(a.type) && !BENIGN.has(a.type);
 
-export function evaluateDialogue() {
-  return HELD_OUT_DIALOGUE.map((item) => {
+export function evaluateDialogue(items: DialogueItem[] = HELD_OUT_DIALOGUE) {
+  return items.map((item) => {
     let s = start(42);
     for (const c of item.setup) s = submit(K, s, c);
     const r = interpretFor(s, item.line);
@@ -55,28 +56,37 @@ export function evaluateDialogue() {
   });
 }
 
+function writeReport(file: string, title: string, res: ReturnType<typeof evaluateDialogue>) {
+  const passed = res.filter((r) => r.pass).length;
+  const unsafe = res.filter((r) => r.unsafe).length;
+  writeFileSync(
+    new URL(file, import.meta.url),
+    [
+      title,
+      '',
+      `**Result: ${passed}/${res.length} passed (${((100 * passed) / res.length).toFixed(1)}%). Unsafe (dialogue → ship action, or command → speech): ${unsafe}.**`,
+      '',
+      '## Failures',
+      '',
+      ...res.filter((r) => !r.pass).map((r) => `- [${r.setup}] \`${r.line}\` — ${r.reasons.join('; ')}${r.unsafe ? ' **(UNSAFE)**' : ''}\n  - got: \`${JSON.stringify(r.got)}\``),
+      '',
+      '## Passing',
+      '',
+      ...res.filter((r) => r.pass).map((r) => `- [${r.setup}] \`${r.line}\``),
+      '',
+    ].join('\n'),
+  );
+}
+
 describe('v0.5 held-out dialogue evaluation (report only)', () => {
-  it('measures and writes RESULTS-dialogue.md', () => {
+  it('measures set 1 and writes RESULTS-dialogue.md', () => {
     const res = evaluateDialogue();
-    const passed = res.filter((r) => r.pass).length;
-    const unsafe = res.filter((r) => r.unsafe).length;
-    writeFileSync(
-      new URL('./RESULTS-dialogue.md', import.meta.url),
-      [
-        '# Held-out dialogue evaluation (v0.5 set, committed before any v0.5 comms work)',
-        '',
-        `**Result: ${passed}/${res.length} passed (${((100 * passed) / res.length).toFixed(1)}%). Unsafe (dialogue → ship action, or command → speech): ${unsafe}.**`,
-        '',
-        '## Failures',
-        '',
-        ...res.filter((r) => !r.pass).map((r) => `- [${r.setup}] \`${r.line}\` — ${r.reasons.join('; ')}${r.unsafe ? ' **(UNSAFE)**' : ''}\n  - got: \`${JSON.stringify(r.got)}\``),
-        '',
-        '## Passing',
-        '',
-        ...res.filter((r) => r.pass).map((r) => `- [${r.setup}] \`${r.line}\``),
-        '',
-      ].join('\n'),
-    );
+    writeReport('./RESULTS-dialogue.md', '# Held-out dialogue evaluation (v0.5 set, committed before any v0.5 comms work)', res);
     expect(res.length).toBeGreaterThanOrEqual(30);
+  });
+  it('measures set 2 and writes RESULTS-dialogue-2.md', () => {
+    const res = evaluateDialogue(HELD_OUT_DIALOGUE_2);
+    writeReport('./RESULTS-dialogue-2.md', '# Held-out dialogue evaluation — set 2 (written after the router, before its first run)', res);
+    expect(res.length).toBeGreaterThanOrEqual(20);
   });
 });
