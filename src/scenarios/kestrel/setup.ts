@@ -170,8 +170,8 @@ export function createScenario(seedInput: number | string = 1): WorldState {
     }),
     passenger: char('passenger', pp.name, 'Hidden passenger', 'kestrel', {
       status: 'stasis',
-      motivation: 'Reach Agency space alive.',
-      goals: ['escape the Directorate', 'reach Agency space'],
+      motivation: 'Reach ISA space alive.',
+      goals: ['escape the Directorate', 'reach ISA space'],
       knowledge: [pp.leverageFact],
       resources: ['intelligence'],
       trust: 0,

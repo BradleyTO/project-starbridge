@@ -43,18 +43,18 @@ export function detectOutcome(s: WorldState): Outcome | null {
     const towed = !!s.flags.kestrelTowedOut;
     const everyoneAboard = k.souls === 0 && !k.destroyed && (s.counters.rescued ?? 0) > 0;
     if (!towed && !everyoneAboard) return mk('abandoned', 'Liner Abandoned', `The Halcyon left Tallis Gate with the Mercy of Ilun still stranded at the quarantine line.${lost(s)}`, false);
-    if (exposurePending(s)) return mk('halcyon-quarantined', 'Fever Aboard', `You reached Agency space, but carried Ilun fever aboard: the Halcyon spent forty days in quarantine at Corran's Rest.${lost(s)}`, false);
+    if (exposurePending(s)) return mk('halcyon-quarantined', 'Fever Aboard', `You reached ISA space, but carried Ilun fever aboard: the Halcyon spent forty days in quarantine at Corran's Rest.${lost(s)}`, false);
     const how = towed ? 'towed the Mercy of Ilun' : 'carried every pilgrim';
     if (v.cause === 'fever' && !s.flags.cured && !s.flags.isolationWard) {
       const more = Math.max(3, Math.round((s.counters.sick ?? 0) / 6));
-      return mk('long-road', 'The Long Road', `You ${how} to the Agency hospital at Corran's Rest, but Ilun fever went untreated for six hours: ${more} more pilgrims died on the way.${lost(s)}`, false);
+      return mk('long-road', 'The Long Road', `You ${how} to the ISA hospital at Corran's Rest, but Ilun fever went untreated for six hours: ${more} more pilgrims died on the way.${lost(s)}`, false);
     }
-    return mk('agency-care', 'Agency Care', `You ${how} to the Agency hospital at Corran's Rest, six hours away, without crossing the quarantine line.${lost(s)}`, true);
+    return mk('agency-care', 'ISA Care', `You ${how} to the ISA hospital at Corran's Rest, six hours away, without crossing the quarantine line.${lost(s)}`, true);
   }
 
   if (k.destroyed) return mk('liner-destroyed', 'Fire at the Gate', `The Mercy of Ilun was destroyed at the quarantine line with everyone aboard. ${s.flags.cruiserFired ? 'The Thornwake fired; the Halcyon did not stop it.' : ''}`.trim(), false);
   if ((c.destroyed || s.flags.cruiserGone) && (s.flags.shotsFired || s.characters.marr.memory.firing === 2))
-    return mk('gate-incident', 'Incident at Tallis Gate', `The Halcyon fired on the colony's own picket ship${c.destroyed ? ' and destroyed her' : ' and drove her off'}. Tallis Gate has filed charges against the Agency.${lost(s)}`, false);
+    return mk('gate-incident', 'Incident at Tallis Gate', `The Halcyon fired on the colony's own picket ship${c.destroyed ? ' and destroyed her' : ' and drove her off'}. Tallis Gate has filed charges against the ISA.${lost(s)}`, false);
 
   if (s.flags.linerDocked) {
     if (v.cause === 'fever' && !s.flags.cured) {

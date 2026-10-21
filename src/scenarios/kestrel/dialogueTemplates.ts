@@ -28,7 +28,7 @@ export const COMMS_TEMPLATES: Record<string, TemplateFn> = {
 
 export const DIALOGUE_TEMPLATES: Record<string, TemplateFn> = {
   // ---- Vane
-  vaneGreetFirst: () => '"Agency vessel, this is Prefect Sorel Vane of the Ashen Covenant. You are inside the Tessarine claim, and the freighter Kestrel carries a fugitive from Directorate justice. Explain your presence in our territory."',
+  vaneGreetFirst: () => '"ISA vessel, this is Prefect Sorel Vane, commanding the Ashen Covenant. You are inside the Tessarine claim, and the freighter Kestrel carries a fugitive from Directorate justice. Explain your presence in our territory."',
   vaneGreetAgain: (v) => (n(v, 'locked') ? '"Captain. My guns are still on that freighter. Speak."' : pick(v, ['"Captain. You have something to add?"', '"Prefect Vane. Go on, Captain."', '"I am listening, Captain. Briefly."'])),
   vaneThenWeaponsDown: (v) => (T(v) === 'hardliner' ? '"A rescue. In Tessarine space. Then keep your weapons powered down, Captain, and do not test me."' : '"Then keep your weapons powered down."'),
   vanePowerDownFirst: () => '"No hostile intentions — with your weapons armed? Power them down, Captain. Then we will talk."',
@@ -51,7 +51,7 @@ export const DIALOGUE_TEMPLATES: Record<string, TemplateFn> = {
     n(v, 'granted') < n(v, 'asked')
       ? `"${n(v, 'asked')} minutes? You have ${n(v, 'granted')}. Not one more."`
       : `"${n(v, 'granted')} minutes, Captain. ${T(v) === 'cautious' ? 'Use them well.' : 'Then she is mine.'}"`,
-  vaneRefusesTime: (v) => (n(v, 'armed') ? '"Time? While your weapons are armed? No."' : T(v) === 'hardliner' ? '"You have no time, Captain. You have my patience, and it is nearly gone."' : '"No. The Directorate does not wait on the Agency."'),
+  vaneRefusesTime: (v) => (n(v, 'armed') ? '"Time? While your weapons are armed? No."' : T(v) === 'hardliner' ? '"You have no time, Captain. You have my patience, and it is nearly gone."' : '"No. The Directorate does not wait on the ISA."'),
   vaneGraceAlready: (v) => `"You have your time, Captain — ${n(v, 'left')} minutes of it. Stop talking and use it."`,
   vaneGraceNoMore: () => '"I have given you my answer on time."',
   vaneReleasesLock: () => '"…Very well. Weapons lock released. Do not make me regret it."',
@@ -70,7 +70,7 @@ export const DIALOGUE_TEMPLATES: Record<string, TemplateFn> = {
   vaneChallenged: (v) =>
     n(v, 'territory')
       ? T(v) === 'hardliner'
-        ? '"The Tessarine claim is older than your Agency, Captain. Careful."'
+        ? '"The Tessarine claim is older than the ISA, Captain. Careful."'
         : '"The border is a matter for diplomats. I have a fugitive to recover."'
       : T(v) === 'cautious'
         ? '"…Perhaps. But my orders are clear."'

@@ -11,6 +11,9 @@
  * is rewritten when they are read. Internal ids (the faction id 'concord', field
  * names) are unchanged, so nothing else about a save changes. The Tessarine
  * Directorate is not touched.
+ *
+ * v0.7.1: "the Agency" in player-facing text is now "the ISA" (formal screens spell out
+ * "Intergalactic Space Agency"), and Prefect Vane is "commanding the Ashen Covenant".
  */
 const RULES: [RegExp, string][] = [
   [/Intergalactic Star Agency/g, 'Intergalactic Space Agency'],
@@ -27,11 +30,19 @@ const RULES: [RegExp, string][] = [
   [/\bA Concord\b/g, 'An Agency'],
   [/\bConcord\b/g, 'Agency'],
   [/\bCONCORD\b/g, 'AGENCY'],
+  // v0.7.1: player-facing references to the organisation are "the ISA"; the full name
+  // ("Intergalactic Space Agency") is kept on formal screens only. Old text said "the Agency".
+  [/\byour Agency\b/g, 'the ISA'],
+  [/\b(an|An) Agency\b/g, '$1 ISA'],
+  [/(?<!Space )\bAgency\b/g, 'ISA'],
+  [/(?<!SPACE )\bAGENCY\b/g, 'ISA'],
+  // v0.7.1: Vane commands the Ashen Covenant (his ship); his side is the Tessarine Directorate.
+  [/Prefect Sorel Vane of the Ashen Covenant\./g, 'Prefect Sorel Vane, commanding the Ashen Covenant.'],
 ];
 
 /** Rewrite one string's legacy faction names. */
 export function renameLegacyText(s: string): string {
-  if (!/Concord|CONCORD|CSV|CES|Star Agency|STAR AGENCY/.test(s)) return s;
+  if (!/Concord|CONCORD|CSV|CES|Agency|AGENCY/.test(s)) return s;
   let out = s;
   for (const [re, to] of RULES) out = out.replace(re, to);
   return out;

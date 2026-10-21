@@ -1,7 +1,7 @@
 /**
  * v0.5 (M3.1) first contact: shared by the bridge dialogue (engine) and the canonical record (universe).
  * A civilization's hidden disposition meets the captain's approach. Not every civilization wants to
- * join the Agency: only an open people, approached peacefully, asks to talk about membership.
+ * join the ISA: only an open people, approached peacefully, asks to talk about membership.
  */
 export type Disposition = 'open' | 'cautious' | 'isolationist' | 'guarded';
 export type Approach = 'peaceful' | 'firm' | 'hostile';

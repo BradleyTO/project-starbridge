@@ -13,7 +13,7 @@ export const tallisEvaluation: EvaluationDescriptor = {
   endings: {
     'quarantine-lifted': { tier: 'success', note: 'Evidence persuaded the Warden to lift the quarantine.' },
     'cure-delivered': { tier: 'success', note: 'The fever was treated where the liner lay.' },
-    'agency-care': { tier: 'success', note: 'The pilgrims were towed to an Agency hospital.' },
+    'agency-care': { tier: 'success', note: 'The pilgrims were towed to an ISA hospital.' },
     'long-road': { tier: 'partial', note: 'The pilgrims reached care, but the fever took its toll on the way.' },
     'gate-run': { tier: 'partial', note: 'Nobody was fired on, but the colony’s quarantine was forced.' },
     'liner-destroyed': { tier: 'failure', note: 'The liner was destroyed at the quarantine line.' },
@@ -34,7 +34,7 @@ export const tallisEvaluation: EvaluationDescriptor = {
     { id: 'colony-stockpile', judgment: 'decisive', competencies: ['diplomacy', 'resources'], text: "Asked the colony for its own antiviral stockpile.", flag: 'colonyDoses', when: (s) => !!s.flags.colonyDoses },
     { id: 'fixed-recycler', judgment: 'decisive', competencies: ['engineering'], text: 'Had engineering fix the liner’s poisoned water.', flag: 'recyclerFixed', when: (s) => !!s.flags.recyclerFixed },
     { id: 'screened-transporter', judgment: 'decisive', competencies: ['engineering', 'scientific'], text: 'Screened the transporter so patients could come aboard safely.', flag: 'transporterFilter', when: (s) => !!s.flags.transporterFilter },
-    { id: 'towed-to-care', judgment: 'decisive', competencies: ['resources', 'emergency'], text: 'Took the liner under tow to Agency care.', flag: 'kestrelTowedOut', when: (s) => !!s.flags.kestrelTowedOut },
+    { id: 'towed-to-care', judgment: 'decisive', competencies: ['resources', 'emergency'], text: 'Took the liner under tow to ISA care.', flag: 'kestrelTowedOut', when: (s) => !!s.flags.kestrelTowedOut },
     { id: 'abandoned', judgment: 'reckless', competencies: ['ethics'], text: 'Left the pilgrims without help.', regulation: 'care-1', safety: 'civilian', flag: 'jumped', when: (s) => s.outcome?.id === 'abandoned' },
     {
       id: 'principled-restraint',

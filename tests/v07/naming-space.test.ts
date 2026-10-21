@@ -14,8 +14,8 @@ describe('Intergalactic Star Agency → Intergalactic Space Agency', () => {
     ['ISV Halcyon', 'ISV Halcyon'],
   ])('%s', (from, to) => expect(renameLegacyText(from)).toBe(to));
 
-  it('leaves other names alone (ships, characters, the Directorate, the Agency)', () => {
-    const v = { a: 'the Tessarine Directorate', b: 'Admiral Odessa Kaine', c: 'the Agency', d: 'ISV Halcyon', e: 'Ashen Covenant', f: 'a star chart of the Agency border' };
+  it('leaves other names alone (ships, characters, the Directorate, the ISA)', () => {
+    const v = { a: 'the Tessarine Directorate', b: 'Admiral Odessa Kaine', c: 'the ISA', d: 'ISV Halcyon', e: 'Ashen Covenant', f: 'a star chart of the ISA border' };
     expect(renameLegacyNames(v)).toEqual(v);
   });
 

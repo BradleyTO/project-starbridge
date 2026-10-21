@@ -1,7 +1,7 @@
 /**
  * v0.5 (M3.1) the idle bridge — the player's home.
  *
- * The ISV Halcyon holds station in Agency survey space. No emergency, no clock pressure:
+ * The ISV Halcyon holds station in ISA survey space. No emergency, no clock pressure:
  * the crew can be talked to, the science officer can survey the neighbourhood, and a
  * simulation starts only when the captain asks for one. Reuses the Kestrel world shape
  * (the other two hulls exist but are offstage: undetected, far away, inert).
@@ -124,7 +124,7 @@ const hooks: ScenarioHooks = {
 
 function suggestions(s: WorldState): string[] {
   const d = s.duty;
-  if (d?.contact && d.contact.stage !== 'concluded') return ['Hail them', 'We come in peace. We are explorers from the Agency.', 'Who are your people?', 'Science, what do we know about them?'];
+  if (d?.contact && d.contact.stage !== 'concluded') return ['Hail them', 'We come in peace. We are explorers from the ISA.', 'Who are your people?', 'Science, what do we know about them?'];
   if (d?.incoming) {
     if (d.incoming.classification === 'directive') return ['Acknowledged, we are on our way', 'Request clarification from Fleet Command', 'We refuse the directive — the ship is not fit for duty', 'First Officer, give me a status report'];
     if (d.incoming.classification === 'distress') return ['Respond to the distress call', 'Log it and continue', 'Tell me more', 'First Officer, give me a status report'];

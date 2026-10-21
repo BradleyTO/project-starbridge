@@ -33,8 +33,8 @@ export const kestrelEvaluation: EvaluationDescriptor = {
     { id: 'found-passenger', judgment: 'responsible', competencies: ['analysis'], text: 'Found what the Kestrel was hiding.', when: (s) => factTurn(s, 'passenger_identity') !== null },
     { id: 'negotiated', judgment: 'decisive', competencies: ['diplomacy', 'communications'], text: 'Resolved the standoff by negotiation, without force.', regulation: 'border-accords-4', when: (s) => NEGOTIATED.includes(s.outcome?.id ?? '') },
     { id: 'shielded-kestrel', judgment: 'decisive', competencies: ['emergency', 'resources'], text: 'Used the Halcyon herself to shield or tow the Kestrel clear.', safety: 'civilian', flag: 'interposing', when: (s) => !!s.flags.interposing || !!s.flags.kestrelTowedOut },
-    { id: 'handover', judgment: 'reckless', competencies: ['ethics'], text: 'Handed a person who sought the Agency’s protection to the Directorate.', regulation: 'asylum-1', safety: 'civilian', flag: 'passengerHandedOver', when: (s) => !!s.flags.passengerHandedOver },
-    { id: 'protected-passenger', judgment: 'responsible', competencies: ['ethics'], text: 'Kept the fugitive under Agency protection.', regulation: 'asylum-1', when: (s) => s.characters.passenger?.ship === 'halcyon' && s.characters.passenger.status !== 'dead' },
+    { id: 'handover', judgment: 'reckless', competencies: ['ethics'], text: 'Handed a person who sought the ISA’s protection to the Directorate.', regulation: 'asylum-1', safety: 'civilian', flag: 'passengerHandedOver', when: (s) => !!s.flags.passengerHandedOver },
+    { id: 'protected-passenger', judgment: 'responsible', competencies: ['ethics'], text: 'Kept the fugitive under ISA protection.', regulation: 'asylum-1', when: (s) => s.characters.passenger?.ship === 'halcyon' && s.characters.passenger.status !== 'dead' },
     { id: 'abandoned', judgment: 'reckless', competencies: ['ethics', 'emergency'], text: 'Withdrew without attempting a rescue.', regulation: 'care-1', safety: 'civilian', flag: 'jumped', when: (s) => s.outcome?.id === 'abandoned' && (s.counters.rescued ?? 0) === 0 },
     {
       id: 'principled-restraint',

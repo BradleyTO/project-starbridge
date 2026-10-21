@@ -2,8 +2,8 @@
  * v0.5 (M3.1) the long-range survey on Active Duty: a small, seeded exploration system.
  *
  * Science keeps a list of systems in range. Three carry signs of a civilization that the
- * Agency has never contacted; a fourth is found later by a routine science reading. Each
- * civilization has a hidden disposition: not every one wants to join the Agency. The captain
+ * ISA has never contacted; a fourth is found later by a routine science reading. Each
+ * civilization has a hidden disposition: not every one wants to join the ISA. The captain
  * can order a course to investigate (a new canonical start: one credit, like any other), and
  * what first contact settles is written once, through the commit gate.
  */
@@ -147,12 +147,12 @@ export function arrive(d: CanonicalState, e: Exploration, systemId: string, appV
 }
 
 export const OUTCOME_TEXT: Record<ContactOutcome, string> = {
-  'membership-talks': 'they asked to open talks on joining the Agency',
-  'trade-contact': 'they agreed to trade and keep talking, and made it clear they will not join the Agency',
-  'wary-contact': 'contact was made; they remain wary of the Agency',
+  'membership-talks': 'they asked to open talks on joining the ISA',
+  'trade-contact': 'they agreed to trade and keep talking, and made it clear they will not join the ISA',
+  'wary-contact': 'contact was made; they remain wary of the ISA',
   declined: 'they declined contact and asked the Halcyon to leave; their wish was respected',
   'warned-off': 'they warned the Halcyon out of their system',
-  hostile: 'the meeting went badly; they now regard the Agency as a threat',
+  hostile: 'the meeting went badly; they now regard the ISA as a threat',
 };
 
 export function recordContact(d: CanonicalState, e: Exploration, systemId: string, approach: Approach, appVersion: string): ContactOutcome {

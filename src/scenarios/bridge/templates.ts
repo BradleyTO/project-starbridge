@@ -4,7 +4,7 @@ import { formalOf } from '../../engine/captain';
 const pick = (v: Record<string, string | number>, xs: string[]) => xs[Number(v.v ?? 0) % xs.length];
 
 export const BRIDGE_SCENARIO_TEMPLATES: Record<string, TemplateFn> = {
-  bridgeIntro0: () => 'The ISV Halcyon holds station on the edge of Agency survey space. The bridge hums quietly; the viewscreen shows nothing but stars.',
+  bridgeIntro0: () => 'The ISV Halcyon holds station on the edge of ISA survey space. The bridge hums quietly; the viewscreen shows nothing but stars.',
   bridgeIntro1: (_v, s) => `${formalOf(s)} on the bridge. All quiet, all systems green. Nothing on the board — the simulation archive is ready whenever you want a drill.`,
   bridgeStatus: (v) => `All quiet, Captain. Hull ${v.hull}%, shields ${v.shields}, weapons ${v.weapons}, ${v.alert} alert. No contacts, no standing mission. The simulation archive is ready if you want a drill.`,
   bridgeNoContacts: () => 'No contacts within sensor range, Captain. Just us and the stars.',

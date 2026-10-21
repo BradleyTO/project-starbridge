@@ -39,7 +39,7 @@ export const ALLOWED_RESPONSES: Record<MissionOffer['classification'], OfferResp
 };
 
 export const FLEET_REPLY =
-  'Directive stands. The Kestrel reports reactor instability, and the Halcyon is the only Agency ship within six hours. The Border Accords rescue exemption (Art. 4) covers entry into the Reach to render aid. You are not authorised to initiate hostilities.';
+  'Directive stands. The Kestrel reports reactor instability, and the Halcyon is the only ISA ship within six hours. The Border Accords rescue exemption (Art. 4) covers entry into the Reach to render aid. You are not authorised to initiate hostilities.';
 
 export function scenarioVersion(sc: ScenarioModule): string {
   return sc.id === 'kestrel-incident' ? SCENARIO_VERSION : '1.0.0';

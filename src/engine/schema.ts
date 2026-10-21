@@ -76,7 +76,7 @@ export const ManeuverIntentSchema = z.enum([
   'escort', // formation alongside
   'block', // sit in the target's path
   'retreat', // open the range from a threat
-  'flee', // run for the Agency border
+  'flee', // run for the ISA border
   'orbit',
   'holdStation', // keep the current offset from a target (or hold position)
   'allStop',

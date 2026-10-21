@@ -325,7 +325,7 @@ function ardenAgent(s: WorldState, _rng: Rng, r: Report[]): WorldState {
  * Arden's nerve: the Kestrel carries a single point-defence mount. He powers it up
  * (no draw on the RNG; the threshold comes from the scenario seed) when someone
  * locks on to his ship, or when the cruiser closes inside his nerve range. A
- * Agency ship physically between him and the cruiser halves that range.
+ * ISA ship physically between him and the cruiser halves that range.
  */
 export function kestrelNerveKm(s: WorldState): number {
   return 12000 + (Math.abs(s.seed) % 19) * 1000;

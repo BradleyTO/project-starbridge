@@ -43,7 +43,7 @@ export function visibleOrders(s: WorldState): TrackedOrder[] {
 
 export function refName(s: WorldState, ref: NavRef | null): string {
   if (!ref) return 'position';
-  if (ref === 'border') return 'the Agency border';
+  if (ref === 'border') return 'the ISA border';
   return `the ${s.ships[ref].name}`;
 }
 
@@ -69,7 +69,7 @@ export function goalLabel(s: WorldState, g: Pick<NavGoal, 'intent' | 'target' | 
     case 'retreat':
       return `Retreat from ${n(g.target)}${km}`;
     case 'flee':
-      return 'Run for the Agency border';
+      return 'Run for the ISA border';
     case 'orbit':
       return `Orbit ${n(g.target)}${km}`;
     case 'holdStation':

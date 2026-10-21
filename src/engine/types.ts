@@ -233,7 +233,7 @@ export interface Provenance {
 
 export type Stance = 'neutral' | 'nonHostile' | 'assertive';
 
-/** 'concord' is the internal id of the player's faction, shown as the Agency (v0.5.1); kept so saves load unchanged. */
+/** 'concord' is the internal id of the player's faction, shown as the ISA (v0.5.1); kept so saves load unchanged. */
 export type FactionId = 'concord' | 'directorate' | 'independent';
 
 export type CharacterStatus = 'active' | 'injured' | 'dead' | 'stasis';
@@ -381,7 +381,7 @@ export interface WorldState {
    * It colours crew lines only; it is never a record of real events.
    */
   familiarity: { drilled: Record<string, number> };
-  /** Scenario landmarks (e.g. the Agency border), km. */
+  /** Scenario landmarks (e.g. the ISA border), km. */
   landmarks: Record<string, Vec2>;
   /** Pending clarifying question from the interpreter, if any. */
   clarification: { question: string; options: string[]; clause: string } | null;

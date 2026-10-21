@@ -18,10 +18,10 @@ describe('legacy display names are rewritten', () => {
     ['Survey cruiser · Concord Exploration Service', 'Survey cruiser · Intergalactic Space Agency'],
     ['Admiral Odessa Kaine, Concord Fleet Command', 'Admiral Odessa Kaine, ISA Fleet Command'],
     ['registry CES-7140', 'registry ISA-7140'],
-    ['We have crossed into Concord space.', 'We have crossed into Agency space.'],
-    ['they asked to open talks on joining the Concord', 'they asked to open talks on joining the Agency'],
-    ['bluff that a Concord battle group is on the way', 'bluff that an Agency battle group is on the way'],
-    ['CONCORD BORDER', 'AGENCY BORDER'],
+    ['We have crossed into Concord space.', 'We have crossed into ISA space.'],
+    ['they asked to open talks on joining the Concord', 'they asked to open talks on joining the ISA'],
+    ['bluff that a Concord battle group is on the way', 'bluff that an ISA battle group is on the way'],
+    ['CONCORD BORDER', 'ISA BORDER'],
   ])('%s', (from, to) => expect(renameLegacyText(from)).toBe(to));
   it('leaves the Tessarine Directorate, ids and keys alone', () => {
     const v = { faction: 'concord', concord: { standing: 50 }, text: 'the Tessarine Directorate', trustConcordDirectorate: 30 };

@@ -19,7 +19,7 @@ const T: Record<string, TemplateFn> = {
   ardenArms: () => "We're powering our point-defence. It won't scratch that cruiser, but I'm not sitting here with my hands in my lap.",
   ardenArmsAgainstHalcyon: () => "You've got a lock on us? Then we're powering our point-defence. Explain yourselves, Halcyon.",
   // ---- intro / narrative
-  intro0: () => 'The ISV Halcyon drops out of her jump corridor at the edge of the Calloway Reach, a band of space claimed by both the Agency and the Tessarine Directorate. Nothing should be out here.',
+  intro0: () => 'The ISV Halcyon drops out of her jump corridor at the edge of the Calloway Reach, a band of space claimed by both the ISA and the Tessarine Directorate. Nothing should be out here.',
   intro1: () => 'Captain, automated distress beacon dead ahead. Civilian freighter, transponder reads KESTREL, adrift at about 38,000 kilometres.',
   intro2: () => '"…freighter Kestrel… reactor containment failing… crew aboard… any vessel, please respond…" (loop repeats)',
   intro3: (_v, s) => `New contact, bearing ${String(Math.round((Math.atan2(s.ships.cruiser.position.x, s.ships.cruiser.position.y) * 180) / Math.PI + 360) % 360).padStart(3, '0')}. Warship profile, running hot, about ${Math.round(range(s, 'halcyon', 'cruiser') / 1000)},000 kilometres out and closing on the Kestrel. Yellow alert.`,
@@ -38,7 +38,7 @@ const T: Record<string, TemplateFn> = {
       : 'This simulation has ended. Restart, start a new seed, or load a save.',
   shipLost: () => 'The Halcyon has been lost.',
   help: () =>
-    'Speak or type orders in plain English. Combine orders with "and"/"then". Examples: "red alert", "divert power from weapons to sensors", "take us to 4,000 km of the Kestrel", "lower shields and evacuate the crew", "tell the Prefect this is a humanitarian rescue", "offer them the cargo", "bluff that an Agency battle group is on the way", "use the tractor beam as a shield", "vent plasma for cover", "eject the Kestrel\'s core", "status", "options".',
+    'Speak or type orders in plain English. Combine orders with "and"/"then". Examples: "red alert", "divert power from weapons to sensors", "take us to 4,000 km of the Kestrel", "lower shields and evacuate the crew", "tell the Prefect this is a humanitarian rescue", "offer them the cargo", "bluff that an ISA battle group is on the way", "use the tractor beam as a shield", "vent plasma for cover", "eject the Kestrel\'s core", "status", "options".',
   invalidAction: () => 'An order failed schema validation and was ignored.',
   outcome: (v, s) => `${s.provenance.timeline === 'canonical' ? 'MISSION ENDED (canonical record)' : 'SIMULATION ENDED'} — ${v.title}. ${v.summary}`,
   objectiveNew: (v) => `New objective: ${v.text}.`,
@@ -203,7 +203,7 @@ const T: Record<string, TemplateFn> = {
 
   // ---- Passenger
   passengerWakesOnKestrel: () => '"…Is anyone there? The stasis pod is failing — please, whoever you are—" (signal from the Kestrel\'s aft compartment)',
-  passengerAsksAsylum: (v) => `"I'm asking the Agency for asylum. ${v.kind === 'defector' ? 'I know things about the Directorate fleet you will want to hear.' : v.kind === 'prisoner' ? 'I can prove what they are doing in the colonies.' : 'My brother will not stop until he has me back.'}"`,
+  passengerAsksAsylum: (v) => `"I'm asking the ISA for asylum. ${v.kind === 'defector' ? 'I know things about the Directorate fleet you will want to hear.' : v.kind === 'prisoner' ? 'I can prove what they are doing in the colonies.' : 'My brother will not stop until he has me back.'}"`,
   passengerIntel_defector: () => '"Their Vigil-class cruisers share a flaw: the aft shield emitter drifts out of alignment under pursuit load. Aim torpedoes there."',
   passengerIntel_prisoner: () => '"I have recordings from the labour colony. Under the border accords that is a crime — show them to the Prefect if you must."',
   passengerIntel_sibling: () => '"Sorel is my brother. He is proud, but not cruel. If you appeal to him on my behalf he may listen."',
@@ -212,8 +212,8 @@ const T: Record<string, TemplateFn> = {
   passengerOffersToTalk: () => '"Let me speak to my brother. Put me on the channel — appeal to him through me."',
 
   // ---- Vane
-  vaneFirst: (_v, s) => `"Agency vessel, this is Prefect Sorel Vane of the Ashen Covenant. You are inside the Tessarine claim. The Kestrel is carrying a fugitive from Directorate justice. ${s.variant.temperament === 'hardliner' ? 'Stand aside or be removed.' : 'Stand aside and there need be no incident.'}"`,
-  vaneDemand: (v) => `"Agency vessel, this is Prefect Sorel Vane. You will move away from the freighter Kestrel. She carries a fugitive of the Directorate. ${v.temp === 'hardliner' ? 'This is your only warning.' : 'I would prefer this ended quietly.'}"`,
+  vaneFirst: (_v, s) => `"ISA vessel, this is Prefect Sorel Vane, commanding the Ashen Covenant. You are inside the Tessarine claim. The Kestrel is carrying a fugitive from Directorate justice. ${s.variant.temperament === 'hardliner' ? 'Stand aside or be removed.' : 'Stand aside and there need be no incident.'}"`,
+  vaneDemand: (v) => `"ISA vessel, this is Prefect Sorel Vane. You will move away from the freighter Kestrel. She carries a fugitive of the Directorate. ${v.temp === 'hardliner' ? 'This is your only warning.' : 'I would prefer this ended quietly.'}"`,
   vaneRepeat: () => '"My position has not changed, Captain."',
   vaneHumanitarian: (v, s) => (n(v, 'weaponsOnHim') ? '"You speak of mercy with your weapons locked on my ship?"' : s.variant.temperament === 'hardliner' ? '"Lives. Yes. Mine are at stake too, Captain. Be quick."' : '"…The Directorate does not murder civilians. Go on."'),
   vaneReassure: () => '"Words are cheap. Your actions will tell me what you are."',

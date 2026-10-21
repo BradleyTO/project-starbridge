@@ -46,7 +46,7 @@ function line(s: WorldState, key: string, vars: Record<string, string | number> 
   return { state: recordLine(s, { from: 'kestrel', intents: [], text: key }), report: comms('arden', key, vars) };
 }
 
-const SUGGEST = ['We come in peace. We are explorers from the Agency.', 'Who are your people?', 'We would like to establish contact.', 'Close the channel.'];
+const SUGGEST = ['We come in peace. We are explorers from the ISA.', 'Who are your people?', 'We would like to establish contact.', 'Close the channel.'];
 
 function conclude(s: WorldState, c: FirstContactState, approach: Approach, r: Report[]): Applied {
   const outcome = contactOutcome(c.disposition, approach);
@@ -117,12 +117,12 @@ export const CONTACT_TEMPLATES: Record<string, (v: Record<string, string | numbe
   contactPress_isolationist: () => 'We will not be studied. Your purpose.',
   contactPress_guarded: () => 'Last time: why are you here?',
   contactUnclear: (v) => ['We do not follow. Speak plainly: why have you come?', 'Your words do not translate well. Peace, trade, or something else?', 'We are waiting for your purpose, Halcyon.'][Number(v.v) % 3],
-  'contactOutcome_membership-talks': (v) => `Then you are welcome, Halcyon. The ${v.people} would hear what your Agency is — and what joining it would mean. Send your envoys; we will listen.`,
-  'contactOutcome_trade-contact': (v) => `Then we will trade knowledge, and perhaps goods. But understand: the ${v.people} will not join your Agency. We have seen what alliances cost.`,
+  'contactOutcome_membership-talks': (v) => `Then you are welcome, Halcyon. The ${v.people} would hear what the ISA is — and what joining it would mean. Send your envoys; we will listen.`,
+  'contactOutcome_trade-contact': (v) => `Then we will trade knowledge, and perhaps goods. But understand: the ${v.people} will not join the ISA. We have seen what alliances cost.`,
   'contactOutcome_wary-contact': (v) => `Words are easily spoken. The ${v.people} will watch what your ships do, not what you say. You may go.`,
-  contactOutcome_declined: () => 'Your courtesy is noted, Captain, and it is returned. Our answer is no. We want no contact with your Agency. Do not come back uninvited.',
+  contactOutcome_declined: () => 'Your courtesy is noted, Captain, and it is returned. Our answer is no. We want no contact with the ISA. Do not come back uninvited.',
   'contactOutcome_warned-off': () => 'Leave our system. Now. Do not mistake our patience for welcome.',
-  contactOutcome_hostile: (v) => `Then we understand each other. Leave — and tell your Agency the ${v.people} will be ready for the next ship.`,
+  contactOutcome_hostile: (v) => `Then we understand each other. Leave — and tell the ISA the ${v.people} will be ready for the next ship.`,
   contactAgain: () => 'We have said what we had to say, Halcyon.',
   contactFarewell: () => 'Go well, Halcyon.',
   contactCutOff: () => 'You came all this way to say nothing? Very well.',

@@ -83,7 +83,7 @@ export function withDuty(u: Universe, s: WorldState): WorldState {
   const live = u.dutyStatus() === 'active';
   const e = live ? u.exploration() : null;
   if (!live || !e) {
-    const off: DutyBridge = { live: false, location: 'Agency survey space', incoming: null, contact: null };
+    const off: DutyBridge = { live: false, location: 'ISA survey space', incoming: null, contact: null };
     const survey = s.survey?.live ? { systems: defaultSurvey(s.seed), course: null } : s.survey;
     return placeContact({ ...s, survey, duty: off }, null);
   }

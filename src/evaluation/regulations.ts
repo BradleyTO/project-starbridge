@@ -23,7 +23,7 @@ export const REGULATIONS: readonly Regulation[] = [
   { id: 'quarantine-1', title: 'Colonial Quarantine Accord §1', text: 'A colony’s quarantine is lawful and respected; an ISA ship may contest it only with evidence, never by force.' },
   { id: 'quarantine-2', title: 'Colonial Quarantine Accord §2', text: 'Contagion is never knowingly carried into a settlement or aboard an ISA ship without isolation.' },
   { id: 'honesty-1', title: 'Code of Conduct §4, Honesty', text: 'An ISA officer does not deceive the parties to a dispute about facts on which lives depend, and keeps commitments made on the record.' },
-  { id: 'asylum-1', title: 'Code of Conduct §9, Asylum', text: 'A person seeking the Agency’s protection is not handed to a power that would harm them.' },
+  { id: 'asylum-1', title: 'Code of Conduct §9, Asylum', text: 'A person seeking the ISA’s protection is not handed to a power that would harm them.' },
 ];
 
 export function regulation(id: string): Regulation | undefined {
