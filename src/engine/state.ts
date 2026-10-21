@@ -3,8 +3,9 @@ import { deriveStatus, clamp } from './rules';
 
 /** Pure state helpers. Each returns a new WorldState and never mutates its input. */
 
-export function addLog(s: WorldState, channel: LogChannel, speaker: string, text: string): WorldState {
-  return { ...s, log: [...s.log, { id: s.nextLogId, time: s.time, turn: s.turn, channel, speaker, text }], nextLogId: s.nextLogId + 1 };
+export function addLog(s: WorldState, channel: LogChannel, speaker: string, text: string, voice?: string): WorldState {
+  const entry = { id: s.nextLogId, time: s.time, turn: s.turn, channel, speaker, text, ...(voice ? { voice } : {}) };
+  return { ...s, log: [...s.log, entry], nextLogId: s.nextLogId + 1 };
 }
 
 export function patchShip(s: WorldState, id: ShipId, patch: Partial<Ship> | ((ship: Ship) => Partial<Ship>)): WorldState {

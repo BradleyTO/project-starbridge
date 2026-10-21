@@ -53,6 +53,11 @@ export const tallisScenario: ScenarioModule = {
   detectOutcome,
   templates,
   roleHolders: ROLE_HOLDERS,
+  // v0.6.1 voice hints (optional): a weary liner captain and a stern colony warden.
+  voices: () => ({
+    sabeth: { gender: 'female', locales: ['en-AU', 'en-NZ', 'en-ZA'], pitch: 1.04, rate: 1.06, candidates: ['Karen', 'Catherine', 'Microsoft Natasha'] },
+    marr: { gender: 'female', locales: ['en-GB', 'en-IE'], pitch: 0.86, rate: 0.93, candidates: ['Martha', 'Serena', 'Kate', 'Microsoft Hazel'] },
+  }),
   suggestions: (s) => {
     const ch = openChannel(s);
     if (ch && !s.outcome) {

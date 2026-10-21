@@ -156,4 +156,6 @@ export const bridgeScenario: ScenarioModule = {
   roleHolders: ROLE_HOLDERS,
   suggestions,
   contactDetails: () => [],
+  // v0.6.1: first-contact peoples speak through the contact slot ('arden'): a slow, low, unhurried voice.
+  voices: () => ({ arden: { label: 'First-contact speakers', gender: 'neutral', locales: ['en-IN', 'en-ZA', 'en-GB'], pitch: 0.8, rate: 0.9 } }),
 };

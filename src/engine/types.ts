@@ -279,6 +279,8 @@ export interface LogEntry {
   channel: LogChannel;
   speaker: string;
   text: string;
+  /** v0.6.1: who is speaking, for the voice cast (a crew character id, 'computer', 'narrator', 'npc:<scenario>:<id>' or 'label:<text>'). */
+  voice?: string;
 }
 
 export interface PendingEvent {

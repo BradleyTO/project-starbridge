@@ -31,7 +31,7 @@ export interface TurnResult {
 }
 
 function commitLogs(s: WorldState, reports: Report[], narrator: Narrator): WorldState {
-  for (const d of narrator.render(reports, s)) s = addLog(s, d.channel, d.speaker, d.text);
+  for (const d of narrator.render(reports, s)) s = addLog(s, d.channel, d.speaker, d.text, d.voice);
   return s;
 }
 

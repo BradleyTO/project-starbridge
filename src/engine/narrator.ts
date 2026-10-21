@@ -11,6 +11,8 @@ export interface LogDraft {
   channel: LogChannel;
   speaker: string;
   text: string;
+  /** Voice key of the speaker (see LogEntry.voice). */
+  voice?: string;
 }
 
 export interface Narrator {
@@ -35,6 +37,24 @@ export function resolveSpeaker(s: WorldState, scenario: ScenarioModule, speaker:
   return s.ships.halcyon.destroyed ? null : 'Ship computer';
 }
 
+/**
+ * v0.6.1: the voice key of a report's speaker, so the speech queue knows who is talking.
+ * Crew roles resolve to whoever holds the post (a relief officer has their own voice).
+ */
+export function resolveVoiceKey(s: WorldState, scenario: ScenarioModule, speaker: Report['speaker']): string {
+  if (typeof speaker === 'object' && 'label' in speaker) return `label:${speaker.label}`;
+  if (typeof speaker === 'object') {
+    const c = s.characters[speaker.character];
+    return c && c.ship !== 'halcyon' ? `npc:${s.scenarioId}:${speaker.character}` : speaker.character;
+  }
+  if (speaker === 'computer' || speaker === 'narrator') return speaker;
+  for (const id of scenario.roleHolders[speaker] ?? []) {
+    const c = s.characters[id];
+    if (c && c.status !== 'dead') return id;
+  }
+  return 'computer';
+}
+
 export class TemplateNarrator implements Narrator {
   private readonly scenario: ScenarioModule;
   constructor(scenario: ScenarioModule) {
@@ -48,7 +68,7 @@ export class TemplateNarrator implements Narrator {
       const t = this.scenario.templates[r.key];
       const text = t ? t(r.vars ?? {}, state) : `[${r.key}] ${JSON.stringify(r.vars ?? {})}`;
       if (!text) continue;
-      out.push({ channel: r.channel, speaker, text });
+      out.push({ channel: r.channel, speaker, text, voice: resolveVoiceKey(state, this.scenario, r.speaker) });
     }
     return out;
   }

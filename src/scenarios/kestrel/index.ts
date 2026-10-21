@@ -50,6 +50,14 @@ export const kestrelScenario: ScenarioModule = {
   detectOutcome,
   templates,
   roleHolders: ROLE_HOLDERS,
+  // v0.6.1 voice hints (optional): how the people on comms should sound.
+  voices: (s) => ({
+    arden: { gender: 'male', locales: ['en-US', 'en-CA'], pitch: 0.88, rate: 1.02, candidates: ['Fred', 'Tom', 'Microsoft Mark', 'Microsoft David'] },
+    vane: { gender: 'male', locales: ['en-GB', 'en-ZA'], pitch: 0.76, rate: 0.92, candidates: ['Gordon', 'Arthur', 'Microsoft George', 'Microsoft James'] },
+    passenger: s.variant.passenger === 'prisoner'
+      ? { gender: 'male', locales: ['en-IN', 'en-GB'], pitch: 1.0, rate: 0.98, candidates: ['Rishi', 'Microsoft Ravi'] }
+      : { gender: 'female', locales: ['en-ZA', 'en-GB', 'en-AU'], pitch: 1.06, rate: 0.96, candidates: ['Tessa', 'Fiona'] },
+  }),
   suggestions: (s) => {
     // v0.5: on an open channel, suggest things to say (the other party's own suggestions first).
     const ch = openChannel(s);

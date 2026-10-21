@@ -2,6 +2,7 @@ import type { Rng } from './rng';
 import type { Applied, ScenarioHooks } from './reduce';
 import type { Objective, Outcome, ShipId, WorldState } from './types';
 import type { SpeakerRole } from './report';
+import type { VoiceHint } from '../voice/profiles';
 
 export type TemplateFn = (vars: Record<string, string | number>, s: WorldState) => string;
 
@@ -23,4 +24,6 @@ export interface ScenarioModule {
   suggestions(s: WorldState): string[];
   /** Player-visible sensor details for a contact (only what the crew actually knows). */
   contactDetails(s: WorldState, id: ShipId): string[];
+  /** v0.6.1 (optional): voice hints for the scenario's own characters, by character id. */
+  voices?(s: WorldState): Record<string, VoiceHint>;
 }
