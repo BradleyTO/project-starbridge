@@ -148,7 +148,7 @@ The brief proposes five phases (A–E). Adjusted to the real architecture, I rec
   - **Markers:** named flags that count as responsible or reckless (Tallis: medical team sent before a diagnosis without an isolation ward = reckless; isolation ward first = responsible).
   - **Regulations** cited, and **competencies** exercised.
 - **Reckless vs responsible success:** two runs with the same ending get different evaluations when their signals differ. For example, Kestrel "rescue corridor" with shields down beside a hostile cruiser and a broken promise, against the same ending with an interposed, shielded Halcyon and every promise kept.
-- **Defensible ethical failure:** if the ending is a failure but the captain's decisions fit a scenario's "principled" marker, the report records a *principled decision* commendation note. Examples: refusing to fire on the liner; refusing an order to hand over a refugee, with the reasoning logged.
+- **Defensible ethical failure:** if the ending is a failure but the captain's decisions fit a scenario's "principled" marker, the report records a *principled decision* commendation note. Examples: holding fire on the Tallis picket; refusing an order to hand over a refugee, with the reasoning logged.
 - **No percentage score.** The report is sections of findings with evidence (§5.3).
 
 ### 3.5 AI and dialogue cost
@@ -223,11 +223,11 @@ The brief proposes five phases (A–E). Adjusted to the real architecture, I rec
    - Tallis "Line Lifted" by evidence → strengths include scientific reasoning and diplomacy.
    - Tallis "Agency Care" by tow → resource and emergency leadership.
    - Kestrel "negotiated release" → communications and diplomacy.
-   - Kestrel "standoff broken" by force → tactical, with escalation noted (brief test 4).
+   - Kestrel "Driven Off" (weapons used) against "Standoff Broken" (no shot fired) → tactical in both, with escalation noted only in the first (brief test 4).
 5. **Reckless vs responsible:**
-   - Tallis, the same success ending reached (a) after an isolation ward and (b) with a medical team sent unprotected then contained by luck of timing: the evaluations differ in the crew-safety section and the "areas to improve".
+   - Tallis, the same success ending reached (a) with the exposure precautions the scenario already tracks and (b) without them, where the crew happened not to be infected: the evaluations differ in the crew-safety section and the "areas to improve".
    - Kestrel "rescue corridor" with shields down beside the cruiser, against interposed and shielded: the risk findings differ (brief test 5).
-6. **Principled failure recognised:** a Tallis run where the captain refuses to fire on the liner and the gate is lost anyway is still a failure, but carries a *principled decision* note.
+6. **Principled failure recognised:** a Tallis run where the captain refuses to fire on the colony's picket even while it fires on the liner (ending "Fire at the Gate") is still a failure, but carries a *principled decision* note.
 7. **No percentage:** the rendered report contains no "%" score and no single number grade.
 8. **Determinism:** the same seed and orders give an identical evaluation.
 9. **Trace inertness:** for every existing scripted playthrough (the whole current suite), the final state with the trace removed is identical to v0.6.1's.
@@ -261,7 +261,7 @@ The brief proposes five phases (A–E). Adjusted to the real architecture, I rec
 >
 > **Crew safety:** no exposure. **Civilian safety:** no further deaths.
 >
-> **Regulations:** quarantine authority respected (Colonial Quarantine Accord §2). No weapons used.
+> **Regulations:** quarantine authority respected (proposed new regulation: Colonial Quarantine Accord §2). No weapons used.
 >
 > **Strengths:** scientific reasoning; communications.
 >
