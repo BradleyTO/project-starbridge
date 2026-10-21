@@ -32,6 +32,10 @@ import { useUniverse } from './ui/useUniverse';
 import { ModeBanner } from './ui/components/ModeBanner';
 import { Hub, type HubTab } from './ui/components/Hub';
 import { RecordPanel } from './ui/components/RecordPanel';
+import { HandbookPanel, type HandbookView } from './ui/components/HandbookPanel';
+import { handbookRequest, type HandbookRequest } from './handbook/command';
+import { playedScenarios } from './handbook';
+import { SIMULATIONS } from './scenarios/catalogue';
 import { ArchivePanel } from './ui/components/ArchivePanel';
 import { UniversePanel } from './ui/components/UniversePanel';
 import { SettingsPanel } from './ui/components/SettingsPanel';
@@ -47,7 +51,7 @@ import './App.css';
 
 const BEAT_MS = 3500;
 const VOICE_KEY = 'starbridge.voice';
-const APP_VERSION = '0.7.1';
+const APP_VERSION = '0.8.0';
 const TRAINING_ID = TRAINING[0].id;
 const AMBIENT_MS = 22000;
 const interpreter = new OfflineInterpreter();
@@ -127,6 +131,9 @@ function initialSeed(): number | string {
   return q && q.trim() ? q.trim() : randomSeed();
 }
 
+/** v0.8.0: catalogue number to scenario id (handbook training references). */
+const scenarioOfSim = (n: number) => SIMULATIONS.find((x) => x.number === n)?.scenarioId;
+
 export default function App() {
   const { universe, rev, touch } = useUniverse(APP_VERSION);
   captainAddress = universe.address();
@@ -163,6 +170,15 @@ export default function App() {
   // v0.7: the one-time naming prompt (new captains and pre-v0.7 saves), and the Service Record view.
   const [askName, setAskName] = useState(() => universe.needsName());
   const [recordView, setRecordView] = useState<{ section: RecordSection; report: string | null }>({ section: 'overview', report: null });
+  // v0.8.0: the Captain's Handbook view. Opening it (Hub, bridge command, a citation) changes no game state.
+  const [handbookView, setHandbookView] = useState<HandbookView>({ kind: 'contents' });
+  const openHandbook = (v: HandbookView | HandbookRequest) => {
+    setHandbookView(v);
+    setHubTab('handbook');
+  };
+  const openArticle = (id: string) => openHandbook({ kind: 'article', id });
+  const openHandbookRef = useRef(openHandbook);
+  openHandbookRef.current = openHandbook;
   const onBridge = meta.timeline === 'bridge';
   const timeline: Timeline = meta.timeline === 'bridge' ? 'simulation' : meta.timeline;
   const scenario = scenarioFor(state.scenarioId);
@@ -244,6 +260,13 @@ export default function App() {
 
   const onCommand = useCallback(
     async (text: string) => {
+      // v0.8.0: "computer, open the handbook" / "show me article B.1": opens the handbook and nothing else.
+      // It never reaches the interpreter or the engine, so no order is issued, no time passes and no state changes.
+      const hb = handbookRequest(text);
+      if (hb) {
+        openHandbookRef.current(hb);
+        return;
+      }
       setBusy(true);
       try {
         const fam = universe.familiarity();
@@ -550,7 +573,7 @@ export default function App() {
           )}
         </div>
         <nav className="controls" aria-label="Simulation controls">
-          <button className="btn hub-btn" onClick={() => setHubTab(luOn ? 'universe' : 'archive')} data-testid="open-hub" title="Active Duty, Mission Archive, Service Record">Hub</button>
+          <button className="btn hub-btn" onClick={() => setHubTab(luOn ? 'universe' : 'archive')} data-testid="open-hub" title="Active Duty, Mission Archive, Service Record, Captain's Handbook">Hub</button>
           {introRunning && (
             <button className="btn ghost" onClick={() => dispatch({ type: 'skipIntro' })} data-testid="skip-intro">Skip intro</button>
           )}
@@ -597,10 +620,11 @@ export default function App() {
       )}
       {!askName && showCommission && duty === 'pending' && <CommissionCeremony captain={universe.address()} onAccept={acceptCommission} onLater={() => { setShowCommission(false); flash('Fleet Command will wait. Answer from the Active Duty tab, or say "I accept the commission".'); }} />}
       {hubTab && (
-        <Hub tab={hubTab} onTab={(t) => { if (t === 'record') setRecordView({ section: 'overview', report: null }); setHubTab(t); }} onClose={() => { setHubTab(null); setRecordView({ section: 'overview', report: null }); }} tabs={['universe', 'archive', 'record', 'voices', 'settings']}>
+        <Hub tab={hubTab} onTab={(t) => { if (t === 'record') setRecordView({ section: 'overview', report: null }); setHubTab(t); }} onClose={() => { setHubTab(null); setRecordView({ section: 'overview', report: null }); }} tabs={['universe', 'archive', 'record', 'handbook', 'voices', 'settings']}>
           {hubTab === 'universe' && <UniversePanel key={rev} universe={universe} actions={universeActions} />}
           {hubTab === 'archive' && <ArchivePanel key={rev} entries={universe.archive()} actions={{ ...archiveActions, onResume: universeActions.onResume }} />}
-          {hubTab === 'record' && <RecordPanel key={`${recordView.section}-${recordView.report ?? ''}`} canon={universe.canon()} familiarity={universe.familiarity()} profile={universe.profile()} service={universe.service()} training={universe.training()} onRename={renameCaptain} initialSection={recordView.section} initialReport={recordView.report} />}
+          {hubTab === 'record' && <RecordPanel key={`${recordView.section}-${recordView.report ?? ''}`} canon={universe.canon()} familiarity={universe.familiarity()} profile={universe.profile()} service={universe.service()} training={universe.training()} onRename={renameCaptain} initialSection={recordView.section} initialReport={recordView.report} onCite={openArticle} />}
+          {hubTab === 'handbook' && <HandbookPanel key={JSON.stringify(handbookView)} view={handbookView} onView={setHandbookView} played={playedScenarios(universe.training())} scenarioOf={scenarioOfSim} />}
           {hubTab === 'voices' && (
             <VoicePanel members={voiceMembers} cast={voiceCast} voices={deviceVoices} settings={voiceSettings} supported={speechSynthesisSupported()} onSettings={updateVoiceSettings} onPreview={previewVoice} />
           )}
@@ -671,7 +695,7 @@ export default function App() {
         </aside>
       </main>
       <footer className="footer">
-        Project Starbridge v{APP_VERSION} (evaluation & records) · Simulation Mode & Active Duty · Original fiction and artwork · Typed orders always available; voice where supported.
+        Project Starbridge v{APP_VERSION} (Captain's Handbook) · Simulation Mode & Active Duty · Original fiction and artwork · Typed orders always available; voice where supported.
       </footer>
     </div>
   );

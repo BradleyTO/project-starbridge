@@ -63,7 +63,7 @@ export function issueKestrelDirective(c: CanonicalState, appVersion: string): Mi
       title: 'Fleet Directive 7-Tessarine: the Kestrel distress beacon',
       missionTitle: 'The Kestrel Incident',
       briefing:
-        'Fleet Command directs the Halcyon to respond to a civilian distress beacon from the freighter Kestrel inside the disputed Tessarine Reach. A Directorate cruiser is reported in the area. Border Accords rescue exemption applies. Acknowledge within six hours.',
+        'Fleet Command directs the Halcyon to respond to a civilian distress beacon from the freighter Kestrel inside the disputed Calloway Reach. A Directorate cruiser is reported in the area. Border Accords rescue exemption applies. Acknowledge within six hours.',
       mission: { kind: 'bridge', scenarioId: KESTREL },
       expiresInMin: 6 * 60,
       event: { title: 'Fleet directive: respond to the Kestrel', summary: 'Mandatory directive issued to the Halcyon by Fleet Command.', ships: ['ISV Halcyon', 'Kestrel'], characters: [], factions: ['concord', 'independent', 'directorate'], classification: 'directive', authority: 'fleet-command', status: 'pending' },
@@ -118,10 +118,10 @@ export function issueReachPatrol(c: CanonicalState, appVersion: string): Mission
       authority: 'fleet-command',
       title: 'Voluntary: Reach patrol (new contact)',
       missionTitle: 'Reach patrol: a new Kestrel-class incident',
-      briefing: 'Fleet asks for volunteers to patrol the Tessarine Reach, where another distress contact has been reported. A fresh situation every time.',
+      briefing: 'Fleet asks for volunteers to patrol the Calloway Reach, where another distress contact has been reported. A fresh situation every time.',
       mission: { kind: 'bridge', scenarioId: KESTREL },
       expiresInMin: null,
-      event: { title: 'Request: Reach patrol', summary: 'Fleet asks for a volunteer patrol of the Tessarine Reach.', ships: ['ISV Halcyon'], characters: [], factions: ['concord'], classification: 'assignment', authority: 'fleet-command', status: 'pending' },
+      event: { title: 'Request: Reach patrol', summary: 'Fleet asks for a volunteer patrol of the Calloway Reach.', ships: ['ISV Halcyon'], characters: [], factions: ['concord'], classification: 'assignment', authority: 'fleet-command', status: 'pending' },
     },
     appVersion,
   );

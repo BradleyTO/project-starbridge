@@ -81,6 +81,19 @@ There are two linked clocks. The **tactical clock** runs inside any bridge sessi
 
 All names, ships, factions and artwork are original. The interface is *inspired by* classic sci-fi console design but uses no copyrighted artwork, fonts or names.
 
+## Captain's Handbook (v0.8.0)
+
+The ISA's regulations are published in-game as **ISA-COM-001, *Captain's Code and Operational Regulations*** (First Edition, Draft 2, pending approval): 42 articles in nine chapters and an annex of treaties. Open it from the **Command Hub → Captain's Handbook**, or say so on the bridge, in a simulation or on Active Duty:
+
+- "Computer, open the handbook"
+- "Show me article B.1" (also "Art. D.7", "Reg. 7.2", "roe-1")
+- "Show me the regulation on first contact"
+- "What are the quarantine regulations?"
+
+Opening the handbook issues no order and takes no time; close it and you are exactly where you were. Each article sets its **authoritative text** apart from the commentary (explanation, when it applies, exceptions, examples, related articles, training references) and states its **legal status** and **enforcement status**, meaning how far the game checks it today. Training references never describe a simulation, and those that would give something away appear only after you have run it. Regulations cited in after-action reports and disciplinary reviews are links to their articles.
+
+`npm run handbook:export` writes the handbook as Markdown (`handbook-export/ISA-COM-001.md`) from the same database the game uses (`src/handbook/articles.ts`). Article ids are permanent; the wording changes only by an approved revision (see SCENARIO_GUIDE §6b).
+
 ## Service Record, after-action reports and your name (v0.7)
 
 - **Your name.** On first launch (or once, for a save from before v0.7) you are asked for your captain's name. It is the only name you can choose: the Halcyon, her crew, the people you meet, worlds, factions and ISA departments keep theirs ("rename the ship" and "call helm Bob" are politely declined). Change it any time in **Hub → Service Record → Career Overview**; nothing else on the record changes. Formal address is rank plus surname ("Captain Morgan"). Names are 2–32 characters: letters (accents welcome), spaces, hyphens, apostrophes and periods.
@@ -380,6 +393,7 @@ The app deploys to Vercel as a Vite static site plus serverless functions in `ap
 - **Canonical time moves only on patrol, travel and missions.** Waiting on the bridge, chatting, or a long first-contact conversation does not advance the galaxy clock.
 - **v0.7 limits.** No promotions, Fleet Command requests channel, qualifications or board of inquiry in play yet (data models and unit tests only). The captain's name is used in the personnel record, reports, the commission and the bridge greeting, not yet throughout every scenario's dialogue (scenario NPCs still say "Captain"). Rank changes are available only from the development selector in Settings. Evaluation describes the final state and a turn trace; it is deterministic and rule-based, not an AI judgment.
 - **v0.7.1 limits (idle bridge and Fleet Command).** "Hail the ISA" / "contact Fleet Command" is a one-shot exchange with an offline duty officer (your training record, and what is coming), not a persistent channel; assignment, supply, personnel and legal requests come later. With exactly one contact on sensors, an unrecognised ship name still hails that contact. "Who is out there?" is not recognised (use "any contacts?" or "scan"). In simulations, generic class words ("freighter", "cruiser") still refer to that scenario's ships. Held-out Fleet/career phrasings passed 12/12, 10/10 and 7/7 negatives on the first run, but they were written by the same author who then built the classifier.
+- **v0.8.0 limits (handbook).** The handbook is the First Edition, Draft 2, pending approval. Evaluations and crew refusals still apply the pre-edition (v0.7) wording, which the handbook keeps as revision 0. They move to the First Edition text in v0.8.2, with the behaviour changes that the enforcement notes describe; until then, for example, a refused order is still reported as B.1 "Breached". Crew do not quote or explain regulations yet (v0.8.1). Bridge commands are rule-based: a phrasing they don't catch goes to the interpreter as usual. Use the Hub tab or search instead.
 - **v0.6.1 crew voices are untested on real devices.**
   - Casting and the speech queue are tested with mocked voice lists (unit tests and the smoke test), not by listening.
   - Which voices exist depends on the device and the voices installed. iOS Safari often exposes only a few English voices (plus novelty ones, which are excluded). Android Chrome usually exposes one voice per locale. Desktop Chrome on Windows has three local voices plus cloud "Google" voices, which are off by default.
@@ -397,6 +411,8 @@ The app deploys to Vercel as a Vite static site plus serverless functions in `ap
 - [x] **v0.6** — Multi-scenario training simulations: catalogue, launch by name or number, simulation #2 (Quarantine at Tallis Gate), authoring guide and 30-simulation roadmap.
 - [x] **v0.6.1** — Distinct crew voices from the browser's free built-in voices, with a preview and override panel.
 - [x] **v0.7** — Evaluation & Records Foundation: the captain's name, ranks (data), after-action reports, competencies in words, Training and Service Records, and the Fleet request foundation (offline).
+- [x] **v0.8.0** — Captain's Handbook foundation: the ISA-COM-001 regulation database, in-game handbook, search, bridge commands, clickable citations and print export (no grading changes).
+- [ ] **v0.8.1 / v0.8.2** — Crew who cite and explain regulations; evaluations, refusals and reviews moved to the approved First Edition wording.
 - [ ] **Next** — Server-side AI narration and character responses with schema validation, timeouts, usage limits and template fallback; server-side accounts and credits.
 - [ ] **Milestone 4** — Branching outcomes, mission evaluation, full save/resume, voice controls.
 - [ ] **Milestone 5** — Multi-playthrough testing, state-consistency fixes, stable release.

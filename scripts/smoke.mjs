@@ -1,9 +1,10 @@
-// Headless smoke test: v0.6.1 (crew voices), v0.6 (multi-scenario + Training Simulation 002), v0.5 / M3.1 (bridge-first startup, Active Duty, organic traffic, science, first contact)
+// Headless smoke test: v0.8.0 (Captain's Handbook, scripts/smoke-handbook.mjs), v0.7 / v0.7.1 (records, idle bridge), v0.6.1 (crew voices), v0.6 (multi-scenario + Training Simulation 002), v0.5 / M3.1 (bridge-first startup, Active Duty, organic traffic, science, first contact)
 // plus the v0.2–v0.4 checks (which now enter their simulations from the bridge, as a player does).
 // Usage: npm run build && npx vite preview --port 4173 &  then  node scripts/smoke.mjs [url]
 // Env: SHOTS_DIR (default ./smoke-shots)
 import { chromium } from 'playwright';
 import fs from 'node:fs';
+import { handbookSmoke } from './smoke-handbook.mjs';
 
 const URL = process.argv[2] || process.env.SMOKE_URL || 'http://localhost:4173/';
 const SHOTS = process.env.SHOTS_DIR || './smoke-shots';
@@ -987,6 +988,11 @@ for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape',
   await pa.screenshot({ path: `${SHOTS}/v071-05-phone.png`, fullPage: true });
   await ctxA.close();
 }
+
+// ============================================================== v0.8.0 =====
+// The Captain's Handbook: contents, articles, search, bridge commands in every timeline (state untouched),
+// report citations, spoiler safety, desktop and phone width.
+await handbookSmoke({ browser, URL, SHOTS, check, errors, stubs });
 
 check('no console errors', errors.length === 0, errors.join(' | '));
 await browser.close();

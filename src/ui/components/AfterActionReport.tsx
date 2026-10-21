@@ -1,6 +1,7 @@
 import { CONDUCT_LABEL, TIER_LABEL } from '../../evaluation/evaluate';
 import { competencyLabel } from '../../evaluation/competencies';
 import type { Evaluation, Finding } from '../../evaluation/types';
+import { CitationLink } from './HandbookPanel';
 
 const RESULT: Record<Evaluation['objectives'][number]['result'], string> = { achieved: 'Achieved', missed: 'Not achieved', failed: 'Failed' };
 const JUDGMENT: Record<string, string> = { responsible: 'Responsible', reckless: 'Reckless', principled: 'Principled', decisive: 'Decisive' };
@@ -19,7 +20,7 @@ function List({ items, testid }: { items: Finding[]; testid: string }) {
  * v0.7: the formal after-action report. Judges outcomes and judgment, not command sequences.
  * No score and no percentages: findings in words, with the evidence from the run.
  */
-export function AfterActionReport({ e, captain, onClose }: { e: Evaluation; captain: string; onClose?(): void }) {
+export function AfterActionReport({ e, captain, onClose, onCite }: { e: Evaluation; captain: string; onClose?(): void; /** v0.8.0: open a cited regulation in the handbook. */ onCite?(id: string): void }) {
   const date = e.atIso.slice(0, 10);
   const strengths = e.competencies.filter((c) => c.sign === 'strength');
   const concerns = e.competencies.filter((c) => c.sign === 'concern');
@@ -82,7 +83,7 @@ export function AfterActionReport({ e, captain, onClose }: { e: Evaluation; capt
         <ul className="aar-list" data-testid="aar-regulations">
           {e.regulations.map((r) => (
             <li key={r.id}>
-              <strong>{r.title}</strong>: {r.applied}
+              <CitationLink id={r.id} onOpen={onCite}><strong>{r.title}</strong></CitationLink>: {r.applied}
             </li>
           ))}
         </ul>

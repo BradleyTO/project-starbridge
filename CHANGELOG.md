@@ -2,6 +2,48 @@
 
 All notable changes to Project Starbridge are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.8.0] — 2026-10-21 — The Captain's Handbook (foundation)
+
+The first stage of the v0.8 handbook plan: ISA-COM-001, *Captain's Code and Operational Regulations*, First Edition, Draft 2 (pending approval), becomes the single regulation database of the game, readable in-game as an official publication. **No change to grading, evaluation outcomes or crew refusal behaviour** (those follow in v0.8.2 once the final wording is approved).
+
+### Added
+- **Regulation database** (`src/handbook/`). 42 articles in chapters A–I and Annex T, each with a permanent id, citation, former citation, chapter, title, authoritative text, explanation, when it applies, exceptions, proper and improper examples, related articles, spoiler-safe training references (with an after-played flag), revision history, legal status and enforcement status. Edition label: "First Edition, Draft 2, pending approval". The 15 pre-edition ids are unchanged; their v0.7 wording is kept verbatim as revision 0. API: `article`, `resolve`, `search`, `textAt`, `citedArticle`, `visibleTraining`.
+- **Captain's Handbook** in the Command Hub: contents, chapter and article views, set like a printed publication (reading measure, serif type, generous spacing; desktop and phone). The authoritative text is boxed apart from the commentary; each article shows its legal and enforcement status, related-article links, training references and revision history.
+- **Ranked search** by number ("B.1", "Art. B.1", "Annex T.4"), id ("roe-1"), earlier citation ("Reg. 7.2", "Rules of Engagement §1") and topic ("pathogen", "quarantine", "biological containment", "rules of engagement", "unlawful order", "first contact", "asylum", "warning shot", …).
+- **Bridge commands**, on station, in a simulation and on Active Duty: "computer, open the handbook", "show me article B.1", "show me the regulation on first contact", "what are the quarantine regulations", "what does the handbook say about asylum". They are routed before the interpreter: the computer only opens the article or results. No order, no time, no state change, and closing returns you exactly where you were. No crew member recites or advises (v0.8.1).
+- **Clickable citations.** Every regulation in an after-action report, and the rule of every disciplinary review in the Service Record, opens its article. Display only; findings and stored reports are unchanged.
+- **Print export:** `npm run handbook:export` writes `handbook-export/ISA-COM-001.md` from the same database (authoritative text as a quoted block, commentary separate). Spoiler-safe by default; `-- --all` includes after-played references, marked.
+
+### Spoiler safety
+- After-played training references (asylum-1 and border-accords-9 → #1, quarantine-2 → #2) stay hidden until the Training Record shows that simulation was run. Enforcement notes that describe a simulation are withheld on the same terms.
+- Drafting material (status flags, change notes, appendices) is not shipped.
+
+### Changed
+- `src/evaluation/regulations.ts` is now a thin layer over the database. It returns the same 15 ids in the same order with byte-identical titles and texts (the v0.7 wording, revision 0), so evaluation output is unchanged. Wording that must be preserved until v0.8.2 includes the old titles ("Rules of Engagement §1, Non-combatants", "Reg. 7.4, Treaty law", "Code of Conduct §9, Asylum" …), the curly apostrophes in care-1, quarantine-1 and asylum-1, and the old short texts in the "Relevant: …" lines.
+- **Naming:** Active Duty briefings now say **Calloway Reach** (were "Tessarine Reach"). Briefings already saved keep their original text.
+- Docs: SCENARIO_GUIDE §6b. Simulations cite handbook article ids only, add spoiler-safe training references, and never add or reword regulations; a genuinely needed rule becomes a labelled exercise objective plus a proposal to the project owner. Also fixed a wrong path (`engine/roe.ts`, `universe/world.ts`) and CAREER_EXPANSION_PLAN (quarantine authority is §1).
+
+### Tests
+- `tests/v080/regulations-compat.test.ts`: the v0.7 catalogue verbatim versus the compatibility layer, plus revision 0 in the database.
+- `tests/v080/handbook.test.ts` covers:
+  - database shape and statuses;
+  - every regulation cited by simulations, the evaluator, refusals and reviews exists;
+  - search by number and topic;
+  - bridge-command recognition, including ordinary orders left alone, and routing ahead of the engine;
+  - exercise objectives are not regulations and don't leak;
+  - spoiler safety;
+  - v0.7.1 saves (training.v1, profile.v1, sim.v1, canon.v1) still load;
+  - simulation evaluations write no canonical discipline;
+  - print export;
+  - a wording lock (`tests/v080/fixtures/handbook-lock.json`).
+- All existing evaluator and refusal tests are unchanged and pass, including roe-1 "Breached" on a refused order.
+- Smoke (`scripts/smoke-handbook.mjs`, run by `npm run smoke`):
+  - contents, article, search and related links;
+  - the bridge commands on the idle bridge, in a simulation and on Active Duty, with clock, turn, log, objectives and every saved key compared before and after;
+  - report citation links;
+  - spoiler safety before and after a run;
+  - phone width.
+
 ## [0.7.1] — 2026-10-21 — The bridge knows where it is
 
 Fixes Brad's idle-bridge report: "what training do I need?" was "order not recognized", and "hail the ISA" asked "the Kestrel, the cruiser, or both?".

@@ -12,6 +12,8 @@ import { BAND_LABEL } from '../../evaluation/competencies';
 import { competencyViews } from '../../evaluation/record';
 import { CONDUCT_LABEL, TIER_LABEL } from '../../evaluation/evaluate';
 import { AfterActionReport } from './AfterActionReport';
+import { CitationLink } from './HandbookPanel';
+import { citedArticle } from '../../handbook';
 
 const CLASS: Record<WorldEvent['classification'], string> = {
   assignment: 'Voluntary',
@@ -36,6 +38,8 @@ export interface RecordProps {
   onRename(name: string): { ok: true } | { ok: false; reason: string };
   initialSection?: RecordSection;
   initialReport?: string | null;
+  /** v0.8.0: open a cited regulation in the Captain's Handbook (display only). */
+  onCite?(id: string): void;
 }
 
 /**
@@ -52,7 +56,7 @@ export function RecordPanel(props: RecordProps) {
   const captain = fullTitle(profile.name, service.rank);
   const all: Evaluation[] = [...service.evaluations, ...training.evaluations];
   const open = report ? all.find((e) => e.id === report) : undefined;
-  if (open) return <div className="record" data-testid="record"><AfterActionReport e={open} captain={captain} onClose={() => setReport(null)} /></div>;
+  if (open) return <div className="record" data-testid="record"><AfterActionReport e={open} captain={captain} onClose={() => setReport(null)} onCite={props.onCite} /></div>;
   return (
     <div className="record" data-testid="record">
       <p className="ceremony-header">ISA PERSONNEL · SERVICE RECORD · {name.toUpperCase()}</p>
@@ -71,7 +75,7 @@ export function RecordPanel(props: RecordProps) {
           <p className="muted">No requests on file. The secure channel to ISA Fleet Command (personnel, logistics, operations, training and legal) opens in a later update. The request system behind it is built and tested: requests are decided on the record, deferred requests are reconsidered when conditions change, and nothing is carried out without your confirmation.</p>
         </div>
       )}
-      {section === 'history' && <History canon={props.canon} service={service} onOpen={setReport} />}
+      {section === 'history' && <History canon={props.canon} service={service} onOpen={setReport} onCite={props.onCite} />}
     </div>
   );
 }
@@ -194,7 +198,7 @@ function Training({ training, familiarity, onOpen }: { training: TrainingRecord;
 }
 
 /** The canonical record: missions, discipline, world events, crew experience. */
-function History({ canon, service, onOpen }: { canon: DeepReadonly<CanonicalState> | null; service: ServiceRecord; onOpen(id: string): void }) {
+function History({ canon, service, onOpen, onCite }: { canon: DeepReadonly<CanonicalState> | null; service: ServiceRecord; onOpen(id: string): void; onCite?(id: string): void }) {
   return (
     <div data-testid="record-history">
       {!canon ? (
@@ -213,7 +217,7 @@ function History({ canon, service, onOpen }: { canon: DeepReadonly<CanonicalStat
               <ul className="discipline" data-testid="discipline">
                 {canon.discipline.map((d) => (
                   <li key={d.id} data-testid={`discipline-${d.id}`} data-finding={d.finding}>
-                    <strong>{d.rule.split(':')[0]}</strong> ({d.trigger}): {d.finding === 'pending' ? `pending; finding due ${clockLabel(d.openedAt + 12 * 60)}` : d.finding === 'no-action' ? 'closed, no action' : 'formal reprimand'}
+                    <CitationLink id={citedArticle(d.rule)?.id} onOpen={onCite}><strong>{d.rule.split(':')[0]}</strong></CitationLink> ({d.trigger}): {d.finding === 'pending' ? `pending; finding due ${clockLabel(d.openedAt + 12 * 60)}` : d.finding === 'no-action' ? 'closed, no action' : 'formal reprimand'}
                     <div className="muted small">{d.rule} Evidence: {d.evidence.join(' ')}</div>
                   </li>
                 ))}

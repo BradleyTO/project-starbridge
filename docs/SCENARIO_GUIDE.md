@@ -215,7 +215,7 @@ export const myEvaluation: EvaluationDescriptor = {
       text: 'Established the cause before sending anyone across.',
       when: (s) => before(factTurn(s, 'cause_known'), flagTurn(s, 'medicalSent')) },
   ],
-  regulations: ['care-1', 'quarantine-1'],  // ids from src/evaluation/regulations.ts
+  regulations: ['care-1', 'quarantine-1'],  // handbook article ids (ISA-COM-001, src/handbook) only
   competencies: ['scientific', 'diplomacy'],// what this exercise mainly tests (the roadmap's Command challenge)
   recommend: { scientific: 'Simulator drill: evidence before action.' },
 };
@@ -227,7 +227,11 @@ Rules:
 - **Different strategies must read differently.** Two runs that reach the same ending by force and by negotiation must produce different conduct, strengths and improvements. A failure reached by upholding the rules must be recognised (a `principled` marker). Test both (see `tests/v07/evaluation.test.ts`).
 - **Shared signals come free:** firing first, returning fire, holding fire, weapons locks, ordered fire on non-combatants, shields down under a lock, kept and broken promises, crew and civilian safety. Do not duplicate them.
 - **Words only.** Marker text is a full sentence ending with a period. No numbers, scores or percentages.
-- **Regulations** must exist in `src/evaluation/regulations.ts`. Add a new one there (with a short citation and text) if your scenario needs it, and keep it consistent with the ROE in `engine/world.ts`.
+- **Regulations come from the Captain's Handbook (ISA-COM-001) and nowhere else (since v0.8.0).** The handbook database in `src/handbook/articles.ts` is the single source of every regulation in the game. A simulation:
+  - **cites handbook article ids only** (`roe-1`, `care-4`, `quarantine-1` …) in `regulations` and in a marker's `regulation`. Never cite by article number ("B.1") or by prose: numbers can change between editions, ids never do. `tests/v080/handbook.test.ts` fails if any cited id is missing from the database.
+  - **adds spoiler-safe training references** to the articles it exercises (the `training` list of each article in `src/handbook/articles.ts`): a training reference names the simulation by catalogue number and title and gives a *training purpose* in one sentence ("Evidence before action: working with the science officer on an unknown illness."). Never describe what happens, who is involved or how it ends. If even the purpose would give something away, mark it after-played: the handbook then shows it only once the Training Record shows the simulation was run. Enforcement notes that name your simulation are likewise withheld until it has been run.
+  - **never adds, rewords or renumbers a regulation.** The handbook's wording is approved by the project owner; a scenario author does not change it, even to fit a scene. Keep scenario behaviour consistent with the rules of engagement in `engine/roe.ts` (crew refusals) and with the disciplinary rules in `universe/world.ts` (reviews).
+  - **when a scene genuinely needs a rule the handbook does not have**, make it a labelled **exercise objective** (an objective in your scenario, described as a training goal, never as a regulation; exercise objectives are not regulations, Article I.1), and send the project owner a proposal for a new article (suggested chapter, wording, rationale, and which simulations would exercise it). It enters the game only in a later handbook revision.
 - **Canon:** evaluations of simulations go only to the Training Record (`starbridge.training.v1`), never to canon.
 - **Names:** reports render the captain's chosen name from the profile. Never store or template the captain's name inside the descriptor; never offer a way to rename your ships, characters, worlds or factions.
 - **Test:** `tests/v07/evaluation.test.ts` checks every catalogue simulation has a well-formed descriptor. Add to your `tests/simNN/` one test that two strategies reaching the same (or a similar) ending get different conduct, and one that every ending id has a tier.

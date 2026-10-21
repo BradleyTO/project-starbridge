@@ -261,7 +261,7 @@ The brief proposes five phases (A–E). Adjusted to the real architecture, I rec
 >
 > **Crew safety:** no exposure. **Civilian safety:** no further deaths.
 >
-> **Regulations:** quarantine authority respected (proposed new regulation: Colonial Quarantine Accord §2). No weapons used.
+> **Regulations:** quarantine authority respected (Colonial Quarantine Accord §1; ISA-COM-001 Annex T.4, id `quarantine-1`). No weapons used.
 >
 > **Strengths:** scientific reasoning; communications.
 >

@@ -1,0 +1,311 @@
+{
+ "cmd-1": {
+  "number": "A.1",
+  "revision": 1,
+  "revisions": [
+   "1:42508c1be1335c6e"
+  ]
+ },
+ "cmd-2": {
+  "number": "A.2",
+  "revision": 1,
+  "revisions": [
+   "1:cbd9ef1d593a1fad"
+  ]
+ },
+ "cmd-3": {
+  "number": "A.3",
+  "revision": 1,
+  "revisions": [
+   "1:de3c22cd61c84d03"
+  ]
+ },
+ "cmd-4": {
+  "number": "A.4",
+  "revision": 1,
+  "revisions": [
+   "1:686ddae8169945a8"
+  ]
+ },
+ "cmd-5": {
+  "number": "A.5",
+  "revision": 1,
+  "revisions": [
+   "1:f339887a3404b88a"
+  ]
+ },
+ "roe-1": {
+  "number": "B.1",
+  "revision": 1,
+  "revisions": [
+   "0:5ca4300e165ee6ee",
+   "1:75864777e37a6584"
+  ]
+ },
+ "roe-2": {
+  "number": "B.2",
+  "revision": 1,
+  "revisions": [
+   "0:94c317726e127bb6",
+   "1:0f235dd8a0f15ba2"
+  ]
+ },
+ "roe-3": {
+  "number": "B.3",
+  "revision": 1,
+  "revisions": [
+   "0:6c89c4cc2fad54ea",
+   "1:5d22ba5c787b79e1"
+  ]
+ },
+ "roe-4": {
+  "number": "B.4",
+  "revision": 1,
+  "revisions": [
+   "1:0ed248916a61fe95"
+  ]
+ },
+ "roe-5": {
+  "number": "B.5",
+  "revision": 1,
+  "revisions": [
+   "1:63346d3de4d4e458"
+  ]
+ },
+ "care-1": {
+  "number": "C.1",
+  "revision": 1,
+  "revisions": [
+   "0:342e4b8ea381a905",
+   "1:2a42571c3dafdd50"
+  ]
+ },
+ "care-2": {
+  "number": "C.2",
+  "revision": 1,
+  "revisions": [
+   "0:0525ba546eb332ad",
+   "1:41685bd2ef3273a1"
+  ]
+ },
+ "care-3": {
+  "number": "C.3",
+  "revision": 1,
+  "revisions": [
+   "1:5a22ef383a350e08"
+  ]
+ },
+ "care-4": {
+  "number": "C.4",
+  "revision": 1,
+  "revisions": [
+   "1:14b7bb3181c56089"
+  ]
+ },
+ "reg-12": {
+  "number": "D.1",
+  "revision": 1,
+  "revisions": [
+   "0:7f579015f12b31bd",
+   "1:5784b7eb6f664ef0"
+  ]
+ },
+ "orders-2": {
+  "number": "D.2",
+  "revision": 1,
+  "revisions": [
+   "1:d6a768cd1799c053"
+  ]
+ },
+ "reg-7.1": {
+  "number": "D.3",
+  "revision": 1,
+  "revisions": [
+   "0:29ed333996a1cdb2",
+   "1:d4aa7dde24d18b6a"
+  ]
+ },
+ "reg-7.2": {
+  "number": "D.4",
+  "revision": 1,
+  "revisions": [
+   "0:d20364666f445b07",
+   "1:193e1e89c406cc95"
+  ]
+ },
+ "reg-7.3": {
+  "number": "D.5",
+  "revision": 1,
+  "revisions": [
+   "0:6167680979c7f10c",
+   "1:bae99a03f5e1dc2b"
+  ]
+ },
+ "reg-7.4": {
+  "number": "D.6",
+  "revision": 1,
+  "revisions": [
+   "0:29c680e70db2a43a",
+   "1:3ade51a6b3afba87"
+  ]
+ },
+ "orders-1": {
+  "number": "D.7",
+  "revision": 1,
+  "revisions": [
+   "1:f5f67e3dda8cb888"
+  ]
+ },
+ "honesty-1": {
+  "number": "E.1",
+  "revision": 1,
+  "revisions": [
+   "0:34e519aadc13e2ef",
+   "1:66833dfaf6999c0f"
+  ]
+ },
+ "conduct-1": {
+  "number": "E.2",
+  "revision": 1,
+  "revisions": [
+   "1:b279791ee680486a"
+  ]
+ },
+ "conduct-2": {
+  "number": "E.3",
+  "revision": 1,
+  "revisions": [
+   "1:e30728023029e295"
+  ]
+ },
+ "asylum-1": {
+  "number": "F.1",
+  "revision": 1,
+  "revisions": [
+   "0:f56369e07405609d",
+   "1:a189609225226839"
+  ]
+ },
+ "asylum-2": {
+  "number": "F.2",
+  "revision": 1,
+  "revisions": [
+   "1:e03c9c2e18a649c4"
+  ]
+ },
+ "health-1": {
+  "number": "G.1",
+  "revision": 1,
+  "revisions": [
+   "1:6d229da696a6c2c1"
+  ]
+ },
+ "health-2": {
+  "number": "G.2",
+  "revision": 1,
+  "revisions": [
+   "1:8ad108c627db889c"
+  ]
+ },
+ "contact-1": {
+  "number": "H.1",
+  "revision": 1,
+  "revisions": [
+   "1:a62c1a1e55e78f62"
+  ]
+ },
+ "contact-2": {
+  "number": "H.2",
+  "revision": 1,
+  "revisions": [
+   "1:039f8b49bdcd4b4b"
+  ]
+ },
+ "contact-3": {
+  "number": "H.3",
+  "revision": 1,
+  "revisions": [
+   "1:a32a54d7ee7856f6"
+  ]
+ },
+ "service-1": {
+  "number": "I.1",
+  "revision": 1,
+  "revisions": [
+   "1:08825ee9d0d7eae1"
+  ]
+ },
+ "service-2": {
+  "number": "I.2",
+  "revision": 1,
+  "revisions": [
+   "1:13d940c23c9b8516"
+  ]
+ },
+ "service-3": {
+  "number": "I.3",
+  "revision": 1,
+  "revisions": [
+   "1:92277e6fe5835ed5"
+  ]
+ },
+ "service-4": {
+  "number": "I.4",
+  "revision": 1,
+  "revisions": [
+   "1:ec1169d4d14294e1"
+  ]
+ },
+ "service-5": {
+  "number": "I.5",
+  "revision": 1,
+  "revisions": [
+   "1:135e105df9afeed6"
+  ]
+ },
+ "service-6": {
+  "number": "I.6",
+  "revision": 1,
+  "revisions": [
+   "1:3532c731d4bd430e"
+  ]
+ },
+ "border-accords-4": {
+  "number": "T.1",
+  "revision": 1,
+  "revisions": [
+   "0:4a14c966d7f32af4",
+   "1:77864c0520ffb475"
+  ]
+ },
+ "border-accords-2": {
+  "number": "T.2",
+  "revision": 1,
+  "revisions": [
+   "1:026448c37859bf23"
+  ]
+ },
+ "border-accords-9": {
+  "number": "T.3",
+  "revision": 1,
+  "revisions": [
+   "1:629ff69d289dd025"
+  ]
+ },
+ "quarantine-1": {
+  "number": "T.4",
+  "revision": 1,
+  "revisions": [
+   "0:dc7556211713efb8",
+   "1:d0f1e8cbbf9fad4f"
+  ]
+ },
+ "quarantine-2": {
+  "number": "T.5",
+  "revision": 1,
+  "revisions": [
+   "0:80581db6691c057a",
+   "1:7be11a6f5b4f273d"
+  ]
+ }
+}

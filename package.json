@@ -1,7 +1,7 @@
 {
   "name": "project-starbridge",
   "private": true,
-  "version": "0.7.1",
+  "version": "0.8.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "typecheck": "tsc -b && tsc -p tsconfig.test.json --noEmit",
     "test": "vitest run",
-    "smoke": "node scripts/smoke.mjs"
+    "smoke": "node scripts/smoke.mjs",
+    "handbook:export": "node scripts/handbook-export.mjs"
   },
   "dependencies": {
     "react": "^19.2.8",
