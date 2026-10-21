@@ -168,6 +168,36 @@ The leak test (`LEAK` in `tests/sim02/helpers.ts`) fuzzes your scenario and fail
 
 Characters speak through `comms(characterId, key, vars)` and crew through `say(role, key, vars)`. Templates receive `(vars, state)`.
 
+## 6a. Voices (optional, recommended): `voices` in index.ts
+
+Since v0.6.1 every line in the log carries a voice key, so the speech queue knows who is speaking. Crew roles resolve to whoever holds the post, and your characters get `npc:<scenarioId>:<characterId>`. The bridge crew and the ship's computer are cast first, so their voices are the same in every simulation. Your characters are cast next, onto voices the crew is not using where the device has enough.
+
+Declare how your people should sound in the scenario module:
+
+```ts
+voices: (s) => ({
+  sabeth: { gender: 'female', locales: ['en-AU', 'en-NZ', 'en-ZA'], pitch: 1.04, rate: 1.06, candidates: ['Karen', 'Catherine'] },
+  marr:   { gender: 'female', locales: ['en-GB', 'en-IE'], pitch: 0.86, rate: 0.93, candidates: ['Martha', 'Serena', 'Microsoft Hazel'] },
+}),
+```
+
+| Field | Meaning |
+|---|---|
+| `gender` | `'female'`, `'male'` or `'neutral'` |
+| `locales` | English BCP-47 locales, best first. On Android, which usually exposes one voice per locale, this is what tells characters apart |
+| `candidates` | voice names, best first, matched as whole words. Apple: Samantha, Daniel, Karen, Moira, Tessa, Rishi, Martha, Arthur… Windows: Microsoft Zira, David, Mark, Hazel, George, Catherine… Android codes such as `en-gb-x-gbd` |
+| `pitch` | 0.5–1.6, where 1 is normal |
+| `rate` | 0.7–1.4, where 1 is normal |
+| `label` | optional name for the Crew voices panel |
+
+Rules:
+- **If you declare `voices`, declare every character who speaks on comms.** Characters you leave out are not listed and speak in the generic "Other speakers" voice. If you declare nothing, all non-crew characters are cast with neutral defaults.
+- Hints may depend on the seed (#1 picks the passenger's voice from who the passenger is).
+- Pick traits that make your two contacts sound unlike each other: a different gender, locale or pitch.
+- **Do not use these voices:** `Ship computer`, `Narrator` and crew voices belong to the Halcyon.
+- `{ label: '…' }` speakers (beacons, open broadcasts) use the generic voice.
+- **Test:** add a speaker-tagging case like the ones in `tests/v061/voices.test.ts`. Every spoken line must have a voice key, and your characters must appear in `castMembers(s, scenario)`.
+
 ## 7. Outcomes: outcome.ts
 
 - Export the list of endings with stable ids:
@@ -259,7 +289,7 @@ Then:
 ## 12. Daily-run checklist
 
 1. Pick the next **planned** entry in the roadmap. Mark it **in progress** and the previous one **done**.
-2. Write `src/scenarios/<name>/`: setup, agents, hooks, dialogue, outcome, templates, index. Copy #2 and replace its content.
+2. Write `src/scenarios/<name>/`: setup, agents, hooks, dialogue, outcome, templates, index (including `voices` hints, §6a). Copy #2 and replace its content.
 3. Add the catalogue entry and the registry line.
 4. Write `tests/simNN/` (§11) and play each ending yourself first (a scratch `_explore.test.ts` that prints the log is the fastest way; delete it afterwards).
 5. Add the smoke block.

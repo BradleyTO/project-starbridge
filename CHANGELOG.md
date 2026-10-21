@@ -2,6 +2,52 @@
 
 All notable changes to Project Starbridge are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.6.1] — 2026-10-20 — Crew voices
+
+### Added
+- **Distinct voices for the crew.** With Voice on, each bridge officer, the ship's computer, the narrator and the people on comms speak with their own voice. It uses the browser's built-in speech synthesis voices: free, no API keys, nothing downloaded, and offline with on-device voices.
+- **Voice profiles** (`src/voice/profiles.ts`). There is one each for the computer, the seven officers, the narrator, the relief officers, Fleet Command and other speakers. Each states:
+  - a gender;
+  - preferred English locales;
+  - ranked voice names across Apple, Windows/Edge, Chrome and Android;
+  - a base pitch and rate.
+  The computer is calm and neutral (pitch 1.0, rate 0.95).
+- **Deterministic casting** (`src/voice/cast.ts`) from `speechSynthesis.getVoices()`, re-read on the async `voiceschanged` event and a few times after load.
+  - **With enough voices:** every officer, the computer and the narrator get a different voice.
+  - **With few voices:** voices are shared, preferring the character's gender, and separated by pitch and rate. No two people have the same voice, pitch and rate.
+  - **With no voices:** the browser default at different pitches and rates.
+  - **Excluded:** cloud voices (unless allowed in the panel), Apple novelty voices and non-English voices.
+  - **Order:** the crew are cast before anyone on comms, so their voices are the same in every simulation.
+- **Scenario voice hints:** `ScenarioModule.voices` (optional). #1 declares voices for Captain Arden, Prefect Vane and the passenger (chosen by seed); #2 for Captain Sabeth and Warden-Commander Marr; the idle bridge for first-contact speakers. Documented in `docs/SCENARIO_GUIDE.md` §6a.
+- **Speaker tagging.** Every log line now carries a `voice` key (`LogEntry.voice`): a crew character id, `computer`, `narrator`, `npc:<scenario>:<id>` or `label:<text>`. The speech queue therefore always knows who is speaking. Relief officers speak in their own voices. Lines saved before v0.6.1 are matched by the speaker's name.
+- **Hub → Crew voices panel:**
+  - each officer's assigned voice, pitch and rate, with a Preview button;
+  - a voice, pitch and rate override per crew member, saved in this browser (`starbridge.voiceCast.v1`);
+  - a "Reset all to automatic" button;
+  - an "Also use online voices" checkbox;
+  - the comms voices for the current simulation, with previews.
+
+### Tests
+- **`tests/v061/voices.test.ts` (21 tests):**
+  - distinct voices with many voices (Mac, Edge, Android lists);
+  - casting to type;
+  - NPCs on voices the crew does not use;
+  - crew voices independent of the scenario;
+  - determinism under shuffled voice lists;
+  - cloud voices excluded unless allowed;
+  - graceful fallback with Android, 2, 1, 3, 0 and non-English-only voice lists;
+  - gender-preserving sharing;
+  - Android locale spread;
+  - overrides that win, reserve their voice, persist and survive malformed storage;
+  - speaker tagging in #1 and #2, relief officers, and pre-v0.6.1 log lines.
+- **The smoke test** uses a mocked voice list that arrives late via `voiceschanged`. It checks:
+  - 9 distinct crew voices;
+  - previews;
+  - an override that persists across reload, and Automatic restoring the cast voice;
+  - the phone layout;
+  - in #2, every spoken line spoken in its tagged speaker's voice, with Marr on a voice no officer uses;
+  - with two voices, no two crew members sounding the same.
+
 ## [0.6.0] — 2026-10-19 — Training simulations: multi-scenario support and simulation #2
 
 Starbridge will ship with 30 training simulations. This release adds the multi-scenario foundation and simulation #2. No AI is used; everything is deterministic, seeded and offline.

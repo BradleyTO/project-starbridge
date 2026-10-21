@@ -2,7 +2,7 @@
 
 A browser-based, AI-assisted **starship command simulator**. You command the exploration ship **ISV Halcyon** of the **Intergalactic Star Agency** (ISA), the service of the player's faction, **the Agency**, and complete dynamic training missions by giving natural-language orders. The long-term goal is integration with a physical starship bridge, so the UI is built to scale from tablets to dedicated bridge consoles.
 
-> **Status: v0.6.0 (training simulations: multi-scenario support and simulation #2, Quarantine at Tallis Gate).** The plan is 30 training simulations ([roadmap](docs/SCENARIO_ROADMAP.md)); two are playable. The app opens on the **bridge of the Halcyon**, not in a mission. Talk to the crew, ask science what is out there, and start a training simulation only when you ask for one ("Computer, list simulations", "Computer, begin the Kestrel Incident simulation"). When a simulation ends you are back on the bridge with a debrief. **Active Duty** (formerly "Living Universe") is the persistent canonical career. There is no mission menu: hails, distress calls, requests and science readings reach the bridge as canonical time passes, and you answer them in your own words. Orders and speech are read by a rule-based **offline interpreter**. No AI is used yet (see [Roadmap](#roadmap)).
+> **Status: v0.6.1 (crew voices: every officer, the ship's computer and the people on comms speak with their own voice; v0.6.0 added multi-scenario support and simulation #2, Quarantine at Tallis Gate).** The plan is 30 training simulations ([roadmap](docs/SCENARIO_ROADMAP.md)); two are playable. The app opens on the **bridge of the Halcyon**, not in a mission. Talk to the crew, ask science what is out there, and start a training simulation only when you ask for one ("Computer, list simulations", "Computer, begin the Kestrel Incident simulation"). When a simulation ends you are back on the bridge with a debrief. **Active Duty** (formerly "Living Universe") is the persistent canonical career. There is no mission menu: hails, distress calls, requests and science readings reach the bridge as canonical time passes, and you answer them in your own words. Orders and speech are read by a rule-based **offline interpreter**. No AI is used yet (see [Roadmap](#roadmap)).
 
 ## The bridge, Active Duty and two-way comms (v0.5 / M3.1)
 
@@ -80,6 +80,22 @@ There are two linked clocks. The **tactical clock** runs inside any bridge sessi
 | No credits left today | — | paused (no in-universe penalty) |
 
 All names, ships, factions and artwork are original. The interface is *inspired by* classic sci-fi console design but uses no copyrighted artwork, fonts or names.
+
+## Crew voices (v0.6.1)
+
+With **Voice on**, each bridge officer, the ship's computer, the narrator and the people on comms speak with their own voice. The voices are the browser's built-in speech synthesis voices: free, no API keys, nothing downloaded. **Hub → Crew voices** lists who sounds like what. Each person has a **Preview** button. You can override any crew member's voice, pitch or rate there; your choices are saved in this browser.
+
+- **Casting** (`src/voice/`) is deterministic and uses the voices the device offers (`speechSynthesis.getVoices()`, re-read on the async `voiceschanged` event).
+  - Each profile ranks voice names across Apple, Windows/Edge, Chrome and Android, and states a gender, preferred English locales, and a pitch and rate.
+  - The computer and the crew pick first, in a fixed order, so their voices are the same in every simulation. Characters on comms are cast next, onto voices the crew is not using where possible.
+- **When there are enough voices** (at least 9 usable English ones), every officer, the computer and the narrator get a different voice.
+- **When voices are scarce** (an iPhone with two English voices, or Windows with Zira, David and Mark):
+  - officers share voices, preferring one of their own gender, and are separated by pitch and rate;
+  - no two people ever have the same voice, pitch and rate;
+  - the computer always keeps its calm base settings.
+- **With no usable voice,** everyone uses the browser default at different pitches and rates.
+- **Offline by default.** Cloud voices (Chrome's "Google …", Edge's "Online (Natural)") and Apple's novelty voices are not used. A checkbox in the panel allows the cloud voices.
+- **Scenarios declare voice hints for their characters** (see [docs/SCENARIO_GUIDE.md](docs/SCENARIO_GUIDE.md) §6a). #1 and #2 do.
 
 ## Training simulations
 
@@ -263,6 +279,7 @@ src/
                        ships", "them") → clarifying questions; leftovers returned as `unparsed`
                        (the hook for a future AI interpreter); output validated by zod
     numbers.ts         "ten thousand", "10,000", "10k" → numbers
+  voice/                profiles.ts (crew voice profiles), cast.ts (deterministic voice casting), members.ts (who speaks)
   scenarios/catalogue.ts  The training simulation list (number, ids, name, launch words); archive and bridge read it
   scenarios/registry.ts   scenarioId → ScenarioModule
   scenarios/tallis/       Simulation #2 (same file layout as kestrel/, plus dialogue.ts)
@@ -277,6 +294,7 @@ src/
 api/command.ts         Serverless stub (no AI calls, no secrets); reserved for M3
 tests/                 Vitest: parser table, validator, reducer, NPCs, determinism, playthroughs, fuzz
 tests/universe/        Timeline isolation, archive, credits, world events / consequences
+tests/v061/            Crew voices: casting (many / few / no voices, determinism, overrides) and speaker tagging
 tests/sim02/           Simulation #2: setup, every ending, seed sweep, fuzz, catalogue/launch/archive/saves
 tests/v04/             The M3 critical interpreter regressions (before and after triggers)
 tests/eval/            Held-out order sets (v0.3, v0.4, v0.4b) + report-only evaluators
@@ -353,6 +371,11 @@ The app deploys to Vercel as a Vite static site plus serverless functions in `ap
 - **v0.5 first contact is short.** It is one exchange that decides the outcome, after any number of questions. Civilizations do not yet follow up, send envoys or change the wider galaxy (faction standing and tension are unaffected). Investigations are not listed in the Mission Archive and cannot be replayed as simulations.
 - **Fleet hails and distress calls are not two-way channels.** You answer them in words (accept, question, refuse, decline, ignore), but you cannot hold a conversation with Fleet Command or the hauler's crew.
 - **Canonical time moves only on patrol, travel and missions.** Waiting on the bridge, chatting, or a long first-contact conversation does not advance the galaxy clock.
+- **v0.6.1 crew voices are untested on real devices.**
+  - Casting and the speech queue are tested with mocked voice lists (unit tests and the smoke test), not by listening.
+  - Which voices exist depends on the device and the voices installed. iOS Safari often exposes only a few English voices (plus novelty ones, which are excluded). Android Chrome usually exposes one voice per locale. Desktop Chrome on Windows has three local voices plus cloud "Google" voices, which are off by default.
+  - Some browsers may ignore the requested pitch or rate.
+  - The opening broadcasts ("Kestrel distress beacon", "Mercy of Ilun, open broadcast") use the generic voice, not the captain's.
 - **v0.6 multi-scenario limits.** The engine has three ship slots (the Halcyon and two contacts), and the viewscreen draws them with the freighter and warship silhouettes in every simulation. The interpreter's built-in words "freighter" and "cruiser" still refer to the two contacts. The "Halcyon Lost" ending of #2 is tested by forcing the ship's destruction, not by a scripted playthrough. Voice launch of #2 is tested with stubbed recognition only.
 - Not yet tested in desktop Safari or Firefox, or on dedicated tablets/bridge consoles.
 
@@ -363,6 +386,7 @@ The app deploys to Vercel as a Vite static site plus serverless functions in `ap
 - [x] **Milestone 3 (v0.4)** — Simulation Mode, Living Universe foundation, Mission Archive, daily credits, world events and consequences, crew memory, standing orders and restrictions.
 - [x] **Milestone 3.1 (v0.5)** — Bridge-first startup, Active Duty (commission, reserve), organic mission delivery, science exploration and first contact, persistent two-way comms, crew autonomy and ROE refusals.
 - [x] **v0.6** — Multi-scenario training simulations: catalogue, launch by name or number, simulation #2 (Quarantine at Tallis Gate), authoring guide and 30-simulation roadmap.
+- [x] **v0.6.1** — Distinct crew voices from the browser's free built-in voices, with a preview and override panel.
 - [ ] **Next** — Server-side AI narration and character responses with schema validation, timeouts, usage limits and template fallback; server-side accounts and credits.
 - [ ] **Milestone 4** — Branching outcomes, mission evaluation, full save/resume, voice controls.
 - [ ] **Milestone 5** — Multi-playthrough testing, state-consistency fixes, stable release.
