@@ -11,6 +11,8 @@
  *   course      — "Helm, set a course for Veyra" (Active Duty: the app moves the Halcyon in canonical time)
  *   patrol      — "Continue the patrol" (Active Duty: canonical hours pass until something reaches the bridge)
  *   respond     — answering the hail / distress call / request waiting on the bridge
+ *   career      — v0.7.1: "what training do I need?" (answered from the Training Record)
+ *   fleet       — v0.7.1: "hail Fleet Command" (ISA Fleet / Training Command, a comms party, never a ship)
  *   rename      — v0.7: "rename the ship" / "call helm Bob" are declined politely (only the captain's name can change)
  *
  * The engine records a UI request on the WorldState; the app performs the transition (opening the
@@ -24,6 +26,7 @@ import type { WorldState } from './types';
 import type { Applied, ScenarioHooks } from './reduce';
 import { officerFrom } from './roe';
 import { SIMULATIONS, simulationByName } from '../scenarios/catalogue';
+import { careerAnswer, fleetCall, type CareerTopic } from './fleetDesk';
 
 export type BridgeAction = Extract<ProposedAction, { type: 'bridge' }>;
 export const IDLE_BRIDGE_ID = 'bridge';
@@ -90,6 +93,12 @@ export function reduceBridge(s: WorldState, action: BridgeAction, hooks: Scenari
     case 'rename':
       // v0.7: only the captain's own name can change (Service Record → Personnel). Nothing else is renamed.
       return { state: s, reports: [say('xo', action.scenario === 'self' ? 'renameSelf' : action.scenario === 'ship' ? 'renameShip' : 'renameOther')] };
+    case 'career':
+      // v0.7.1: "what training do I need?" — answered from the Training Record, in every setting.
+      return { state: s, reports: careerAnswer(s, (action.scenario ?? 'record') as CareerTopic) };
+    case 'fleet':
+      // v0.7.1: ISA Fleet Command / Training Command is a comms party in every setting, never a ship.
+      return { state: s, reports: fleetCall(s, action.scenario === 'training' ? 'training' : 'fleet', (action.text as CareerTopic | undefined) ?? null) };
     case 'chat':
       if (hooks.bridge) {
         const r = hooks.bridge(s, action, rng);
@@ -121,6 +130,9 @@ export function crewChat(s: WorldState, action: BridgeAction, rng: Rng): Report[
 }
 
 export const BRIDGE_TEMPLATES: Record<string, (v: Record<string, string | number>) => string> = {
+  careerAnswer: (v) => String(v.text),
+  fleetOpening: (v) => `Channel open to ${v.who}, Captain.`,
+  fleetLine: (v) => String(v.text),
   bridgeArchiveOpen: () => 'Simulation archive open on your display, Captain.',
   renameShip: () => 'With respect, Captain, the Halcyon’s name is on her ISA registry, and it is not ours to change. She stays the Halcyon.',
   renameOther: () => 'I am afraid not, Captain. People keep the names they were given, and so do ships, worlds and the ISA’s departments. Your own name is the one the record lets you change.',
@@ -147,7 +159,7 @@ export const BRIDGE_TEMPLATES: Record<string, (v: Record<string, string | number
 
 /** Bridge actions never consume a turn; small talk and the survey take a few seconds. */
 export function bridgeSeconds(a: BridgeAction): number {
-  return a.op === 'chat' ? 5 : a.op === 'survey' || a.op === 'civs' ? 10 : 0;
+  return a.op === 'chat' ? 5 : a.op === 'survey' || a.op === 'civs' || a.op === 'fleet' ? 10 : 0;
 }
 
 export { sys };

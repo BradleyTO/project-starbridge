@@ -46,6 +46,10 @@ export function validate(s: WorldState, action: ProposedAction): Validation {
   const h = s.ships.halcyon;
   if (s.outcome) return no(action, [sys('simEnded')]);
   if (h.destroyed) return no(action, [sys('shipLost')]);
+  // v0.7.1: on station the contact slots are empty unless a civilization is on sensors. Anything
+  // aimed at an absent ship gets the station's answer, never another scenario's ("no warship").
+  const absent = stationAbsentTarget(s, action);
+  if (absent) return no(action, [say(absent, absent === 'comms' ? 'stationNoVessels' : 'stationNoContact')]);
 
   switch (action.type) {
     case 'query':
@@ -340,4 +344,20 @@ function validateStanding(s: WorldState, action: ProposedAction): Validation {
 /** Helper for UIs/tests: the efficiency of a Halcyon system as a 0–100 percentage. */
 export function systemPercent(s: WorldState, id: Parameters<typeof efficiency>[1]): number {
   return Math.round(efficiency(s.ships.halcyon, id) * 100);
+}
+
+/** v0.7.1: the officer who answers an order aimed at a ship that is not on sensors, on station. */
+function stationAbsentTarget(s: WorldState, action: ProposedAction): 'comms' | 'sensors' | 'helm' | 'tactical' | 'xo' | 'engineering' | null {
+  if (s.scenarioId !== 'bridge') return null;
+  const target = (action as { target?: unknown }).target;
+  // Transporter, tractor and repair-team orders all reach into the contact slot.
+  if ((action.type === 'transport' || (action.type === 'tractor' && action.engage) || (action.type === 'repair' && action.ship === 'kestrel')) && !s.ships.kestrel.detected) return action.type === 'repair' ? 'engineering' : 'xo';
+  const party = action.type === 'channel' ? action.party : action.type === 'speak' ? action.to : target;
+  const ids: ('kestrel' | 'cruiser')[] = party === 'all' ? ['kestrel', 'cruiser'] : party === 'kestrel' || party === 'cruiser' ? [party] : party === 'passenger' ? ['kestrel'] : [];
+  if (!ids.length || ids.some((id) => s.ships[id].detected)) return null;
+  if (action.type === 'communicate' || action.type === 'channel' || action.type === 'speak') return 'comms';
+  if (action.type === 'scan') return 'sensors';
+  if (action.type === 'maneuver') return 'helm';
+  if (action.type === 'weapons') return 'tactical';
+  return null;
 }

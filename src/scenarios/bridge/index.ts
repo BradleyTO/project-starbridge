@@ -38,17 +38,37 @@ export function defaultSurvey(seed: number | string): SurveySystem[] {
   return out.sort((a, b) => a.distanceLy - b.distanceLy);
 }
 
+/**
+ * v0.7.1: the station world. Built on the shared world shape but stripped of every scenario's
+ * content: the two contact slots are empty, unnamed and offstage; the only people aboard are the
+ * Halcyon's crew plus one neutral comms-speaker record for first contact (filled in by Active Duty
+ * when a civilization is met); no scenario facts. Before v0.7.1 the bridge copied the Kestrel
+ * Incident's world, so its ships, aliases and characters were in the interpreter's reach.
+ */
+export function neutralStation(s: WorldState): WorldState {
+  const blank = (id: 'kestrel' | 'cruiser', name: string) => ({ ...s.ships[id], name, classification: 'No contact', faction: 'independent' as const, aliases: [], detected: false, position: OFFSTAGE, velocity: { x: 0, y: 0 }, nav: null, scanLevel: 0, disposition: 'unknown' as const, souls: 0, hull: 100, containment: 100, destroyed: false });
+  const crew = Object.fromEntries(Object.entries(s.characters).filter(([, c]) => c.ship === 'halcyon'));
+  const speaker = s.characters.arden;
+  return {
+    ...s,
+    ships: { ...s.ships, kestrel: s.ships.kestrel.detected && s.duty?.contact ? s.ships.kestrel : blank('kestrel', 'no contact'), cruiser: blank('cruiser', 'no second contact') },
+    characters: { ...crew, arden: { ...speaker, name: s.duty?.contact?.leader ?? 'Unknown speaker', role: s.duty?.contact?.people ?? 'Contact', goals: [], knowledge: [], resources: [], motivation: '', memory: s.duty?.contact ? speaker.memory : {}, status: 'active', ship: 'kestrel' } },
+    facts: {},
+    relations: { tension: 0, trustConcordDirectorate: s.relations.trustConcordDirectorate },
+    slots: undefined,
+  };
+}
+
 export function createBridge(seed: number | string = 1, opts: { survey?: SurveySystem[] } = {}): WorldState {
   const base = createScenario(seed);
-  const hide = (id: 'kestrel' | 'cruiser') => ({ ...base.ships[id], detected: false, position: OFFSTAGE, velocity: { x: 0, y: 0 }, nav: null, scanLevel: 0, disposition: 'unknown' as const });
-  return {
+  return neutralStation({
     ...base,
     scenarioId: IDLE_BRIDGE_ID,
     alert: 'green',
-    ships: { ...base.ships, halcyon: { ...base.ships.halcyon, heading: 0 }, kestrel: hide('kestrel'), cruiser: hide('cruiser') },
+    ships: { ...base.ships, halcyon: { ...base.ships.halcyon, heading: 0 } },
     objectives: [],
     survey: { systems: opts.survey ?? defaultSurvey(seed), course: null },
-  };
+  });
 }
 
 const AMBIENT: [Parameters<typeof say>[0], string][] = [

@@ -7,8 +7,15 @@
 import type { Clarification, Interpretation } from '../engine/schema';
 import type { WorldState } from '../engine/types';
 import { leadOf } from '../engine/state';
+import { settingOf, type Setting } from '../engine/setting';
 
 export interface InterpreterContext {
+  /**
+   * v0.7.1: where the ship is (station / simulation <id> / Active Duty mission). The interpreter's
+   * vocabulary follows it: a scenario's own names exist only while that scenario runs.
+   * Absent (hand-built test contexts): the v0.6 behaviour (the Kestrel's built-in words).
+   */
+  setting?: Setting;
   visible: ('kestrel' | 'cruiser')[];
   lastTarget: 'kestrel' | 'cruiser' | null;
   /** Last party the captain spoke to (pronouns in speech orders prefer this). */
@@ -65,9 +72,20 @@ export function contextFrom(s: WorldState): InterpreterContext {
     channel: activeChannel(s),
     held: (s.comms?.channels ?? []).filter((c) => c.state === 'hold').map((c) => c.party),
     recentRefusal: (s.refusals ?? []).some((r) => r.turn >= s.turn - 3),
+    setting: settingOf(s),
+    // v0.7.1: on station the only nameable contact is a first-contact civilization actually on sensors.
+    ...(s.scenarioId === 'bridge' ? stationNames(s) : {}),
     ...(s.slots ? { names: { kestrel: namesFor(s, 'kestrel'), cruiser: namesFor(s, 'cruiser') }, labels: { kestrel: `the ${s.ships.kestrel.name}`, cruiser: `the ${s.ships.cruiser.name}` }, contactRepair: s.slots.kestrelRepair, contactRepairWords: s.slots.kestrelRepairWords } : {}),
     duty: s.scenarioId === 'bridge' ? { live: !!s.duty?.live, incoming: !!s.duty?.incoming, places: (s.survey?.systems ?? []).map((x) => x.name.toLowerCase()) } : null,
   };
+}
+
+/** v0.7.1: station vocabulary — the first-contact party when one is on sensors, otherwise nothing. */
+function stationNames(s: WorldState): Pick<InterpreterContext, 'names' | 'labels'> {
+  const k = s.ships.kestrel;
+  const c = s.duty?.contact;
+  const words = k.detected && c ? [c.station, c.people, c.leader, c.system].filter(Boolean).map((w) => w.toLowerCase()) : [];
+  return { names: { kestrel: words, cruiser: [] }, labels: { kestrel: k.detected ? `the ${k.name.replace(/^the /i, '')}` : 'no contact', cruiser: 'no second contact' } };
 }
 
 /** A slot's words: its ship's declared aliases plus its lead character's name (surname, full name). */

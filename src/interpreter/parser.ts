@@ -22,6 +22,7 @@ import { InterpretationSchema } from '../engine/schema';
 import { planConflict } from '../engine/standing';
 import type { Interpreter, InterpreterContext } from './types';
 import { wordsToDigits } from './numbers';
+import { careerQuestion, fleetAddress } from './addressees';
 import { SpellCorrector, vocabularyFrom } from './spell';
 
 type Contact = 'kestrel' | 'cruiser';
@@ -89,6 +90,14 @@ export function normalise(input: string): string {
 
 const KESTREL_BASE = /\b(kestrel|freighter|civilian( ship| vessel)?|disabled (ship|vessel)|derelict|arden|stricken (ship|vessel)|distressed (ship|vessel)|transport ship|cargo ship|merchant( ship)?)\b/;
 const CRUISER_BASE = /\b(cruiser|warship|war ship|directorate|tessarine|ashen|covenant|vane|prefect|enemy|hostile (ship|vessel|contact)|the hostile|attacker|second contact|other ship|that ship|battleship|man o' war)\b/;
+/**
+ * v0.7.1: the same words without the Kestrel Incident's own names (Kestrel, Arden, the Directorate,
+ * the Ashen Covenant, Prefect Vane). Used in every other setting, so those names never resolve to a
+ * contact outside their scenario. Generic class words ("the freighter", "the warship") remain.
+ */
+const KESTREL_GENERIC = /\b(freighter|civilian( ship| vessel)?|disabled (ship|vessel)|derelict|stricken (ship|vessel)|distressed (ship|vessel)|transport ship|cargo ship|merchant( ship)?)\b/;
+const CRUISER_GENERIC = /\b(cruiser|warship|war ship|enemy|hostile (ship|vessel|contact)|the hostile|attacker|second contact|other ship|that ship|battleship|man o' war)\b/;
+const KESTREL_SCENARIO_ID = 'kestrel-incident';
 /** v0.6: the built-in ship words plus the active scenario's (vocabulary.ts); identical to the base for the Kestrel. */
 let KESTREL = KESTREL_BASE;
 let CRUISER = CRUISER_BASE;
@@ -638,6 +647,8 @@ interface Parsed {
 const BASE_LABELS = { kestrel: 'the Kestrel', cruiser: 'the cruiser' };
 /** v0.6: how clarifying questions name the two contacts (the scenario's ship names; the Kestrel's words by default). */
 let OPTIONS_CONTACTS = [BASE_LABELS.kestrel, BASE_LABELS.cruiser];
+/** v0.7.1: contacts actually on sensors (null: a hand-built context, v0.6 behaviour). */
+let VISIBLE: InterpreterContext['visible'] | null = null;
 let REF_LABEL: Record<Ref, string> = { ...BASE_LABELS, border: 'the border' };
 const whichContact = () => `${OPTIONS_CONTACTS[0]} or ${OPTIONS_CONTACTS[1]}`;
 type Clar = { question: string; options: string[]; clause: string };
@@ -733,6 +744,13 @@ function resolveTargets(parsed: Parsed[], ctx: InterpreterContext): { actions: P
         else if (/\b(cargo|compartment|hold)\b/.test(p.clause) && ctx.visible.includes('kestrel')) target = 'kestrel';
       }
       if (!target) {
+        // v0.7.1: only contacts on sensors are offered; with none, the hail goes out to no one (the
+        // validator answers "no vessels on sensors") rather than naming another scenario's ships.
+        if (VISIBLE && VISIBLE.length === 0) {
+          a.target = 'all';
+          actions.push(a as ProposedActionInput);
+          return;
+        }
         clarify = clarify ?? { question: `Open a channel to which vessel, Captain — ${OPTIONS_CONTACTS[0]}, ${OPTIONS_CONTACTS[1]}, or both?`, options: [...OPTIONS_CONTACTS, 'both ships'], clause: p.clause };
         return;
       }
@@ -1122,7 +1140,10 @@ export function interpretSync(input: string, ctx: InterpreterContext): Interpret
   if (why) return { kind: 'actions', actions: [why] as never, unparsed: [], notes: [], source };
   // v0.5: with a channel open (or someone addressed by name) speech and crew orders are separated first.
   const routed = routeComms(input, ctx, (t, c) => ordersSync(t, c));
-  const r = routed ? safe(routed, input) : ordersSync(input, ctx);
+  const r0 = routed ? safe(routed, input) : ordersSync(input, ctx);
+  // v0.7.1: with nothing on sensors there is no "which contact?" to ask (it would name ships that
+  // are not there); the sensors answer instead.
+  const r: Interpretation = r0.kind === 'clarify' && VISIBLE && VISIBLE.length === 0 && /\bwhich (?:contact|vessel)\b/.test(r0.clarification.question) ? { kind: 'actions', actions: [{ type: 'query', topic: 'contacts' }] as never, unparsed: [], notes: [], source } : r0;
   // v0.5: "Okafor, how are the engines?" — an officer addressed with something that is not an order is small talk.
   if (r.kind === 'unrecognised') {
     const chat = crewChatOf(input);
@@ -1177,7 +1198,7 @@ function respondOf(t0: string): string | null {
   return null;
 }
 
-type BridgeOp = { type: 'bridge'; op: 'openArchive' | 'beginSim' | 'endSim' | 'listSims' | 'survey' | 'acceptCommission' | 'civs' | 'course' | 'patrol' | 'respond' | 'rename'; scenario?: string; hours?: number; text?: string };
+type BridgeOp = { type: 'bridge'; op: 'openArchive' | 'beginSim' | 'endSim' | 'listSims' | 'survey' | 'acceptCommission' | 'civs' | 'course' | 'patrol' | 'respond' | 'rename' | 'fleet' | 'career'; scenario?: string; hours?: number; text?: string };
 
 /**
  * v0.7: renaming. The captain's own name is the only customizable name (Service Record →
@@ -1217,6 +1238,15 @@ function bridgeCommand(input: string, ctx?: InterpreterContext): BridgeOp | null
     const c = COURSE.exec(t);
     if (c && !/\b(kestrel|freighter|cruiser|warship|ashen|them|him|her|it)\b/.test(c[1])) return { type: 'bridge', op: 'course', scenario: c[1].replace(/\b(at (?:full|best) speed|immediately|now|please)\b/g, '').trim().slice(0, 80) };
   }
+  // v0.7.1: ISA Fleet Command / Training Command as a comms party (never a ship), and the
+  // captain's questions about their own training. Both work in every setting.
+  const fleet = fleetAddress(t);
+  if (fleet) {
+    const topic = careerQuestion(fleet.rest);
+    return { type: 'bridge', op: 'fleet', scenario: fleet.to, ...(topic ? { text: topic } : {}) };
+  }
+  const career = careerQuestion(t);
+  if (career) return { type: 'bridge', op: 'career', scenario: career };
   if (CIVS.test(t) && !/\b(hail|fire|lock|approach)\b/.test(t)) return { type: 'bridge', op: 'civs' };
   if (END_SIM.test(t)) return { type: 'bridge', op: 'endSim' };
   if (LIST_SIMS.test(t)) return { type: 'bridge', op: 'listSims' };
@@ -1326,8 +1356,10 @@ function safe(result: Interpretation, input: string): Interpretation {
 /** v0.6: switch to the scenario's names for the contact slots (no-op for the Kestrel, which declares none). */
 function applyScenarioVocabulary(ctx: InterpreterContext): void {
   setVocabulary(ctx.names ? { kestrel: ctx.names.kestrel, cruiser: ctx.names.cruiser, repair: ctx.contactRepairWords ?? [] } : undefined);
-  KESTREL = withAliases(KESTREL_BASE, 'kestrel');
-  CRUISER = withAliases(CRUISER_BASE, 'cruiser');
+  const own = !ctx.setting || ctx.setting.scenarioId === KESTREL_SCENARIO_ID;
+  KESTREL = withAliases(own ? KESTREL_BASE : KESTREL_GENERIC, 'kestrel');
+  CRUISER = withAliases(own ? CRUISER_BASE : CRUISER_GENERIC, 'cruiser');
+  VISIBLE = ctx.setting ? ctx.visible : null;
   const labels = ctx.labels ?? BASE_LABELS;
   OPTIONS_CONTACTS = [labels.kestrel, labels.cruiser];
   REF_LABEL = { ...labels, border: 'the border' };

@@ -395,6 +395,8 @@ export interface WorldState {
   trace?: EvalTrace;
   /** v0.7: the captain's name and how people address them (set by the app; display only, never parsed). */
   captain?: CaptainAddress;
+  /** v0.7.1: the captain's training summary from the Training Record (set by the app; display only, never parsed). */
+  career?: import('../career/advice').CareerBrief;
   /** v0.5 crew autonomy: recent refusals with the reasons the officer gave (for "why?"). */
   refusals?: { officer: string; turn: number; order: string; reasons: string[] }[];
   /** v0.5: the science officer's survey of systems within exploration range (idle bridge). */

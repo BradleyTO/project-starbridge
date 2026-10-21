@@ -3,6 +3,7 @@
  * It owns no game rules; it routes sessions to the right store and enforces
  * the product rules (entitlements, credits) around the canonical commit gate.
  */
+import { trainingAdvice, type CareerBrief, type CatalogueEntry } from '../career/advice';
 import type { ScenarioModule } from '../engine/scenario';
 import type { TurnResult } from '../engine/turn';
 import type { Timeline, WorldState } from '../engine/types';
@@ -17,6 +18,7 @@ import { openCanonicalContext, type CanonicalContext } from './gate';
 import { beginBridgeMission, beginEventMission, canonicalSession, completeBridgeMission, newCanon, recordProgress, updateEvent } from './canon';
 import type { CanonicalSession } from './sessions';
 import { replenish, seedBoard } from './catalogue';
+import { SIMULATIONS } from '../scenarios/catalogue';
 import { charge, configure, msUntilReset, refresh, remaining, resetNow } from './credits';
 import * as world from './world';
 import * as explore from './exploration';
@@ -450,6 +452,16 @@ export class Universe {
   }
 
   // -------------------------------------------------------- v0.7 records --
+
+  /** v0.7.1: the Training Record summary the bridge answers career questions from (words only). */
+  careerBrief(): CareerBrief {
+    const catalogue: CatalogueEntry[] = SIMULATIONS.flatMap((x) => {
+      const mod = this.scenarios[x.scenarioId];
+      return mod ? [{ trainingId: x.trainingId, title: x.title, name: x.name, competencies: mod.evaluation?.competencies ?? [] }] : [];
+    });
+    return trainingAdvice(this.training(), catalogue);
+  }
+
 
   /** Which simulations exercise which competencies (for training recommendations). */
   private evaluationCatalogue(): { title: string; scenarioId: string; competencies: CompetencyId[] }[] {

@@ -39,7 +39,7 @@ import { TRAINING } from './universe/archive';
 import { expandAliases } from './universe/familiarity';
 import type { BridgeSession, CanonicalSession } from './universe/sessions';
 import { arriveOnBridge, handleDutyRequest, withDuty } from './dutyBridge';
-import { withCaptain } from './engine/captain';
+import { withCaptain, withCareer } from './engine/captain';
 import type { CaptainAddress } from './engine/types';
 import { CaptainNamePrompt } from './ui/components/CaptainNamePrompt';
 import type { RecordSection } from './ui/components/RecordPanel';
@@ -134,7 +134,7 @@ export default function App() {
   const [firstSeed] = useState(() => initialSeed());
   const nextSimSeed = useRef<number | string | null>(new URLSearchParams(window.location.search).get('seed') ? firstSeed : null);
   const [meta, setMeta] = useState<SessionMeta>(() => ({ timeline: 'bridge', title: BRIDGE_TITLE }));
-  const [state, dispatch] = useReducer(reducer, undefined, () => withDuty(universe, bridgeState(firstSeed)));
+  const [state, dispatch] = useReducer(reducer, undefined, () => withCareer(withDuty(universe, bridgeState(firstSeed)), universe.careerBrief()));
   /** v0.7: open the Service Record at a section (optionally on one after-action report). */
   const openRecord = (section: RecordSection, report: string | null = null) => {
     setRecordView({ section, report });
@@ -142,7 +142,7 @@ export default function App() {
   };
   /** v0.7: a name change re-stamps how the crew addresses the captain; progress is untouched. */
   const restampCaptain = () => {
-    const next = withCaptain(stateRef.current, universe.address());
+    const next = withCareer(withCaptain(stateRef.current, universe.address()), universe.careerBrief());
     if (next !== stateRef.current) {
       dispatch({ type: 'replace', state: next });
       stateRef.current = next;
@@ -283,7 +283,7 @@ export default function App() {
 
   const reset = (raw: WorldState, msg: string) => {
     cancelSpeech();
-    const next = withCaptain(raw, universe.address());
+    const next = withCareer(withCaptain(raw, universe.address()), universe.careerBrief());
     dispatch({ type: 'replace', state: next });
     stateRef.current = next;
     setSession((n) => n + 1);
