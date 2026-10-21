@@ -1,4 +1,4 @@
-// Headless smoke test: v0.6 (multi-scenario + Training Simulation 002), v0.5 / M3.1 (bridge-first startup, Active Duty, organic traffic, science, first contact)
+// Headless smoke test: v0.6.1 (crew voices), v0.6 (multi-scenario + Training Simulation 002), v0.5 / M3.1 (bridge-first startup, Active Duty, organic traffic, science, first contact)
 // plus the v0.2–v0.4 checks (which now enter their simulations from the bridge, as a player does).
 // Usage: npm run build && npx vite preview --port 4173 &  then  node scripts/smoke.mjs [url]
 // Env: SHOTS_DIR (default ./smoke-shots)
@@ -664,6 +664,120 @@ for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape',
   await sendOn(p6, 'Computer, end the simulation', 1200);
   check('v0.6: ending #2 returns to the bridge', (await mode6()) === 'bridge');
   await ctx6.close();
+}
+
+// ============================================================== v0.6.1 =====
+// Crew voices with a mocked device voice list: async voiceschanged, distinct casting, preview,
+// overrides saved locally, speaker-tagged speech in a simulation, and the scarce-voice fallback.
+{
+  const voiceMock = (list) => {
+    window.__spoken = [];
+    window.__voices = [];
+    const mk = ([name, lang, local = true]) => ({ name, lang, voiceURI: `mock:${name}`, localService: local, default: name === list[0][0] });
+    class FakeUtterance { constructor(text) { this.text = text; this.voice = null; this.pitch = 1; this.rate = 1; this.lang = ''; } }
+    window.SpeechSynthesisUtterance = FakeUtterance;
+    const synth = window.speechSynthesis;
+    synth.getVoices = () => window.__voices;
+    synth.speak = (u) => window.__spoken.push({ text: u.text, voice: u.voice?.name ?? null, pitch: u.pitch, rate: u.rate });
+    synth.cancel = () => {};
+    // Like Chrome: the list is empty at first and arrives later with a voiceschanged event.
+    setTimeout(() => {
+      window.__voices = list.map(mk);
+      synth.dispatchEvent(new Event('voiceschanged'));
+    }, 400);
+    window.SpeechRecognition = window.webkitSpeechRecognition = class { start() {} stop() {} };
+  };
+  const MANY = [['Samantha', 'en-US'], ['Alex', 'en-US'], ['Daniel', 'en-GB'], ['Kate', 'en-GB'], ['Serena', 'en-GB'], ['Arthur', 'en-GB'], ['Martha', 'en-GB'], ['Karen', 'en-AU'], ['Catherine', 'en-AU'], ['Moira', 'en-IE'], ['Tessa', 'en-ZA'], ['Victoria', 'en-US'], ['Susan', 'en-US'], ['Fred', 'en-US'], ['Google US English', 'en-US', false], ['Zarvox', 'en-US'], ['Thomas', 'fr-FR']];
+  const CREW = ['computer', 'marrow', 'rask', 'varga', 'adeyemi', 'szabo', 'okafor', 'osei', 'narrator'];
+  const ctx7 = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await ctx7.addInitScript(voiceMock, MANY);
+  const p7 = await ctx7.newPage();
+  p7.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  p7.on('pageerror', (e) => errors.push(String(e)));
+  const rows7 = () => p7.evaluate((keys) => keys.map((k) => { const r = document.querySelector(`[data-testid=voice-row-${k}]`); return r ? { k, v: r.getAttribute('data-voice'), p: r.getAttribute('data-pitch'), r: r.getAttribute('data-rate') } : null; }), CREW);
+  await p7.goto(withSeed(5), { waitUntil: 'networkidle' });
+  await skipIntro(p7);
+  await p7.waitForTimeout(600);
+  await p7.click('[data-testid=open-hub]');
+  await p7.click('[data-testid=hub-tab-voices]');
+  await p7.waitForTimeout(300);
+  const cnt = p7.locator('[data-testid=voice-count]');
+  check('v0.6.1: voices arrive via voiceschanged (14 usable: no cloud, novelty or non-English voices)', (await cnt.getAttribute('data-usable')) === '14', await cnt.innerText());
+  let rows = await rows7();
+  check('v0.6.1: every crew member and the computer has a different voice', rows.every(Boolean) && new Set(rows.map((r) => r.v)).size === CREW.length, JSON.stringify(rows.map((r) => r?.v)));
+  check('v0.6.1: computer is calm (Samantha, rate 0.95); Rask is Alex at low pitch', rows[0].v === 'mock:Samantha' && rows[0].r === '0.95' && rows[2].v === 'mock:Alex' && Number(rows[2].p) < 1);
+  await p7.screenshot({ path: `${SHOTS}/v061-01-voice-panel.png`, fullPage: true });
+  await p7.click('[data-testid=voice-preview-rask]');
+  await p7.waitForTimeout(150);
+  let last = await p7.evaluate(() => window.__spoken.at(-1));
+  check('v0.6.1: preview speaks with the assigned voice, pitch and rate', last?.voice === 'Alex' && last.pitch === Number(rows[2].p) && /Tactical/.test(last.text), JSON.stringify(last));
+  await p7.selectOption('[data-testid=voice-select-rask]', 'mock:Fred');
+  await p7.waitForTimeout(150);
+  check('v0.6.1: override changes the voice', /Fred/.test(await p7.innerText('[data-testid=voice-assigned-rask]')) && /your choice/.test(await p7.innerText('[data-testid=voice-assigned-rask]')));
+  await p7.reload({ waitUntil: 'networkidle' });
+  await skipIntro(p7);
+  await p7.waitForTimeout(700);
+  await p7.click('[data-testid=open-hub]');
+  await p7.click('[data-testid=hub-tab-voices]');
+  await p7.waitForTimeout(200);
+  rows = await rows7();
+  check('v0.6.1: override persists across reload (saved locally)', rows[2].v === 'mock:Fred', rows[2].v);
+  await p7.click('[data-testid=voice-reset-rask]');
+  await p7.waitForTimeout(150);
+  rows = await rows7();
+  check('v0.6.1: "Automatic" restores the cast voice', rows[2].v === 'mock:Alex', rows[2].v);
+  await p7.setViewportSize({ width: 390, height: 844 });
+  await p7.waitForTimeout(300);
+  const ov7 = await p7.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  check('v0.6.1 phone: voice panel has no horizontal overflow', ov7 <= 0, `overflow ${ov7}px`);
+  await p7.screenshot({ path: `${SHOTS}/v061-02-voice-panel-phone.png`, fullPage: true });
+  await p7.setViewportSize({ width: 1440, height: 900 });
+  await p7.click('[data-testid=hub-close]');
+  // Speech in a simulation: each line is spoken in its speaker's voice.
+  await p7.click('[data-testid=voice-toggle]');
+  await sendOn(p7, 'Computer, begin the Tallis Gate simulation', 1200);
+  await p7.waitForSelector('[data-testid=mode-banner][data-mode=simulation]');
+  await p7.waitForTimeout(100);
+  const base7 = await p7.evaluate(() => window.__spoken.length);
+  await skipIntro(p7);
+  for (const c of ['take us to 3,000 km of the liner', 'scan the liner', 'hail the picket', 'what do you want', 'close the channel', 'status report']) await sendOn(p7, c, 400);
+  await p7.click('[data-testid=open-hub]');
+  await p7.click('[data-testid=hub-tab-voices]');
+  await p7.waitForTimeout(200);
+  const castMap = await p7.evaluate(() => Object.fromEntries([...document.querySelectorAll('[data-testid^=voice-row-]')].map((r) => [r.getAttribute('data-testid').replace('voice-row-', ''), r.getAttribute('data-voice')])));
+  await p7.screenshot({ path: `${SHOTS}/v061-03-voice-panel-in-sim.png`, fullPage: true });
+  await p7.click('[data-testid=hub-close]');
+  const pairs = await p7.evaluate((base) => {
+    const norm = (s) => s.replace(/["“”]/g, '').trim();
+    const lines = [...document.querySelectorAll('.log-entry[data-voice]')].map((e) => ({ key: e.getAttribute('data-voice'), text: norm(e.querySelector('.log-text').textContent) }));
+    return window.__spoken.slice(base).map((u) => ({ ...u, key: lines.find((l) => l.text === norm(u.text))?.key ?? null }));
+  }, base7);
+  const tagged = pairs.filter((x) => x.key);
+  const byKey = {};
+  for (const x of tagged) (byKey[x.key] ??= new Set()).add(x.voice);
+  const marrKey = 'npc:tallis-quarantine:marr';
+  check('v0.6.1: every spoken line is matched to a tagged speaker', pairs.length > 5 && tagged.length === pairs.length, `${tagged.length}/${pairs.length}`);
+  check('v0.6.1: each speaker is always spoken in their cast voice', Object.entries(byKey).every(([k, vs]) => vs.size === 1 && [...vs][0] === (castMap[k] ?? castMap.other ?? '').replace('mock:', '')), JSON.stringify(Object.fromEntries(Object.entries(byKey).map(([k, v]) => [k, [...v]]))));
+  check('v0.6.1: Warden-Commander Marr speaks, in a voice no bridge officer uses', !!byKey[marrKey] && !CREW.some((k) => castMap[k] === castMap[marrKey]), castMap[marrKey]);
+  check('v0.6.1: at least three different voices heard in one session', new Set(tagged.map((x) => x.voice)).size >= 3);
+  await ctx7.close();
+
+  // Scarce voices (like an iPhone with two English voices): shared voices, separated by pitch/rate.
+  const ctx8 = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await ctx8.addInitScript(voiceMock, [['Samantha', 'en-US'], ['Daniel', 'en-GB']]);
+  const p8 = await ctx8.newPage();
+  p8.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  p8.on('pageerror', (e) => errors.push(String(e)));
+  await p8.goto(withSeed(5), { waitUntil: 'networkidle' });
+  await skipIntro(p8);
+  await p8.waitForTimeout(600);
+  await p8.click('[data-testid=open-hub]');
+  await p8.click('[data-testid=hub-tab-voices]');
+  await p8.waitForTimeout(300);
+  const r8 = await p8.evaluate((keys) => keys.map((k) => { const r = document.querySelector(`[data-testid=voice-row-${k}]`); return `${r.getAttribute('data-voice')}|${r.getAttribute('data-pitch')}|${r.getAttribute('data-rate')}`; }), CREW);
+  check('v0.6.1 scarce: two voices shared by the crew, nobody sounds identical', new Set(r8.map((x) => x.split('|')[0])).size === 2 && new Set(r8).size === CREW.length, r8.join(' '));
+  await p8.screenshot({ path: `${SHOTS}/v061-04-voice-panel-two-voices.png`, fullPage: true });
+  await ctx8.close();
 }
 
 check('no console errors', errors.length === 0, errors.join(' | '));
