@@ -1,6 +1,6 @@
 # Project Starbridge
 
-A browser-based, AI-assisted **starship command simulator**. You command the exploration ship **ISV Halcyon** of the **Intergalactic Space Agency** (ISA), the service of the player's faction, **the Agency**, and complete dynamic training missions by giving natural-language orders. The long-term goal is integration with a physical starship bridge, so the UI is built to scale from tablets to dedicated bridge consoles.
+A browser-based, AI-assisted **starship command simulator**. You command the exploration ship **ISV Halcyon** of the **Intergalactic Space Agency** (**the ISA**), the player's faction, and complete dynamic training missions by giving natural-language orders. The long-term goal is integration with a physical starship bridge, so the UI is built to scale from tablets to dedicated bridge consoles.
 
 > **Status: v0.7.0 (Evaluation & Records: your own name on the record, after-action reports for every simulation, competencies in words, a Service Record with Training kept apart from canon; v0.6.1 added crew voices, v0.6.0 simulation #2).** The plan is 30 training simulations ([roadmap](docs/SCENARIO_ROADMAP.md)); two are playable. The app opens on the **bridge of the Halcyon**, not in a mission. Talk to the crew, ask science what is out there, and start a training simulation only when you ask for one ("Computer, list simulations", "Computer, begin the Kestrel Incident simulation"). When a simulation ends you are back on the bridge with a debrief. **Active Duty** (formerly "Living Universe") is the persistent canonical career. There is no mission menu: hails, distress calls, requests and science readings reach the bridge as canonical time passes, and you answer them in your own words. Orders and speech are read by a rule-based **offline interpreter**. No AI is used yet (see [Roadmap](#roadmap)).
 
@@ -44,14 +44,14 @@ Accepting starts a canonical mission and costs one credit, exactly as before. De
 
 | Disposition | Peaceful | Firm | Threatening |
 |---|---|---|---|
-| open | asks to open talks on **joining the Agency** | wary contact | warned off |
+| open | asks to open talks on **joining the ISA** | wary contact | warned off |
 | cautious | trade and contact, **will not join** | wary contact | warned off |
 | isolationist | **declines contact**, asks you to leave | declines | warned off |
 | guarded | wary contact | warned off | hostile |
 
-**Not every civilization wants to join the Agency.** Only an open people approached peacefully does. The outcome is written once to canon (a world event and an entry in the captain's record). Rask will not fire on a civilian station or on a ship that has not fired. The survey and the civilizations are seeded per career (four original peoples: the Ossari, Kethren, Lumae and Drassk).
+**Not every civilization wants to join the ISA.** Only an open people approached peacefully does. The outcome is written once to canon (a world event and an entry in the captain's record). Rask will not fire on a civilian station or on a ship that has not fired. The survey and the civilizations are seeded per career (four original peoples: the Ossari, Kethren, Lumae and Drassk).
 
-**Naming (resolved in v0.5.1; updated in v0.7.0).** The M3.1 brief spoke of civilizations joining the "Directorate", but the **Tessarine Directorate** is the rival power on the border (Prefect Vane's side) and stays as it is. The player's faction was called the Concord until v0.5.0; it is now **the Agency**. Its fleet service is the **Intergalactic Space Agency (ISA)** (v0.5.1–v0.6.1 said "Intergalactic Star Agency"; saved text is migrated on load), its ships carry the prefix **ISV** (ISV Halcyon), registry codes would read `ISA-nnnn` (the app shows none today; the load-time migration maps any old `CES-nnnn`), and **Fleet Command** is the ISA's command. Civilizations are invited to join the Agency. Older saves load with the new names (display text is rewritten on load; internal ids such as the faction id `concord` are unchanged), and the interpreter still accepts the old words ("Concord space", "run for Concord space") as aliases for Agency space.
+**Naming (resolved in v0.5.1; updated in v0.7.0).** The M3.1 brief spoke of civilizations joining the "Directorate", but the **Tessarine Directorate** is the rival power on the border (Prefect Vane's side) and stays as it is. The player's faction was called the Concord until v0.5.0; it is now **the ISA**, the **Intergalactic Space Agency** (spelled out only on formal screens; everywhere else it is "the ISA", since v0.7.1) (v0.5.1–v0.6.1 said "Intergalactic Star Agency"; saved text is migrated on load), its ships carry the prefix **ISV** (ISV Halcyon), registry codes would read `ISA-nnnn` (the app shows none today; the load-time migration maps any old `CES-nnnn`), and **Fleet Command** is the ISA's command. Civilizations are invited to join the ISA. Prefect Sorel Vane commands the *Ashen Covenant* (his ship) for the Tessarine Directorate (his side). Older saves load with the new names (display text is rewritten on load; internal ids such as the faction id `concord` are unchanged), and the interpreter still accepts the old words ("Concord space", "run for Concord space") (and "Agency space") as aliases for ISA space.
 
 **Two-way comms.** A hail opens a persistent channel (the indicator shows who you are talking to). Lines of speech go to the other party; orders addressed to the crew go to the crew, even with a channel open. Promises you make ("our weapons stay down") are remembered and checked. Anything unclear gets a clarifying question from the other party. You can hold, resume, mute or close channels.
 
@@ -128,14 +128,14 @@ The seed decides:
 Scan the liner up close to learn what is wrong. Medical teams sent before the cause is known can bring the fever aboard the Halcyon, unless you improvise ("set up an isolation ward", "screen the transport with biofilters"). Talk to both captains: hidden facts come out when you ask the right question or show the evidence.
 
 Endings:
-- **Success:** **The Cure** (treat the fever aboard or with the colony's antiviral), **Line Lifted** (persuade Marr with evidence), **Agency Care** (tow or evacuate the liner to an Agency hospital without crossing the line).
+- **Success:** **The Cure** (treat the fever aboard or with the colony's antiviral), **Line Lifted** (persuade Marr with evidence), **ISA Care** (tow or evacuate the liner to an ISA hospital without crossing the line).
 - **Failure or partial:** **Fire at the Gate** (the liner is destroyed), **Outbreak at Tallis Gate**, **Fever Aboard** (the Halcyon is quarantined), **Incident at Tallis Gate** (you fire on the colony's picket), **Liner Abandoned**, **The Long Road** (an untreated fever on a six-hour tow), **The Gate Run** (Sabeth forces the line), **Stalemate**, **Halcyon Lost**.
 
 Rask will not fire on the liner. Every ending is reached by a scripted test (see `tests/sim02/`).
 
 ## Simulation #1 — The Kestrel Incident
 
-The Halcyon arrives at the edge of the **Calloway Reach**, space disputed between the Agency and the **Tessarine Directorate**. A civilian freighter, the **Kestrel**, is adrift with a failing reactor and 23 crew. A Directorate heavy cruiser is closing fast. The Kestrel is hiding something.
+The Halcyon arrives at the edge of the **Calloway Reach**, space disputed between the ISA and the **Tessarine Directorate**. A civilian freighter, the **Kestrel**, is adrift with a failing reactor and 23 crew. A Directorate heavy cruiser is closing fast. The Kestrel is hiding something.
 
 Every run is generated from a **seed**, which is shown in the header. You can choose one with `?seed=42`. The seed decides:
 
@@ -207,7 +207,7 @@ Type `help` or `options` in the command bar, or tap a suggestion chip.
 - `Get us inbetween the two ships. Keep the weapons down and shields down. We don't want to appear hostile. And hail them on screen.`: one turn produces five tracked orders. Helm interposes between the Kestrel and the cruiser, tactical keeps weapons safe and shields down, the posture becomes non-hostile, and comms hails both ships on screen. Helm then reports underway and in position, and the Prefect notices.
 - `Escort the Kestrel` · `Circle the freighter` · `Slip in behind the cruiser` · `Put us in the cruiser's path`
 - `Shadow the warship at fifty thousand kilometres` · `Stay out of their weapons range` · `Close to transporter range of the Kestrel`
-- `Plot an intercept course for the Tessarine ship` · `Swing around so our bow faces the freighter` · `Run for Agency space` (the old `Run for Concord space` still works)
+- `Plot an intercept course for the Tessarine ship` · `Swing around so our bow faces the freighter` · `Run for ISA space` (the old `Run for Agency space` and `Run for Concord space` still work)
 - `Back us away from that warship slowly` · `Evasive pattern delta, then return fire`
 - `Lock torpedos on the crusier` (misspellings are corrected against the game's vocabulary)
 - `Get between them` (resolved to the Kestrel and the cruiser) · `interpose in front of the cruiser`: helm asks "between the cruiser and the Kestrel, or between the cruiser and the border?" and offers buttons
@@ -379,6 +379,7 @@ The app deploys to Vercel as a Vite static site plus serverless functions in `ap
 - **Fleet hails and distress calls are not two-way channels.** You answer them in words (accept, question, refuse, decline, ignore), but you cannot hold a conversation with Fleet Command or the hauler's crew.
 - **Canonical time moves only on patrol, travel and missions.** Waiting on the bridge, chatting, or a long first-contact conversation does not advance the galaxy clock.
 - **v0.7 limits.** No promotions, Fleet Command requests channel, qualifications or board of inquiry in play yet (data models and unit tests only). The captain's name is used in the personnel record, reports, the commission and the bridge greeting, not yet throughout every scenario's dialogue (scenario NPCs still say "Captain"). Rank changes are available only from the development selector in Settings. Evaluation describes the final state and a turn trace; it is deterministic and rule-based, not an AI judgment.
+- **v0.7.1 limits (idle bridge and Fleet Command).** "Hail the ISA" / "contact Fleet Command" is a one-shot exchange with an offline duty officer (your training record, and what is coming), not a persistent channel; assignment, supply, personnel and legal requests come later. With exactly one contact on sensors, an unrecognised ship name still hails that contact. "Who is out there?" is not recognised (use "any contacts?" or "scan"). In simulations, generic class words ("freighter", "cruiser") still refer to that scenario's ships. Held-out Fleet/career phrasings passed 12/12, 10/10 and 7/7 negatives on the first run, but they were written by the same author who then built the classifier.
 - **v0.6.1 crew voices are untested on real devices.**
   - Casting and the speech queue are tested with mocked voice lists (unit tests and the smoke test), not by listening.
   - Which voices exist depends on the device and the voices installed. iOS Safari often exposes only a few English voices (plus novelty ones, which are excluded). Android Chrome usually exposes one voice per locale. Desktop Chrome on Windows has three local voices plus cloud "Google" voices, which are off by default.

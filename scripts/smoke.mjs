@@ -925,6 +925,69 @@ for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape',
   await ctx9.close();
 }
 
+// ============================================================== v0.7.1 =====
+// The idle bridge knows its setting: no scenario contacts, Fleet Command as a comms party,
+// training questions answered from the Training Record.
+{
+  const ctxA = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await ctxA.addInitScript(stubs);
+  const pa = await ctxA.newPage();
+  pa.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  pa.on('pageerror', (e) => errors.push(String(e)));
+  // Lines from the crew and comms (never the captain's own words), per panel, so new ones can be told apart.
+  const lines = () => pa.evaluate(() => ['narrative', 'comms'].map((id) => [...document.querySelectorAll(`[data-testid=${id}] .log-entry`)].map((e) => ({ who: e.querySelector('.log-speaker')?.textContent ?? '', text: `${e.querySelector('.log-speaker')?.textContent ?? ''}: ${e.querySelector('.log-text')?.textContent ?? ''}` }))));
+  const crewText = async () => (await lines()).flat().filter((x) => x.who !== 'Captain').map((x) => x.text).join('\n');
+  const askA = async (cmd, wait = 450) => {
+    const [n0, c0] = (await lines()).map((x) => x.length);
+    await sendOn(pa, cmd, wait);
+    const [n1, c1] = await lines();
+    return [...n1.slice(n0), ...c1.slice(c0)].filter((x) => x.who !== 'Captain').map((x) => x.text).join('\n');
+  };
+  await pa.goto(withSeed(7), { waitUntil: 'networkidle' });
+  await pa.waitForTimeout(500);
+  await skipIntro(pa);
+  check('v0.7.1: idle bridge says "No mission. On station."', /No mission\. On station\./.test(await pa.innerText('[data-testid=objectives]')));
+  let a = await askA('what training do i need?');
+  check('v0.7.1: "what training do I need?" is answered from the (empty) Training Record', /no exercise has been assessed/.test(a) && /recommend/.test(a), a.slice(-300));
+  await pa.screenshot({ path: `${SHOTS}/v071-01-training-question.png` });
+  a = await askA('hail the ISA', 600);
+  check('v0.7.1: "hail the ISA" opens ISA Fleet Command (not a ship)', /Channel open to ISA Fleet Command/.test(a) && /Go ahead, Captain Ashby/.test(a) && !/which vessel/i.test(a), a.slice(-300));
+  await pa.screenshot({ path: `${SHOTS}/v071-02-hail-isa.png` });
+  a = await askA('hail them');
+  check('v0.7.1: hailing with nothing on sensors says so', /No vessels on sensors/.test(a), a.slice(-200));
+  a = await askA('scan the cruiser');
+  check('v0.7.1: scanning an absent ship: no contacts', /No contacts/.test(a), a.slice(-200));
+  a = await askA('fire torpedoes');
+  check('v0.7.1: no "which contact" question with nothing on sensors', !/which contact/i.test(a) && /No contacts/.test(a), a.slice(-200));
+  for (const c of ['hail fleet command', 'patch me through to Training Command', 'how am I doing?', 'recommend a simulation', 'helm, full stop', 'status report']) await askA(c, 350);
+  // Catalogue titles ("The Kestrel Incident") are fair to name as recommendations; scenario ships and people are not.
+  const all = (await crewText()).replace(/The Kestrel Incident|Quarantine at Tallis Gate/g, '');
+  const leak = all.match(/.{0,50}\b(Kestrel|Arden|Vane|Prefect|Ashen|Covenant|Directorate|Mercy of Ilun|Sabeth|Marr\b|Thornwake|liner|picket|freighter|warship)\b.{0,30}/);
+  check('v0.7.1: nothing from Training Simulation 001 or 002 is spoken on the idle bridge', !leak, leak ? leak[0] : '');
+  await pa.screenshot({ path: `${SHOTS}/v071-03-idle-bridge-battery.png` });
+  // After one assessed exercise, the answer changes.
+  await sendOn(pa, 'Computer, begin the Kestrel Incident simulation', 1200);
+  await pa.waitForSelector('[data-testid=mode-banner][data-mode=simulation]');
+  await pa.waitForTimeout(500);
+  await skipIntro(pa);
+  a = await askA('hail fleet command', 500);
+  check('v0.7.1: in a simulation, Fleet Command is exercise control', /exercise control/i.test(a), a.slice(-200));
+  for (const c of ['charge the jump drive', 'wait', 'wait', 'jump']) await sendOn(pa, c, 350);
+  await pa.waitForTimeout(800);
+  if (await pa.locator('[data-testid=outcome-dismiss]').count()) await pa.click('[data-testid=outcome-dismiss]');
+  a = await askA('how am I doing?');
+  check('v0.7.1: with evidence, the XO answers from the record', /One exercise assessed/.test(a) && /Kestrel Abandoned/.test(a), a.slice(-300));
+  a = await askA('what training do I need?');
+  check('v0.7.1: training needs cite concerns from the record', /concern in/.test(a) && !/\d\s*%/.test(a), a.slice(-300));
+  await pa.screenshot({ path: `${SHOTS}/v071-04-training-with-evidence.png` });
+  await pa.setViewportSize({ width: 390, height: 844 });
+  await pa.waitForTimeout(300);
+  const ovA = await pa.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  check('v0.7.1 phone: no horizontal overflow on the bridge', ovA <= 0, `overflow ${ovA}px`);
+  await pa.screenshot({ path: `${SHOTS}/v071-05-phone.png`, fullPage: true });
+  await ctxA.close();
+}
+
 check('no console errors', errors.length === 0, errors.join(' | '));
 await browser.close();
 const failed = results.filter((r) => !r.pass);

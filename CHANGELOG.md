@@ -2,6 +2,32 @@
 
 All notable changes to Project Starbridge are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.7.1] — 2026-10-21 — The bridge knows where it is
+
+Fixes Brad's idle-bridge report: "what training do I need?" was "order not recognized", and "hail the ISA" asked "the Kestrel, the cruiser, or both?".
+
+### Root cause
+- The idle bridge (no mission, on station) was built from the Kestrel Incident world, with its ships, people and facts hidden but present.
+- The bridge has no scenario vocabulary of its own, so the interpreter fell back to its built-in Kestrel words and labels ("the Kestrel", "the cruiser"), and the hail-target question offered both ship slots whether or not anything was on sensors. "The ISA" was not an addressee at all, so the hail fell through to that question.
+- There was no notion of setting (station, simulation, mission), no non-ship comms party, and no career-question intent. Kestrel-only words also resolved inside Tallis Gate ("prefect" → the picket).
+
+### Fixed
+- **Setting.** `settingOf(state)` (station / training simulation `<id>` / Active Duty mission) is part of the interpreter context. Scenario vocabulary, contacts and dialogue apply only while that scenario is active; the station is neutral (no ships, no scenario people, no facts).
+- **Nothing on sensors.** Hailing with no contacts: "No vessels on sensors…"; scanning, steering at or firing on a ship that isn't there: "No contacts on sensors…". No "which vessel" question when there is nothing to choose; transport, tow and repair orders no longer report the distance to a hidden Kestrel.
+- **ISA Fleet Command as a comms party.** "Hail the ISA", "contact Fleet Command", "get me HQ", "open a secure channel to Training Command", "call the Admiralty" and similar reach a Fleet Command duty officer (or, inside a simulation, exercise control) in every context. The answer is honest about what works now (your training record) and what comes later. It uses your rank and name and never touches scenario characters.
+- **Career and training questions.** "What training do I need?", "how am I doing?", "what are my strengths?", "recommend a simulation", "what's my training record?" are answered by the XO (or via Fleet/Training Command) from the Training Record and competencies. With no assessed exercise it says so and recommends simulations by the competencies they assess.
+
+### Changed (naming, approved)
+- The commission is reviewed by **ISA Fleet Command** (was "the Admiralty").
+- Prefect Sorel Vane now introduces himself as "commanding the Ashen Covenant"; his side is still the Tessarine Directorate.
+- Player-facing references read **"the ISA"**; "Intergalactic Space Agency" is spelled out only on formal screens (commission, ship status, name prompt). "Your Agency", "Agency survey space", "Agency Care" etc. now say ISA. Saved text is migrated on load; the parser still accepts "Agency space" and "Concord space"; internal `concord` ids are unchanged.
+
+### Tests
+- `tests/v071/station.test.ts` (54): idle-bridge battery (hail variants, scan, helm, tactical, career, unknown ships; no Kestrel/Tallis names leak), Fleet routing on station, Active Duty, simulations and missions, training answers with and without evidence, scenario comms isolation both ways, existing simulation comms unchanged.
+- `tests/v071/heldout.test.ts`: paraphrases written before the routing was built and not tuned on. First run: **Fleet 12/12, career 10/10, negatives 7/7** left alone (same author for list and classifier, so treat as indicative).
+- `tests/v071/naming-consistency.test.ts`: no bare "Agency" or "Admiralty" in source, the formal name only on formal screens, Vane's line, concord ids intact, migration and old aliases.
+- Smoke: a v0.7.1 idle-bridge block (training question, hail the ISA, absent ships, leak check, exercise control in a sim, answers with evidence after a run).
+
 ## [0.7.0] — 2026-10-21 — Evaluation & Records Foundation
 
 The first milestone of the approved [career expansion plan](docs/CAREER_EXPANSION_PLAN.md).
