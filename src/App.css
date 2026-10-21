@@ -293,3 +293,13 @@
   .grid { grid-template-columns: minmax(0, 1fr); }
   .log-speaker { white-space: normal; overflow-wrap: anywhere; }
 }
+
+/* v0.6.1 crew voices panel */
+.voice-panel .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 4px 0; }
+.voice-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.voice-row { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: center; padding: 8px 10px; border: 1px solid #2a3550; border-radius: 10px; background: #0d1119; }
+.voice-who { min-width: 0; flex: 1 1 220px; overflow-wrap: anywhere; }
+.voice-controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.voice-controls select { background: #11151f; color: var(--ink); border: 1px solid #2a4b74; border-radius: 8px; padding: 4px 6px; min-height: 32px; max-width: 220px; }
+.voice-controls label { display: flex; gap: 6px; align-items: center; }
+.voice-controls input[type=range] { width: 90px; }

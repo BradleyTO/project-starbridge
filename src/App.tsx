@@ -23,7 +23,11 @@ import { Objectives } from './ui/components/Objectives';
 import { Tactical } from './ui/components/Tactical';
 import { CommsLog, NarrativePanel } from './ui/components/LogPanels';
 import { CommandInput } from './ui/components/CommandInput';
-import { cancelSpeech, speak, speechSynthesisSupported } from './ui/speech';
+import { cancelSpeech, speechSynthesisSupported } from './ui/speech';
+import { loadVoiceSettings, saveVoiceSettings, speakAs, useDeviceVoices, type VoiceSettings } from './ui/voices';
+import { VoicePanel } from './ui/components/VoicePanel';
+import { assignVoices } from './voice/cast';
+import { castMembers, voiceKeyOf } from './voice/members';
 import { useUniverse } from './ui/useUniverse';
 import { ModeBanner } from './ui/components/ModeBanner';
 import { Hub, type HubTab } from './ui/components/Hub';
@@ -39,7 +43,7 @@ import './App.css';
 
 const BEAT_MS = 3500;
 const VOICE_KEY = 'starbridge.voice';
-const APP_VERSION = '0.6.0';
+const APP_VERSION = '0.6.1';
 const TRAINING_ID = TRAINING[0].id;
 const AMBIENT_MS = 22000;
 const interpreter = new OfflineInterpreter();
@@ -139,6 +143,26 @@ export default function App() {
   });
   const [voiceOn, setVoiceOn] = useState(() => safeStorage()?.getItem(VOICE_KEY) === 'on');
   const lastSpoken = useRef(state.nextLogId - 1);
+  // v0.6.1 crew voices: cast the device's voices onto the crew, the computer and the people on comms.
+  const deviceVoices = useDeviceVoices();
+  const [voiceSettings, setVoiceSettings] = useState<VoiceSettings>(() => loadVoiceSettings());
+  const castState = useMemo(() => state, [state.scenarioId, state.characters]); // eslint-disable-line react-hooks/exhaustive-deps
+  const voiceMembers = useMemo(() => castMembers(castState, scenarioFor(castState.scenarioId)), [castState]);
+  const voiceCast = useMemo(() => assignVoices(deviceVoices, voiceMembers, voiceSettings), [deviceVoices, voiceMembers, voiceSettings]);
+  const voiceCastRef = useRef(voiceCast);
+  useEffect(() => {
+    voiceCastRef.current = voiceCast;
+  }, [voiceCast]);
+  const updateVoiceSettings = (next: VoiceSettings) => {
+    setVoiceSettings(next);
+    saveVoiceSettings(next);
+  };
+  const previewVoice = (key: string) => {
+    const m = voiceMembers.find((x) => x.key === key);
+    if (!m) return;
+    cancelSpeech();
+    speakAs({ text: m.sample, speakerKey: key, speaker: m.label, assignment: voiceCast[key] ?? null });
+  };
   const introRunning = state.intro < scenario.intro.length;
   const contacts = useMemo(() => contactsView(state, scenarioFor(state.scenarioId)), [state]);
   const helm = useMemo(() => helmView(state), [state]);
@@ -161,8 +185,12 @@ export default function App() {
     }
     const fresh = state.log.filter((e) => e.id > lastSpoken.current && e.speaker !== 'Captain' && (e.channel === 'crew' || e.channel === 'comms' || e.channel === 'narrative'));
     lastSpoken.current = state.nextLogId - 1;
-    for (const e of fresh) speak(e.text);
-  }, [state.log, state.nextLogId, voiceOn]);
+    const cast = voiceCastRef.current;
+    for (const e of fresh) {
+      const key = voiceKeyOf(e, state);
+      speakAs({ text: e.text, speakerKey: key, speaker: e.speaker, assignment: cast[key] ?? cast['*'] ?? null });
+    }
+  }, [state, state.log, state.nextLogId, voiceOn]);
 
   const toastTimer = useRef<number | undefined>(undefined);
   const flash = useCallback((msg: string) => {
@@ -512,10 +540,13 @@ export default function App() {
       {toast && <div className="toast" role="status" data-testid="toast">{toast}</div>}
       {showCommission && duty === 'pending' && <CommissionCeremony onAccept={acceptCommission} onLater={() => { setShowCommission(false); flash('Fleet Command will wait. Answer from the Active Duty tab, or say "I accept the commission".'); }} />}
       {hubTab && (
-        <Hub tab={hubTab} onTab={setHubTab} onClose={() => setHubTab(null)} tabs={['universe', 'archive', 'record', 'settings']}>
+        <Hub tab={hubTab} onTab={setHubTab} onClose={() => setHubTab(null)} tabs={['universe', 'archive', 'record', 'voices', 'settings']}>
           {hubTab === 'universe' && <UniversePanel key={rev} universe={universe} actions={universeActions} />}
           {hubTab === 'archive' && <ArchivePanel key={rev} entries={universe.archive()} actions={{ ...archiveActions, onResume: universeActions.onResume }} />}
           {hubTab === 'record' && <RecordPanel key={rev} canon={universe.canon()} familiarity={universe.familiarity()} />}
+          {hubTab === 'voices' && (
+            <VoicePanel members={voiceMembers} cast={voiceCast} voices={deviceVoices} settings={voiceSettings} supported={speechSynthesisSupported()} onSettings={updateVoiceSettings} onPreview={previewVoice} />
+          )}
           {hubTab === 'settings' && <SettingsPanel key={rev} universe={universe} onChange={(msg) => { touch(); flash(msg); }} onDuty={onDuty} />}
         </Hub>
       )}
@@ -582,7 +613,7 @@ export default function App() {
         </aside>
       </main>
       <footer className="footer">
-        Project Starbridge v{APP_VERSION} (training simulations) · Simulation Mode & Active Duty · Original fiction and artwork · Typed orders always available; voice where supported.
+        Project Starbridge v{APP_VERSION} (crew voices) · Simulation Mode & Active Duty · Original fiction and artwork · Typed orders always available; voice where supported.
       </footer>
     </div>
   );

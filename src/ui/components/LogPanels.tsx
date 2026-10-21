@@ -14,7 +14,7 @@ function useAutoScroll(dep: unknown) {
 
 function Entry({ e }: { e: LogEntry }) {
   return (
-    <div className={`log-entry ch-${e.channel}`} data-channel={e.channel}>
+    <div className={`log-entry ch-${e.channel}`} data-channel={e.channel} data-voice={e.voice}>
       <span className="log-time">{formatMissionClock(e.time)}</span>
       <span className="log-speaker">{e.speaker}</span>
       <p className="log-text">{e.text}</p>
