@@ -288,13 +288,25 @@ Then:
 
 ## 12. Daily-run checklist
 
-1. Pick the next **planned** entry in the roadmap. Mark it **in progress** and the previous one **done**.
-2. Write `src/scenarios/<name>/`: setup, agents, hooks, dialogue, outcome, templates, index (including `voices` hints, §6a). Copy #2 and replace its content.
-3. Add the catalogue entry and the registry line.
-4. Write `tests/simNN/` (§11) and play each ending yourself first (a scratch `_explore.test.ts` that prints the log is the fastest way; delete it afterwards).
-5. Add the smoke block.
-6. Update the README scenario list and the CHANGELOG, and bump the minor version.
-7. Run all checks, commit in small chunks, push (no force), confirm Vercel READY, and run the live smoke test.
+1. Pick the lowest-numbered **planned** entry in the roadmap and mark it **in progress**.
+2. **No-overlap check (before any code).** Re-read the roadmap's Overview and Overlap review, and every **done** entry. Stop and revise the premise if the new simulation repeats another's:
+   - **core situation:** e.g. a vulnerable ship and an armed one with the Halcyon in the middle (#1 and #2 already use it; no further simulation may), contagion (#2 owns it), a derelict to explore (#8 owns it), a pirate attack (#15 owns it), a hostage-taker (#19 owns it), first contact (#3 owns it);
+   - **central dilemma:** the hard choice the captain faces;
+   - **solution shape:** if the same plan of orders would win both, they are the same event.
+
+   Seed variants count too: a variant must not turn this simulation into another one.
+3. **Challenge-variety check.** The entry's *Command challenge* must actually decide the outcome:
+   - The **primary** skill (deduction, a gut call, relying on the science officer, the comms officer cracking a code, the engineer improvising, reading people, restraint, crew leadership, triage, timing, bluffing, ethics under orders, mediation, and so on) must be **necessary**. At least one success ending must be out of reach without it.
+   - The **pivotal officer's** expertise must be **necessary** for at least one success ending: their report, decode, repair or judgement unlocks it, and the captain chooses whether to trust it.
+   - **Variety:** it must not share its primary skill or its pivotal officer with the previous simulation, and no primary skill may be used more than three times across the library.
+   - **Writing the tests:** add one scripted playthrough that wins *through* the primary skill. Add one that fails *for lack of* it (for example, acting before the science is in, or trusting the lie).
+   - **Changes:** if the challenge or premise changes while building, update the roadmap's Overview, Variety check and Overlap review in the same commit.
+4. Write `src/scenarios/<name>/`: setup, agents, hooks, dialogue, outcome, templates, index (including `voices` hints, §6a). Copy #2 and replace its content.
+5. Add the catalogue entry and the registry line.
+6. Write `tests/simNN/` (§11) and play each ending yourself first (a scratch `_explore.test.ts` that prints the log is the fastest way; delete it afterwards).
+7. Add the smoke block.
+8. Update the README scenario list and the CHANGELOG, and bump the minor version.
+9. Run all checks, commit in small chunks, push (no force), confirm Vercel READY, and run the live smoke test. Mark the entry **done** in the roadmap once it is live and verified.
 
 ## 13. Known limits of the shared engine (v0.6)
 
