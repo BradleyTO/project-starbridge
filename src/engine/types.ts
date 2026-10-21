@@ -256,6 +256,28 @@ export interface Character {
   memory: Record<string, number>;
 }
 
+/** v0.7: how the captain is named and addressed in dialogue. */
+export interface CaptainAddress {
+  /** "Rowan Ashby" (validated: letters, spaces, hyphen, apostrophe, period). */
+  name: string;
+  /** "Captain Ashby" / "Commodore Ashby". */
+  formal: string;
+  /** Rank title alone ("Captain"), for casual address. */
+  rank: string;
+}
+
+/** v0.7: what happened that the final state alone cannot show (who fired first, the worst moment). */
+export interface EvalTrace {
+  /** Lowest Halcyon hull seen. */
+  minHull: number;
+  /** Who fired first: the Halcyon, another ship, both in the same minute, or nobody yet. */
+  firstShot: 'halcyon' | 'other' | 'both' | null;
+  /** Turns on which the Halcyon's shields were down under a hostile weapons lock. */
+  exposed: number[];
+  /** Orders that changed something (capped). */
+  orders: { turn: number; order: string; flags: string[]; facts: string[]; objectives: string[] }[];
+}
+
 export interface Fact {
   id: string;
   text: string;
@@ -369,6 +391,10 @@ export interface WorldState {
   outcome: Outcome | null;
   /** v0.5 comms session (absent in older saves = no channels). */
   comms?: CommsState;
+  /** v0.7: judgment signals for the after-action evaluation (never read by game rules). */
+  trace?: EvalTrace;
+  /** v0.7: the captain's name and how people address them (set by the app; display only, never parsed). */
+  captain?: CaptainAddress;
   /** v0.5 crew autonomy: recent refusals with the reasons the officer gave (for "why?"). */
   refusals?: { officer: string; turn: number; order: string; reasons: string[] }[];
   /** v0.5: the science officer's survey of systems within exploration range (idle bridge). */

@@ -23,6 +23,15 @@ import * as explore from './exploration';
 import { markDelivered, pickTraffic, type Traffic } from './delivery';
 import type { Exploration } from './types';
 
+import { evaluate } from '../evaluation/evaluate';
+import { fileEvaluation } from '../evaluation/record';
+import type { CompetencyId, Evaluation, TrainingRecord } from '../evaluation/types';
+import type { CaptainProfile } from '../career/profile';
+import { DEFAULT_CAPTAIN_NAME, formalAddress, validateCaptainName, type NameCheck } from '../career/name';
+import { isRankId, rankOf, type RankId } from '../career/ranks';
+import { fileServiceEvaluation, serviceOf, type ServiceRecord } from '../career/service';
+import type { CaptainAddress } from '../engine/types';
+
 export type PatrolResult = { ok: true; hours: number; traffic: Traffic | null } | { ok: false; reason: 'no-credits-paused' | 'not-entitled' };
 export type CourseResult =
   | { ok: true; to: string; hours: number; charged: boolean; investigating: boolean; traffic: Traffic | null }
@@ -168,6 +177,8 @@ export class Universe {
     const atIso = this.now().toISOString();
     return this.repo.canon.commit(this.ctx(), (d) => {
       d.commission = { at: d.clock, atIso, ship: 'ISV Halcyon', by: 'Admiral Odessa Kaine, ISA Fleet Command' };
+      const named = this.repo.profile.read().name;
+      if (named) d.captain.name = named;
       d.captain.career.push({ id: `career-commission`, at: d.clock, missionId: null, eventId: null, text: 'Commissioned to active duty in command of the ISV Halcyon, Tessarine border survey.' });
       return d;
     });
@@ -205,7 +216,8 @@ export class Universe {
     if (cur) return cur;
     const seed = Math.floor((this.now().getTime() / 1000) % 1_000_000);
     const profileId = `local-${seed.toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`;
-    return this.repo.canon.initialise(this.ctx(), seedBoard(newCanon({ profileId, seed, appVersion: this.appVersion }), this.appVersion));
+    const captain = this.repo.profile.read().name ?? undefined;
+    return this.repo.canon.initialise(this.ctx(), seedBoard(newCanon({ profileId, seed, appVersion: this.appVersion, captain }), this.appVersion));
   }
 
   offers(): readonly DeepReadonly<MissionOffer>[] {
@@ -277,6 +289,12 @@ export class Universe {
       if (d.missions[session.missionId]?.status === 'completed') return d;
       const before = d.clock;
       completeBridgeMission(d, session, { after: (cc, record, final) => world.afterBridgeMission(cc, record, final, this.appVersion) });
+      // v0.7: the canonical after-action evaluation goes on the Service Record (never the Training Record).
+      const scenario = this.scenarios[session.state.scenarioId];
+      if (scenario && session.state.outcome) {
+        const e = evaluate(session.state, scenario, { id: `EVAL-${session.missionId}`, source: 'canonical', refId: session.missionId, atIso: this.now().toISOString(), catalogue: this.evaluationCatalogue() });
+        d.service = fileServiceEvaluation(serviceOf(d), e);
+      }
       world.advanceWorld(d, d.clock - before, this.appVersion, { from: before });
       replenish(d, this.appVersion);
       return d;
@@ -413,11 +431,108 @@ export class Universe {
     return this.repo.familiarity.update((f) => learnFromCommand(f, timeline, text, results));
   }
 
-  /** A simulation ended: store its outcome in simulation history and training stats only. */
-  finishSimulation(session: SimulationSession, final: WorldState): void {
-    if (!final.outcome) return;
+  /**
+   * A simulation ended: store its outcome in simulation history, its after-action evaluation in
+   * the Training Record, and training stats. Never canon. Returns the evaluation (null if the
+   * scenario is unknown here).
+   */
+  finishSimulation(session: SimulationSession, final: WorldState): Evaluation | null {
+    if (!final.outcome) return null;
     const outcome = { ...final.outcome, turn: final.turn };
-    this.repo.sims.update((v) => ({ ...v, runs: v.runs.map((r) => (r.id === session.runId && !r.outcome ? { ...r, outcome } : r)) }));
+    const id = `EVAL-${session.runId}`;
+    this.repo.sims.update((v) => ({ ...v, runs: v.runs.map((r) => (r.id === session.runId && !r.outcome ? { ...r, outcome, evaluationId: id } : r)) }));
     this.repo.familiarity.update((f) => recordSimulationEnd(f, final));
+    const scenario = this.scenarios[final.scenarioId];
+    if (!scenario) return null;
+    const e = evaluate(final, scenario, { id, source: 'simulation', refId: session.runId, atIso: this.now().toISOString(), catalogue: this.evaluationCatalogue() });
+    this.repo.training.update((r) => fileEvaluation(r, e));
+    return this.training().evaluations.find((x) => x.id === id) ?? e;
+  }
+
+  // -------------------------------------------------------- v0.7 records --
+
+  /** Which simulations exercise which competencies (for training recommendations). */
+  private evaluationCatalogue(): { title: string; scenarioId: string; competencies: CompetencyId[] }[] {
+    return Object.values(this.scenarios)
+      .filter((m) => m.evaluation)
+      .map((m) => ({ title: m.title, scenarioId: m.id, competencies: m.evaluation!.competencies }));
+  }
+
+  /** The Training Record (simulation evaluations and competencies). Never canon. */
+  training(): TrainingRecord {
+    return this.repo.training.read();
+  }
+
+  /** The captain profile. Careers from before v0.7 with a name on the canonical record keep it. */
+  profile(): CaptainProfile {
+    const p = this.repo.profile.read();
+    if (p.name) return p;
+    const legacy = this.canon()?.captain.name;
+    return legacy && legacy !== 'Captain' && validateCaptainName(legacy).ok ? { ...p, name: legacy } : p;
+  }
+
+  /** The one-time naming prompt is due (new captain or a save from before v0.7). */
+  needsName(): boolean {
+    return !this.repo.profile.read().prompted;
+  }
+
+  /**
+   * Set (or change) the captain's name: the only customizable name. Validated; records are tied
+   * to the profile, not the name, so nothing else changes. Synced to the canonical record when on
+   * Active Duty (through the commit gate).
+   */
+  setCaptainName(raw: unknown): NameCheck {
+    const v = validateCaptainName(raw);
+    if (!v.ok) return v;
+    const before = this.profile().name;
+    this.repo.profile.update((p) => ({ ...p, name: v.name, prompted: true, history: before === v.name ? p.history : [...p.history, { from: before, to: v.name, atIso: this.now().toISOString() }].slice(-50) }));
+    this.syncCanonName();
+    return v;
+  }
+
+  /** The prompt was dismissed: keep a sensible default (editable later in the Service Record). */
+  dismissNamePrompt(): string {
+    const cur = this.profile().name;
+    if (cur) {
+      this.repo.profile.update((p) => ({ ...p, name: cur, prompted: true }));
+      return cur;
+    }
+    this.setCaptainName(DEFAULT_CAPTAIN_NAME);
+    return DEFAULT_CAPTAIN_NAME;
+  }
+
+  private syncCanonName(): void {
+    const name = this.repo.profile.read().name;
+    const c = this.canon();
+    if (!name || !c || c.captain.name === name || !this.entitlements().activeDuty) return;
+    this.repo.canon.commit(this.ctx(), (d) => {
+      d.captain.name = name;
+      return d;
+    });
+  }
+
+  /** The Service Record (rank, assignment, canonical evaluations); the default before a career exists. */
+  service(): ServiceRecord {
+    return serviceOf(this.canon() as CanonicalState | null);
+  }
+
+  /** How the captain is named and addressed right now ("Captain Ashby", "Commodore Ashby"). */
+  address(): CaptainAddress {
+    const name = this.profile().name ?? DEFAULT_CAPTAIN_NAME;
+    const rank = this.service().rank;
+    return { name, formal: formalAddress(name, rank), rank: rankOf(rank).title };
+  }
+
+  /** Dev / tests: set the canonical rank (promotion offers come in a later phase). Commit gate only. */
+  setRank(rank: RankId, reason = 'Set from developer settings.'): boolean {
+    if (!isRankId(rank) || !this.ensureCanon()) return false;
+    const atIso = this.now().toISOString();
+    this.repo.canon.commit(this.ctx(), (d) => {
+      const svc = serviceOf(d);
+      if (svc.rank === rank) return d;
+      d.service = { ...svc, rank, rankHistory: [...svc.rankHistory, { rank, at: d.clock, atIso, reason }] };
+      return d;
+    });
+    return true;
   }
 }

@@ -9,6 +9,8 @@
  *   starbridge.credits.v1       daily canonical-start allowance (local, NOT tamper-proof)
  *   starbridge.entitlements.v1  dev entitlement toggles (no real payments)
  *   starbridge.save.v4          simulation save slot (engine/persistence.ts)
+ *   starbridge.training.v1      v0.7 Training Record: simulation evaluations, competencies (never canon)
+ *   starbridge.profile.v1       v0.7 captain profile: the captain's chosen name
  */
 import type { StorageLike } from '../engine/persistence';
 import { migrateWorldState } from '../engine/persistence';
@@ -17,6 +19,9 @@ import type { WorldState } from '../engine/types';
 import { clone, deepFreeze, type DeepReadonly } from './freeze';
 import { TimelineViolation, assertCanonical, type CanonicalContext } from './gate';
 import type { CanonicalState, CreditLedger, Entitlements, FamiliarityMemory, SimulationStoreState } from './types';
+import { defaultTraining, isTraining } from '../evaluation/record';
+import type { TrainingRecord } from '../evaluation/types';
+import { defaultProfile, isProfile, type CaptainProfile } from '../career/profile';
 import { UNIVERSE_SCHEMA_VERSION } from './types';
 
 export const KEYS = {
@@ -25,6 +30,8 @@ export const KEYS = {
   familiarity: 'starbridge.familiarity.v1',
   credits: 'starbridge.credits.v1',
   entitlements: 'starbridge.entitlements.v1',
+  training: 'starbridge.training.v1',
+  profile: 'starbridge.profile.v1',
 } as const;
 
 export type LoadStatus = 'ok' | 'none' | 'corrupt-backed-up' | 'newer-version';
@@ -117,11 +124,19 @@ function assertNoSimulationData(c: CanonicalState): void {
   }
 }
 
+/** Legacy display names are migrated, but the captain's own chosen name is never rewritten. */
+function renameKeepingCaptain(raw: Record<string, unknown>): Record<string, unknown> {
+  const out = renameLegacyNames(raw);
+  const cap = (raw as { captain?: { name?: unknown } }).captain;
+  if (cap && typeof cap.name === 'string' && out.captain && typeof out.captain === 'object') (out.captain as { name: string }).name = cap.name;
+  return out;
+}
+
 export class CanonStore {
   private doc: VersionedDoc<CanonicalState>;
   private cache: DeepReadonly<CanonicalState> | null | undefined;
   constructor(storage: StorageLike) {
-    this.doc = new VersionedDoc<CanonicalState>(storage, KEYS.canon, 'starbridge.canon', {}, isCanon, renameLegacyNames);
+    this.doc = new VersionedDoc<CanonicalState>(storage, KEYS.canon, 'starbridge.canon', {}, isCanon, renameKeepingCaptain);
   }
   get status(): LoadStatus {
     return this.doc.status;
@@ -203,6 +218,8 @@ export interface UniverseRepository {
   familiarity: PlainStore<FamiliarityMemory>;
   credits: PlainStore<CreditLedger>;
   entitlements: PlainStore<Entitlements>;
+  training: PlainStore<TrainingRecord>;
+  profile: PlainStore<CaptainProfile>;
 }
 
 export function localRepository(storage: StorageLike, defaultLedger: () => CreditLedger): UniverseRepository {
@@ -212,5 +229,7 @@ export function localRepository(storage: StorageLike, defaultLedger: () => Credi
     familiarity: new PlainStore(storage, KEYS.familiarity, 'starbridge.familiarity', defaultFamiliarity),
     credits: new PlainStore(storage, KEYS.credits, 'starbridge.credits', defaultLedger),
     entitlements: new PlainStore(storage, KEYS.entitlements, 'starbridge.entitlements', defaultEntitlements),
+    training: new PlainStore(storage, KEYS.training, 'starbridge.training', defaultTraining, isTraining, renameLegacyNames),
+    profile: new PlainStore(storage, KEYS.profile, 'starbridge.profile', defaultProfile, isProfile),
   };
 }

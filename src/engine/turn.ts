@@ -4,6 +4,7 @@
  *   [if time passes] standing orders + NPC agents + events → objectives →
  *   outcome → narration (reports + state diff) → new WorldState.
  */
+import { traceTurn } from './trace';
 import type { Interpretation, ProposedAction } from './schema';
 import { addRestriction, addStanding, checkStanding, describeTrigger, liftFor, planConflict, planOrder, SUBJECT_LABEL } from './standing';
 import { ProposedActionSchema } from './schema';
@@ -168,6 +169,7 @@ export function processOrders(
   }
   s = { ...s, rng: rng.state };
   s = finalise(s, scenario);
+  s = traceTurn(before, s, text);
   const diffs = diffReports(before, s);
   const isObjective = (r: Report) => r.key === 'objectiveNew' || r.key === 'objectiveUpdate';
   const ending = s.outcome && !before.outcome ? [sys('outcome', { title: s.outcome.title, summary: s.outcome.summary })] : [];

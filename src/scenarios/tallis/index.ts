@@ -1,4 +1,5 @@
 /** Training Simulation 002: Quarantine at Tallis Gate. */
+import { tallisEvaluation } from './evaluation';
 import type { ScenarioModule } from '../../engine/scenario';
 import type { ShipId, WorldState } from '../../engine/types';
 import { narrate, say, sys } from '../../engine/report';
@@ -50,6 +51,7 @@ export const tallisScenario: ScenarioModule = {
   hooks: { ...hooks, dialogue: tallisDialogue },
   simulate,
   objectives: computeObjectives,
+  evaluation: tallisEvaluation,
   detectOutcome,
   templates,
   roleHolders: ROLE_HOLDERS,

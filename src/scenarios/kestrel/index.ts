@@ -1,3 +1,4 @@
+import { kestrelEvaluation } from './evaluation';
 import type { ScenarioModule } from '../../engine/scenario';
 import type { ShipId, WorldState } from '../../engine/types';
 import { narrate, say, sys } from '../../engine/report';
@@ -47,6 +48,7 @@ export const kestrelScenario: ScenarioModule = {
   hooks: { ...hooks, dialogue: kestrelDialogue },
   simulate,
   objectives: computeObjectives,
+  evaluation: kestrelEvaluation,
   detectOutcome,
   templates,
   roleHolders: ROLE_HOLDERS,

@@ -16,6 +16,7 @@
  * cloud saves, server-side credit enforcement, AI-authored missions, DLC packs
  * or shared galaxy events without reshaping it.
  */
+import type { ServiceRecord } from '../career/service';
 import type { Outcome, WorldState } from '../engine/types';
 
 export const UNIVERSE_SCHEMA_VERSION = 1;
@@ -206,6 +207,8 @@ export interface CanonicalState {
   commission?: { at: CanonMinutes; atIso: string; ship: string; by: string };
   /** v0.5: the long-range survey, where the Halcyon is, and what has reached the bridge (created lazily, seeded). */
   exploration?: Exploration;
+  /** v0.7: rank, assignment, canonical evaluations, discipline effects (absent on older careers = default). */
+  service?: ServiceRecord;
   provenance: Provenance;
 }
 
@@ -266,6 +269,8 @@ export interface SimRunRecord {
   /** 'original' = exact canonical initial conditions; 'variation' = new seed. */
   conditions: 'training' | 'original' | 'variation';
   outcome: (Outcome & { turn: number }) | null;
+  /** v0.7: the after-action evaluation in the Training Record. */
+  evaluationId?: string;
 }
 
 export interface SimulationStoreState {

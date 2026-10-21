@@ -1,3 +1,4 @@
+import type { EvaluationDescriptor } from '../evaluation/types';
 import type { Rng } from './rng';
 import type { Applied, ScenarioHooks } from './reduce';
 import type { Objective, Outcome, ShipId, WorldState } from './types';
@@ -26,4 +27,6 @@ export interface ScenarioModule {
   contactDetails(s: WorldState, id: ShipId): string[];
   /** v0.6.1 (optional): voice hints for the scenario's own characters, by character id. */
   voices?(s: WorldState): Record<string, VoiceHint>;
+  /** v0.7: optional after-action evaluation descriptor (objectives, ending tiers, judgment markers). */
+  evaluation?: EvaluationDescriptor;
 }
