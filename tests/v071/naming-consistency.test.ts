@@ -12,15 +12,26 @@ import { renameLegacyText } from '../../src/engine/naming';
 const files = execSync('git ls-files src', { encoding: 'utf8' }).split('\n').filter((f) => /\.(ts|tsx)$/.test(f) && f !== 'src/engine/naming.ts');
 const src = files.map((f) => [f, readFileSync(f, 'utf8')] as const);
 const FORMAL = ['src/ui/components/CommissionCeremony.tsx', 'src/ui/components/ShipStatus.tsx', 'src/ui/components/CaptainNamePrompt.tsx'];
+/**
+ * v0.8.1: the Captain's Handbook (ISA-COM-001) is a formal document whose wording is locked
+ * (tests/v080/fixtures/handbook-lock.json) and may change only by a new revision Brad approves.
+ * Its title page names the issuer in full, and Draft 2 says "the Agency" in the places pinned
+ * below. They are exempt here, pending Brad's ruling, and no other use may be added.
+ */
+const HANDBOOK_FORMAL = ['src/handbook/articles.ts', 'src/handbook/index.ts'];
+const HANDBOOK_AGENCY_PINNED = 11;
 
 describe('naming consistency', () => {
   it('no bare "Agency" in source (the ISA is "the ISA")', () => {
-    const bad = src.flatMap(([f, t]) => t.split('\n').map((l, i) => [f, i + 1, l] as const)).filter(([, , l]) => /(?<!Space )\bAgency\b|\bAGENCY\b/.test(l));
+    const all = src.flatMap(([f, t]) => t.split('\n').map((l, i) => [f, i + 1, l] as const)).filter(([, , l]) => /(?<!Space )\bAgency\b|\bAGENCY\b/.test(l));
+    const bad = all.filter(([f]) => f !== 'src/handbook/articles.ts');
     expect(bad.map(([f, n, l]) => `${f}:${n}: ${l.trim().slice(0, 80)}`)).toEqual([]);
+    // The handbook's locked Draft 2 wording: exactly the pinned lines, never more.
+    expect(all.length - bad.length).toBe(HANDBOOK_AGENCY_PINNED);
   });
   it('"Intergalactic Space Agency" appears only on formal screens', () => {
     const where = src.filter(([, t]) => /Intergalactic Space Agency/.test(t)).map(([f]) => f).sort();
-    expect(where).toEqual([...FORMAL].sort());
+    expect(where).toEqual([...FORMAL, ...HANDBOOK_FORMAL].sort());
   });
   it('no "Admiralty"; Vane commands the Ashen Covenant', () => {
     for (const [f, t] of src) {

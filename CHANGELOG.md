@@ -2,6 +2,12 @@
 
 All notable changes to Project Starbridge are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Fixed
+- **Main was red after v0.8.0.** `tests/v071/naming-consistency.test.ts` failed 2 of 641 unit tests: the handbook's locked Draft 2 wording says "the Agency" (11 lines in `src/handbook/articles.ts`) and its title page names the "Intergalactic Space Agency" (`src/handbook/articles.ts`, `src/handbook/index.ts`), which the v0.7.1 naming rule allows only on the three formal screens. The handbook wording is locked and may change only by a revision Brad approves, so no article text was touched: the test now treats the handbook as a formal document and pins exactly those 11 lines (no new bare "Agency" anywhere else, none added to the handbook). Pending Brad's ruling on whether the next revision should say "the ISA".
+- No change to game code, handbook text, grading or crew behaviour; the deployed build is unchanged.
+
 ## [0.8.0] — 2026-10-21 — The Captain's Handbook (foundation)
 
 The first stage of the v0.8 handbook plan: ISA-COM-001, *Captain's Code and Operational Regulations*, First Edition, Draft 2 (pending approval), becomes the single regulation database of the game, readable in-game as an official publication. **No change to grading, evaluation outcomes or crew refusal behaviour** (those follow in v0.8.2 once the final wording is approved).
