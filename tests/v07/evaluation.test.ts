@@ -203,3 +203,28 @@ describe('safety findings never contradict the judgment', () => {
     }
   });
 });
+
+describe('every training simulation ships evaluation data (SCENARIO_GUIDE §6b)', () => {
+  it('each catalogue simulation has a descriptor whose regulations exist and whose markers are well formed', async () => {
+    const { SIMULATIONS } = await import('../../src/scenarios/catalogue');
+    const { TRAINING_SCENARIOS } = await import('../../src/scenarios/registry');
+    const { REGULATIONS } = await import('../../src/evaluation/regulations');
+    const { COMPETENCIES } = await import('../../src/evaluation/competencies');
+    const regIds = new Set(REGULATIONS.map((r) => r.id));
+    const compIds = new Set<string>(COMPETENCIES.map((c) => c.id));
+    for (const sim of SIMULATIONS) {
+      const mod = TRAINING_SCENARIOS[sim.scenarioId];
+      const d = mod?.evaluation;
+      expect(d, `${sim.trainingId} needs an evaluation descriptor`).toBeTruthy();
+      expect(Object.keys(d!.endings).length, sim.trainingId).toBeGreaterThan(1);
+      expect(Object.values(d!.endings).some((e) => e.tier === 'success'), sim.trainingId).toBe(true);
+      for (const r of d!.regulations) expect(regIds.has(r), `${sim.trainingId}: ${r}`).toBe(true);
+      for (const c of d!.competencies) expect(compIds.has(c), `${sim.trainingId}: ${c}`).toBe(true);
+      for (const m of d!.markers) {
+        expect(m.text, m.id).toMatch(/^[A-Z].*[.!]$/);
+        if (m.regulation) expect(regIds.has(m.regulation), `${sim.trainingId}: ${m.id}`).toBe(true);
+        expect(m.text, m.id).not.toMatch(/\d\s*%/);
+      }
+    }
+  });
+});

@@ -198,6 +198,40 @@ Rules:
 - `{ label: '…' }` speakers (beacons, open broadcasts) use the generic voice.
 - **Test:** add a speaker-tagging case like the ones in `tests/v061/voices.test.ts`. Every spoken line must have a voice key, and your characters must appear in `castMembers(s, scenario)`.
 
+## 6b. Evaluation data (required since v0.7): `evaluation` in index.ts
+
+Every training simulation is an official ISA exercise, and ISA Training Command files an **after-action report** when it ends. The report judges outcomes and judgment, not command sequences, and never shows a score, number or percentage. Your scenario provides the facts it needs in an `EvaluationDescriptor` (`src/evaluation/types.ts`), kept in `src/scenarios/<name>/evaluation.ts` and attached as `evaluation:` on the module. See `src/scenarios/tallis/evaluation.ts` for a complete example.
+
+```ts
+export const myEvaluation: EvaluationDescriptor = {
+  version: 'myscenario-eval-1',             // bump when the descriptor's meaning changes
+  objectives: { diagnose: 'secondary', pilgrims: 'primary' },   // every objective id
+  endings: {                                // every ending id in X_ENDINGS, unchanged
+    'quarantine-lifted': { tier: 'success', note: 'Evidence persuaded the Warden to lift the quarantine.' },
+    abandoned: { tier: 'failure', note: 'The Halcyon left the pilgrims behind.' },
+  },
+  markers: [                                // scenario-specific judgment signals
+    { id: 'diagnosed-first', judgment: 'responsible', competencies: ['scientific', 'analysis'],
+      text: 'Established the cause before sending anyone across.',
+      when: (s) => before(factTurn(s, 'cause_known'), flagTurn(s, 'medicalSent')) },
+  ],
+  regulations: ['care-1', 'quarantine-1'],  // ids from src/evaluation/regulations.ts
+  competencies: ['scientific', 'diplomacy'],// what this exercise mainly tests (the roadmap's Command challenge)
+  recommend: { scientific: 'Simulator drill: evidence before action.' },
+};
+```
+
+Rules:
+- **Do not change your endings to fit the evaluation.** Tiers (`success`, `partial`, `failure`) describe endings that already exist.
+- **Markers describe judgment, not keystrokes.** Use `when(s)` on the final state: flags, facts, counters, the outcome, and `flagTurn` / `factTurn` for "did A happen before B" (they read the turn trace `s.trace`, which the engine keeps for every simulation; it never changes play). Judgments: `responsible`, `decisive`, `principled` (rules upheld at a cost), `reckless`.
+- **Different strategies must read differently.** Two runs that reach the same ending by force and by negotiation must produce different conduct, strengths and improvements. A failure reached by upholding the rules must be recognised (a `principled` marker). Test both (see `tests/v07/evaluation.test.ts`).
+- **Shared signals come free:** firing first, returning fire, holding fire, weapons locks, ordered fire on non-combatants, shields down under a lock, kept and broken promises, crew and civilian safety. Do not duplicate them.
+- **Words only.** Marker text is a full sentence ending with a period. No numbers, scores or percentages.
+- **Regulations** must exist in `src/evaluation/regulations.ts`. Add a new one there (with a short citation and text) if your scenario needs it, and keep it consistent with the ROE in `engine/world.ts`.
+- **Canon:** evaluations of simulations go only to the Training Record (`starbridge.training.v1`), never to canon.
+- **Names:** reports render the captain's chosen name from the profile. Never store or template the captain's name inside the descriptor; never offer a way to rename your ships, characters, worlds or factions.
+- **Test:** `tests/v07/evaluation.test.ts` checks every catalogue simulation has a well-formed descriptor. Add to your `tests/simNN/` one test that two strategies reaching the same (or a similar) ending get different conduct, and one that every ending id has a tier.
+
 ## 7. Outcomes: outcome.ts
 
 - Export the list of endings with stable ids:
@@ -281,6 +315,7 @@ Copy `tests/sim02/` and adapt it. The minimum is:
    - add a `begin the <name> simulation` launch case.
 7. **Saves:** save, load and resume as the same scenario.
 8. **Canon untouched:** see §10.
+9. **Evaluation (§6b):** every ending has a tier; two strategies are told apart; a principled failure is recognised.
 
 Then:
 - **Smoke:** add a block to `scripts/smoke.mjs` that does three things: list simulations, launch yours by name and play a known seed to an ending. It saves screenshots named `simNN-*.png`.
@@ -301,7 +336,7 @@ Then:
    - **Variety:** it must not share its primary skill or its pivotal officer with the previous simulation, and no primary skill may be used more than three times across the library.
    - **Writing the tests:** add one scripted playthrough that wins *through* the primary skill. Add one that fails *for lack of* it (for example, acting before the science is in, or trusting the lie).
    - **Changes:** if the challenge or premise changes while building, update the roadmap's Overview, Variety check and Overlap review in the same commit.
-4. Write `src/scenarios/<name>/`: setup, agents, hooks, dialogue, outcome, templates, index (including `voices` hints, §6a). Copy #2 and replace its content.
+4. Write `src/scenarios/<name>/`: setup, agents, hooks, dialogue, outcome, templates, evaluation (§6b, required), index (including `voices` hints, §6a, and `evaluation`). Copy #2 and replace its content.
 5. Add the catalogue entry and the registry line.
 6. Write `tests/simNN/` (§11) and play each ending yourself first (a scratch `_explore.test.ts` that prints the log is the fastest way; delete it afterwards).
 7. Add the smoke block.

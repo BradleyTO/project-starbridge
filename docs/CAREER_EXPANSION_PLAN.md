@@ -1,6 +1,6 @@
 # ISA Career, Training & Fleet Command Expansion: review and proposal
 
-**Status:** proposal for Bradley Ockrant's review (2026-10-21). Nothing in this document is built yet. No game code was changed to write it.
+**Status:** approved by Bradley Ockrant on 2026-10-21 with decisions (ranks provisional; Intergalactic Space Agency; the captain's own name is the only customizable name; no OpenRouter yet). **v0.7.0 (Evaluation & Records Foundation) is built**; later milestones are still proposals. The original proposal text below is kept as written; where a decision differs, it is noted inline.
 
 **Baseline:** v0.6.1 (main at f1b467e), with two playable training simulations (#1 The Kestrel Incident, #2 Quarantine at Tallis Gate) and a daily routine adding one simulation per day (see [SCENARIO_ROADMAP.md](SCENARIO_ROADMAP.md)).
 
@@ -307,6 +307,7 @@ ISA operational ranks for starship command. **You start as Captain.** No path is
 - **The conflict:** the brief says **"Intergalactic *Space* Agency"** and **"CSV Endeavour"**. The game uses **Intergalactic *Star* Agency (ISA)**, the **ISV** prefix and the **ISV Halcyon**. "CSV" was the pre-v0.5.1 prefix, and saves are migrated from it.
 - **Recommendation:** keep *Intergalactic Star Agency*, *ISV* and the *Halcyon*.
 - **Avoid "Endeavour" as a ship name:** it is strongly associated with real spacecraft and with existing science-fiction ships, which strains the "original fiction" rule.
+- **Decided (2026-10-21):** *Intergalactic Space Agency*, keeping ISA, ISV and the Halcyon; old saves are migrated on load (v0.7.0). No Endeavour.
 - **Please confirm:** (a) Star or Space; (b) whether "Endeavour" was meant as a second ship or a slip. If you want a second ISA ship named, I can propose original names.
 
 ### 5.3 Competencies as words or numbers

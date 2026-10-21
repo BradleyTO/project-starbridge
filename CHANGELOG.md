@@ -2,6 +2,65 @@
 
 All notable changes to Project Starbridge are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.7.0] — 2026-10-21 — Evaluation & Records Foundation
+
+The first milestone of the approved [career expansion plan](docs/CAREER_EXPANSION_PLAN.md).
+
+### Changed
+- **The Intergalactic Space Agency.** The fleet service is now the Intergalactic **Space** Agency (ISA) everywhere; v0.5.1–v0.6.1 said "Intergalactic Star Agency". Saved text is migrated on load (`src/engine/naming.ts`). ISA, the ISV prefix and every ship, character, civilization and place keep their names.
+- **Hub → Service Record** (was "Captain's Record"), an ISA personnel file with four sections:
+  - **Career Overview:** personnel (name, rank and insignia, formal address, assignment), a one-line training profile and the canonical career;
+  - **Training:** competencies and after-action reports (never canon), plus simulator familiarity;
+  - **Service History:** the canonical record (missions, Active Duty after-action reports, discipline, world events, crew experience);
+  - **Fleet Requests:** an empty state; the channel opens in a later update.
+
+### Added
+- **Your name, Captain.** The captain's name is the **only** customizable name in the game.
+  - **Asked once:** a new captain is asked at the start, and a save from before v0.7 is asked once. Dismissing keeps a default (Rowan Ashby, or the name an older save already had).
+  - **Stored** in `starbridge.profile.v1`, shared by the Training and Service Records. Records belong to the profile, not to the name, so renaming never resets or changes progress.
+  - **Change it** in Service Record → Career Overview → Change my name. Earlier names are listed.
+  - **Validation:** trimmed; 2–32 characters; letters (accents welcome), spaces, hyphens, apostrophes and periods. Control or invisible characters and markup are refused. The name is rendered as text only and is never parsed as an order.
+  - **Where it is used:** the personnel record, after-action reports, the commission from Fleet Command and the bridge crew's greeting. Formal address is rank plus surname ("Captain Morgan", "Commodore Morgan"). The crew still says "Captain" in ordinary talk.
+  - **Nothing else can be renamed.** "Rename the ship" and "call helm Bob" are declined politely by the XO, in simulations and on the bridge. "Call me …" points to the Service Record.
+- **Ranks (data model, provisional):**
+  - Captain, Senior Captain, Commodore and Fleet Captain, each with insignia and meaning;
+  - Rear Admiral and Admiral are NPC staff ranks only;
+  - single-ship command at every rank;
+  - the rank is kept in the canonical service record with its history, and the address follows it;
+  - a development rank selector in Settings, for testing only. There is no promotion system yet.
+- **After-action reports.** Every finished simulation is assessed by ISA Training Command and filed in the Training Record (`starbridge.training.v1`), never in canon. Each report covers:
+  - objectives achieved, missed or failed (primary or secondary);
+  - the key decisions, taken from a turn trace that never changes play;
+  - crew safety and civilian safety;
+  - the ISA regulations relevant, upheld or breached;
+  - strengths, areas to improve and recommended training;
+  - a conduct finding: exemplary, sound, mixed, principled, insufficient or reckless.
+
+  The same ending reached by different strategies gets a different report: force reads differently from negotiation, and a failure reached by upholding the rules is recognised as principled. Open a report from the debrief card ("Read the after-action report") or from the Training list. A canonical Active Duty mission files its report into the service record instead.
+- **Competencies in words, not numbers:** Not yet assessed, Developing, Competent, Proficient or Distinguished, each with the evidence behind it. No scores or percentages appear anywhere in the reports or the Training view.
+- **Evaluation descriptors** for Training Simulation 001 (`kestrel-eval-1`) and 002 (`tallis-eval-1`): every ending is tiered, and scenario-specific judgment markers are added. **The endings themselves are unchanged.** `docs/SCENARIO_GUIDE.md` §6b now requires a descriptor for every new simulation. A test checks every catalogue entry has one.
+- **Service record model** (`src/career/service.ts`): assignment, qualifications, commendations, and temporary disciplinary restrictions with an appeal process (they can delay promotion review but never lock simulations or end a career). It also models a board of inquiry for losing the Halcyon on Active Duty; that is not played yet.
+- **Fleet request foundation** (`src/fleet/requests.ts`), deterministic and offline, **not yet playable**:
+  - the request lifecycle: submitted, under review, deferred, approved, denied, withdrawn, completed;
+  - reasons and conditions, and reconsideration when conditions change;
+  - Fleet asks for confirmation before anything is carried out, and re-checks the facts first;
+  - supply amounts are capped by the engine;
+  - follow-up status queries;
+  - a provider seam for a future AI voice, with the engine still deciding. No AI or OpenRouter is used.
+- **Records are archived, not erased:** after 60 full reports, older ones are compressed to a summary line.
+
+### Tests
+- New suites in `tests/v07/`: naming migration, captain name and injection inputs, persistence and migration, rank address, rename declines and no-rename paths, evaluation (strategies told apart, principled failures, safety findings), records (separate stores, canon byte-identical, compression), and the Fleet request lifecycle. All earlier tests still pass.
+- `scripts/smoke.mjs` v0.7 section covers:
+  - the naming prompt, with markup refused, a valid name saved and the prompt one-time;
+  - the crew addressing the captain by rank and surname;
+  - rename requests declined;
+  - after-action reports for both simulations;
+  - the Training section;
+  - renaming in the Service Record with the records kept;
+  - no percentages, and no canonical store created by simulations;
+  - phone layout.
+
 ## [0.6.1] — 2026-10-20 — Crew voices
 
 ### Added

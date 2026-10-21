@@ -2,7 +2,7 @@
 
 A browser-based, AI-assisted **starship command simulator**. You command the exploration ship **ISV Halcyon** of the **Intergalactic Space Agency** (ISA), the service of the player's faction, **the Agency**, and complete dynamic training missions by giving natural-language orders. The long-term goal is integration with a physical starship bridge, so the UI is built to scale from tablets to dedicated bridge consoles.
 
-> **Status: v0.6.1 (crew voices: every officer, the ship's computer and the people on comms speak with their own voice; v0.6.0 added multi-scenario support and simulation #2, Quarantine at Tallis Gate).** The plan is 30 training simulations ([roadmap](docs/SCENARIO_ROADMAP.md)); two are playable. The app opens on the **bridge of the Halcyon**, not in a mission. Talk to the crew, ask science what is out there, and start a training simulation only when you ask for one ("Computer, list simulations", "Computer, begin the Kestrel Incident simulation"). When a simulation ends you are back on the bridge with a debrief. **Active Duty** (formerly "Living Universe") is the persistent canonical career. There is no mission menu: hails, distress calls, requests and science readings reach the bridge as canonical time passes, and you answer them in your own words. Orders and speech are read by a rule-based **offline interpreter**. No AI is used yet (see [Roadmap](#roadmap)).
+> **Status: v0.7.0 (Evaluation & Records: your own name on the record, after-action reports for every simulation, competencies in words, a Service Record with Training kept apart from canon; v0.6.1 added crew voices, v0.6.0 simulation #2).** The plan is 30 training simulations ([roadmap](docs/SCENARIO_ROADMAP.md)); two are playable. The app opens on the **bridge of the Halcyon**, not in a mission. Talk to the crew, ask science what is out there, and start a training simulation only when you ask for one ("Computer, list simulations", "Computer, begin the Kestrel Incident simulation"). When a simulation ends you are back on the bridge with a debrief. **Active Duty** (formerly "Living Universe") is the persistent canonical career. There is no mission menu: hails, distress calls, requests and science readings reach the bridge as canonical time passes, and you answer them in your own words. Orders and speech are read by a rule-based **offline interpreter**. No AI is used yet (see [Roadmap](#roadmap)).
 
 ## The bridge, Active Duty and two-way comms (v0.5 / M3.1)
 
@@ -80,6 +80,13 @@ There are two linked clocks. The **tactical clock** runs inside any bridge sessi
 | No credits left today | — | paused (no in-universe penalty) |
 
 All names, ships, factions and artwork are original. The interface is *inspired by* classic sci-fi console design but uses no copyrighted artwork, fonts or names.
+
+## Service Record, after-action reports and your name (v0.7)
+
+- **Your name.** On first launch (or once, for a save from before v0.7) you are asked for your captain's name. It is the only name you can choose: the Halcyon, her crew, the people you meet, worlds, factions and ISA departments keep theirs ("rename the ship" and "call helm Bob" are politely declined). Change it any time in **Hub → Service Record → Career Overview**; nothing else on the record changes. Formal address is rank plus surname ("Captain Morgan"). Names are 2–32 characters: letters (accents welcome), spaces, hyphens, apostrophes and periods.
+- **After-action reports.** When a simulation ends, the debrief card offers **Read the after-action report**. ISA Training Command lists the objectives met and missed, the key decisions, crew and civilian safety, the regulations involved, strengths, what to improve and recommended training. It judges how you got there, not just where: force and negotiation read differently, and a failure reached by upholding the rules is recorded as principled. There are no scores or percentages.
+- **Training vs service.** Simulation reports and competencies (Not yet assessed → Developing → Competent → Proficient → Distinguished, each with evidence) live in the Training Record and never touch canon. Active Duty missions are filed in Service History.
+- **Ranks** (Captain, Senior Captain, Commodore, Fleet Captain) exist as data and change how you are addressed; promotions are not in the game yet. The Fleet Requests channel is built and tested underneath but not yet playable.
 
 ## Crew voices (v0.6.1)
 
@@ -371,6 +378,7 @@ The app deploys to Vercel as a Vite static site plus serverless functions in `ap
 - **v0.5 first contact is short.** It is one exchange that decides the outcome, after any number of questions. Civilizations do not yet follow up, send envoys or change the wider galaxy (faction standing and tension are unaffected). Investigations are not listed in the Mission Archive and cannot be replayed as simulations.
 - **Fleet hails and distress calls are not two-way channels.** You answer them in words (accept, question, refuse, decline, ignore), but you cannot hold a conversation with Fleet Command or the hauler's crew.
 - **Canonical time moves only on patrol, travel and missions.** Waiting on the bridge, chatting, or a long first-contact conversation does not advance the galaxy clock.
+- **v0.7 limits.** No promotions, Fleet Command requests channel, qualifications or board of inquiry in play yet (data models and unit tests only). The captain's name is used in the personnel record, reports, the commission and the bridge greeting, not yet throughout every scenario's dialogue (scenario NPCs still say "Captain"). Rank changes are available only from the development selector in Settings. Evaluation describes the final state and a turn trace; it is deterministic and rule-based, not an AI judgment.
 - **v0.6.1 crew voices are untested on real devices.**
   - Casting and the speech queue are tested with mocked voice lists (unit tests and the smoke test), not by listening.
   - Which voices exist depends on the device and the voices installed. iOS Safari often exposes only a few English voices (plus novelty ones, which are excluded). Android Chrome usually exposes one voice per locale. Desktop Chrome on Windows has three local voices plus cloud "Google" voices, which are off by default.
@@ -387,6 +395,7 @@ The app deploys to Vercel as a Vite static site plus serverless functions in `ap
 - [x] **Milestone 3.1 (v0.5)** — Bridge-first startup, Active Duty (commission, reserve), organic mission delivery, science exploration and first contact, persistent two-way comms, crew autonomy and ROE refusals.
 - [x] **v0.6** — Multi-scenario training simulations: catalogue, launch by name or number, simulation #2 (Quarantine at Tallis Gate), authoring guide and 30-simulation roadmap.
 - [x] **v0.6.1** — Distinct crew voices from the browser's free built-in voices, with a preview and override panel.
+- [x] **v0.7** — Evaluation & Records Foundation: the captain's name, ranks (data), after-action reports, competencies in words, Training and Service Records, and the Fleet request foundation (offline).
 - [ ] **Next** — Server-side AI narration and character responses with schema validation, timeouts, usage limits and template fallback; server-side accounts and credits.
 - [ ] **Milestone 4** — Branching outcomes, mission evaluation, full save/resume, voice controls.
 - [ ] **Milestone 5** — Multi-playthrough testing, state-consistency fixes, stable release.
