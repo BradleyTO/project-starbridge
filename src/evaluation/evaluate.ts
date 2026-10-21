@@ -143,8 +143,12 @@ export function evaluate(s: WorldState, scenario: ScenarioModule, opts: Evaluate
   for (const x of signals) {
     const list = x.safety === 'crew' ? safety.crew : x.safety === 'civilian' ? safety.civilian : null;
     if (!list) continue;
-    if (x.judgment === 'reckless') list.unshift({ text: x.text });
-    else list.push({ text: x.text });
+    if (x.judgment === 'reckless') {
+      // A reckless safety finding replaces the "nobody hurt" default: "no deaths recorded" is not "safe".
+      const clean = x.safety === 'crew' ? !safety.crewConcern : !safety.civilianConcern;
+      if (clean) list.splice(0, list.length, { text: x.text }, { text: x.safety === 'crew' ? 'No Halcyon casualties were recorded, but the crew was put at avoidable risk.' : 'No deaths were recorded, but the people in danger were left without help.' });
+      else list.unshift({ text: x.text });
+    } else list.push({ text: x.text });
   }
   // Principled: a failure (or partial) reached without recklessness, where the captain upheld the rules.
   const principledMarker = signals.find((x) => x.judgment === 'principled');
@@ -213,7 +217,7 @@ export function evaluate(s: WorldState, scenario: ScenarioModule, opts: Evaluate
       const facts = x.facts.map((f) => s.facts[f]?.text).filter(Boolean) as string[];
       const passive = /^(wait|stand by|hold position|continue)\b/i.test(x.order.trim());
       const flagText = sig ? [sig.text] : [];
-      const effect = passive && !sig ? '' : [...flagText, ...objs, ...facts.map((f) => `established: ${f}`)].slice(0, 2).join('; ');
+      const effect = passive && !sig ? '' : [...flagText, ...objs, ...facts.map((f) => `established: ${f}`)].slice(0, 2).map((x) => x.replace(/[.;]\s*$/, '')).join('; ');
       return { turn: x.turn, order: x.order, effect, ...(sig ? { judgment: sig.judgment } : {}) };
     })
     .filter((x) => x.effect)

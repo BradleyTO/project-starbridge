@@ -5,7 +5,7 @@ import type { CanonicalState, FamiliarityMemory, WorldEvent } from '../../univer
 import type { ServiceRecord } from '../../career/service';
 import { activeRestrictions } from '../../career/service';
 import { rankOf, NPC_ONLY_RANKS } from '../../career/ranks';
-import { NAME_MAX, fullTitle, validateCaptainName } from '../../career/name';
+import { NAME_MAX, formalAddress, fullTitle, validateCaptainName } from '../../career/name';
 import type { CaptainProfile } from '../../career/profile';
 import type { Evaluation, TrainingRecord } from '../../evaluation/types';
 import { BAND_LABEL } from '../../evaluation/competencies';
@@ -98,7 +98,7 @@ function Personnel({ profile, service, onRename, captain }: RecordProps & { capt
         <dt>Rank</dt>
         <dd data-testid="personnel-rank">{rank.title} <span className="muted small">({rank.insignia})</span></dd>
         <dt>Formal address</dt>
-        <dd data-testid="personnel-address">{captain}</dd>
+        <dd data-testid="personnel-address">{formalAddress(profile.name, service.rank)} <span className="muted small">(on the record: {captain})</span></dd>
         <dt>Assignment</dt>
         <dd>{service.assignment.position}, {service.assignment.ship} <span className="muted small">({service.assignment.shipClass})</span></dd>
         <dt>Service</dt>

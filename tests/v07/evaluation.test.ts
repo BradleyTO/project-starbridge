@@ -186,3 +186,20 @@ describe('fuzz: random games evaluate cleanly', () => {
     }
   });
 });
+
+describe('safety findings never contradict the judgment', () => {
+  it('abandoning the Kestrel is not reported as "no civilian lives were lost" on its own', () => {
+    const e = evK(KESTREL.abandoned());
+    expect(e.outcome.id).toBe('abandoned');
+    const civ = e.civilianSafety.map((f) => f.text);
+    expect(civ).toContain('Withdrew without attempting a rescue.');
+    expect(civ).not.toContain('No civilian or third-party lives were lost.');
+    expect(civ.join(' ')).toMatch(/left without help/);
+  });
+  it('decision effects read cleanly (no ".;" joins)', () => {
+    for (const s of [KESTREL.abandoned(), KESTREL.pyrrhic(), TALLIS.incident()]) {
+      const e = s.scenarioId === K.id ? evK(s) : evT(s);
+      for (const d of e.decisions) expect(d.effect).not.toMatch(/\.;|;;/);
+    }
+  });
+});

@@ -791,6 +791,140 @@ for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape',
   await ctx8.close();
 }
 
+// ============================================================== v0.7 =====
+// Evaluation & Records: the naming prompt, the Service Record (personnel, rename), after-action
+// reports for both simulations, the Training section, words not numbers, rename requests declined.
+{
+  const ctx9 = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await ctx9.addInitScript(() => { try { sessionStorage.setItem('smoke.askName', '1'); } catch {} });
+  await ctx9.addInitScript(stubs);
+  const p9 = await ctx9.newPage();
+  p9.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  p9.on('pageerror', (e) => errors.push(String(e)));
+  const all9 = async () => (await p9.innerText('[data-testid=narrative]')) + '\n' + (await p9.innerText('[data-testid=comms]'));
+  const mode9 = () => p9.getAttribute('[data-testid=mode-banner]', 'data-mode');
+  const hub9 = async (tab) => {
+    if (!(await p9.locator('[data-testid=hub]').count())) await p9.click('[data-testid=open-hub]');
+    await p9.click(`[data-testid=hub-tab-${tab}]`);
+    await p9.waitForTimeout(150);
+  };
+  const close9 = async () => { if (await p9.locator('[data-testid=hub]').count()) await p9.click('[data-testid=hub-close]'); await p9.waitForTimeout(100); };
+  const noPercent = async (sel) => !/\d\s*%|percent/i.test(await p9.innerText(sel));
+
+  await p9.goto(withSeed(7), { waitUntil: 'networkidle' });
+  await p9.waitForTimeout(500);
+  check('v0.7: a new captain is asked for a name', await p9.locator('[data-testid=name-prompt]').isVisible());
+  await p9.screenshot({ path: `${SHOTS}/v070-01-name-prompt.png` });
+  await p9.fill('[data-testid=name-input]', '<script>alert(1)</script>');
+  await p9.click('[data-testid=name-save]');
+  await p9.waitForTimeout(150);
+  check('v0.7: markup in a name is refused with a reason', (await p9.locator('[data-testid=name-error]').count()) === 1 && (await p9.locator('[data-testid=name-prompt]').isVisible()));
+  await p9.screenshot({ path: `${SHOTS}/v070-02-name-rejected.png` });
+  await p9.fill('[data-testid=name-input]', "  Siobhán   O'Neill-Okafor ");
+  await p9.click('[data-testid=name-save]');
+  await p9.waitForTimeout(300);
+  check('v0.7: a valid name is saved and the prompt closes', (await p9.locator('[data-testid=name-prompt]').count()) === 0);
+  await skipIntro(p9);
+  await p9.reload({ waitUntil: 'networkidle' });
+  await p9.waitForTimeout(500);
+  check('v0.7: the prompt is one-time (not shown after reload)', (await p9.locator('[data-testid=name-prompt]').count()) === 0);
+  await skipIntro(p9);
+  check('v0.7: the crew addresses the captain by rank and surname', /Captain O'Neill-Okafor/.test(await all9()), (await all9()).slice(0, 300));
+  await hub9('record');
+  const rec = await p9.innerText('[data-testid=record]');
+  check('v0.7: Hub tab is the Service Record', /Service Record/.test(await p9.innerText('[data-testid=hub]')));
+  check('v0.7: personnel shows name, rank, address and assignment', (await p9.innerText('[data-testid=personnel-name]')) === "Siobhán O'Neill-Okafor" && /Captain/.test(await p9.innerText('[data-testid=personnel-rank]')) && /ISV Halcyon/.test(rec));
+  await p9.screenshot({ path: `${SHOTS}/v070-03-service-record.png`, fullPage: true });
+  await close9();
+
+  // rename requests for anything else are declined
+  await sendOn(p9, 'rename the ship to Dauntless', 400);
+  await sendOn(p9, 'call helm Bob', 400);
+  const dec = await all9();
+  check('v0.7: "rename the ship" is politely declined', /the Halcyon’s name is on her ISA registry/.test(dec));
+  check('v0.7: "call helm Bob" is politely declined', /People keep the names they were given/.test(dec));
+  await p9.screenshot({ path: `${SHOTS}/v070-04-rename-declined.png` });
+
+  // Kestrel: abandon (seed 7) -> ending -> AAR
+  await sendOn(p9, 'Computer, begin the Kestrel Incident simulation', 1200);
+  await p9.waitForSelector('[data-testid=mode-banner][data-mode=simulation]');
+  await p9.waitForTimeout(500);
+  await skipIntro(p9);
+  for (const c of ['charge the jump drive', 'wait', 'wait', 'jump']) await sendOn(p9, c, 350);
+  await p9.waitForTimeout(800);
+  check('v0.7: #1 ended and the debrief offers the after-action report', (await mode9()) === 'bridge' && (await p9.locator('[data-testid=outcome-aar]').count()) === 1);
+  await p9.click('[data-testid=outcome-aar]');
+  await p9.waitForTimeout(300);
+  let aar = await p9.innerText('[data-testid=aar]');
+  check('v0.7: #1 AAR has objectives, decisions, safety, regulations, strengths, improvements, training', ['Objectives', 'Key decisions', 'Crew safety', 'Civilian safety', 'ISA regulations', 'Strengths', 'Areas to improve', 'Recommended training'].every((h) => aar.includes(h)), aar.slice(0, 300));
+  check('v0.7: #1 AAR is filed under the captain’s name', /Captain Siobhán O'Neill-Okafor/.test(await p9.innerText('[data-testid=aar-captain]')));
+  check('v0.7: #1 AAR has no percentages or scores', await noPercent('[data-testid=aar]'));
+  await p9.screenshot({ path: `${SHOTS}/v070-05-aar-kestrel.png`, fullPage: true });
+  await close9();
+
+  // Tallis Gate: line lifted (seed 5)
+  await p9.goto(withSeed(5), { waitUntil: 'networkidle' });
+  await p9.waitForTimeout(500);
+  await skipIntro(p9);
+  await sendOn(p9, 'Computer, begin the Quarantine at Tallis Gate simulation', 1200);
+  await p9.waitForSelector('[data-testid=mode-banner][data-mode=simulation]');
+  await p9.waitForTimeout(500);
+  await skipIntro(p9);
+  for (const c of ['take us to 3,000 km of the liner', 'wait', 'wait', 'scan the liner', 'hail the picket']) await sendOn(p9, c, 300);
+  await sendOn(p9, 'tell her our scans show it is not contagious', 800);
+  await p9.waitForTimeout(500);
+  if (await p9.locator('[data-testid=outcome-aar]').count()) await p9.click('[data-testid=outcome-aar]');
+  await p9.waitForTimeout(300);
+  aar = (await p9.locator('[data-testid=aar]').count()) ? await p9.innerText('[data-testid=aar]') : '';
+  check('v0.7: #2 AAR (Line Lifted) is available', /Line Lifted/i.test(aar) && /Recommended training/.test(aar), aar.slice(0, 200));
+  check('v0.7: #2 AAR has no percentages or scores', !!aar && (await noPercent('[data-testid=aar]')));
+  await p9.screenshot({ path: `${SHOTS}/v070-06-aar-tallis.png`, fullPage: true });
+  if (await p9.locator('[data-testid=aar-close]').count()) await p9.click('[data-testid=aar-close]');
+  await p9.waitForTimeout(200);
+
+  // Training section
+  await p9.click('[data-testid=record-tab-training]');
+  await p9.waitForTimeout(200);
+  const tr = await p9.innerText('[data-testid=record-training]');
+  check('v0.7: Training lists both after-action reports', (await p9.locator('[data-testid=evaluations] li').count()) === 2);
+  check('v0.7: competencies are words with evidence', /Not yet assessed|Developing|Competent|Proficient|Distinguished/i.test(tr) && (await p9.locator('[data-testid=competencies] li').count()) >= 8);
+  check('v0.7: the Training section shows no percentages', await noPercent('[data-testid=record-training]'));
+  check('v0.7: training is marked not canonical', /NOT CANONICAL/i.test(tr));
+  await p9.screenshot({ path: `${SHOTS}/v070-07-training.png`, fullPage: true });
+  await p9.click('[data-testid=record-tab-requests]');
+  await p9.waitForTimeout(150);
+  check('v0.7: Fleet Requests section present (empty state)', /No requests on file/.test(await p9.innerText('[data-testid=record-requests]')));
+
+  // Rename in the Service Record; progress kept
+  await p9.click('[data-testid=record-tab-overview]');
+  await p9.waitForTimeout(150);
+  await p9.click('[data-testid=rename-open]');
+  await p9.fill('[data-testid=rename-input]', 'Jean-Luc Moreau');
+  await p9.click('[data-testid=rename-save]');
+  await p9.waitForTimeout(300);
+  check('v0.7: rename from the Service Record', (await p9.innerText('[data-testid=personnel-name]')) === 'Jean-Luc Moreau' && /Captain Moreau/.test(await p9.innerText('[data-testid=personnel-address]')));
+  await p9.screenshot({ path: `${SHOTS}/v070-08-renamed.png`, fullPage: true });
+  await p9.click('[data-testid=record-tab-training]');
+  await p9.waitForTimeout(150);
+  check('v0.7: renaming kept the training record', (await p9.locator('[data-testid=evaluations] li').count()) === 2);
+  await p9.locator('[data-testid^=eval-open-]').first().click();
+  await p9.waitForTimeout(200);
+  check('v0.7: old reports show the current name', /Captain Jean-Luc Moreau/.test(await p9.innerText('[data-testid=aar-captain]')));
+  await close9();
+  const ls = await p9.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith('starbridge.')).sort().join(','));
+  check('v0.7: no canonical store created by simulations', !/starbridge\.canon\.v1/.test(ls), ls);
+
+  // phone
+  await p9.setViewportSize({ width: 390, height: 844 });
+  await hub9('record');
+  await p9.click('[data-testid=record-tab-training]');
+  await p9.waitForTimeout(300);
+  const ov9 = await p9.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  check('v0.7 phone: Service Record has no horizontal overflow', ov9 <= 0, `overflow ${ov9}px`);
+  await p9.screenshot({ path: `${SHOTS}/v070-09-phone-training.png`, fullPage: true });
+  await ctx9.close();
+}
+
 check('no console errors', errors.length === 0, errors.join(' | '));
 await browser.close();
 const failed = results.filter((r) => !r.pass);
