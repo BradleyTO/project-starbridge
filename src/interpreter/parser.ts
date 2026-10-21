@@ -1177,11 +1177,31 @@ function respondOf(t0: string): string | null {
   return null;
 }
 
-type BridgeOp = { type: 'bridge'; op: 'openArchive' | 'beginSim' | 'endSim' | 'listSims' | 'survey' | 'acceptCommission' | 'civs' | 'course' | 'patrol' | 'respond'; scenario?: string; hours?: number; text?: string };
+type BridgeOp = { type: 'bridge'; op: 'openArchive' | 'beginSim' | 'endSim' | 'listSims' | 'survey' | 'acceptCommission' | 'civs' | 'course' | 'patrol' | 'respond' | 'rename'; scenario?: string; hours?: number; text?: string };
+
+/**
+ * v0.7: renaming. The captain's own name is the only customizable name (Service Record →
+ * Personnel). Ships, crew, NPCs, planets, factions and ISA departments keep their names: such
+ * requests are recognised so the crew can decline politely instead of misreading them as orders.
+ */
+const CREW_WORDS = "helm|helmsman|tactical|sensors|science|comms|communications|engineering|ops|number one|the xo|xo|commander|lieutenant|ensign|chief|doctor|doc|marrow|rask|varga|szabo|okafor|adeyemi|osei|the computer|computer|him|her|them|the doctor|the chief|my first officer|the prefect|the warden|the admiral|admiral kaine";
+const RENAME_SHIP = /\b(?:rename|re-name|renaming)\b.*\b(?:ship|halcyon|vessel|isv)\b|\b(?:change|changing) (?:the |our )?(?:ship'?s?|halcyon'?s?|vessel'?s?) name\b|\bname (?:the|our|this) (?:ship|vessel)\b|\bcall (?:the|our|this) (?:ship|vessel)\b|\b(?:ship|halcyon) (?:is|will be) (?:now )?(?:called|named)\b/;
+const RENAME_SELF = /^(?:computer,? |everyone,? |number one,? )?(?:call me (?!when|if|back|once|on|up|in|at|after|before|later)[a-z'’.-]+|my name is\b|change my name\b|rename me\b|i(?:'m| am) (?:now )?called\b)/;
+const RENAME_CREW = new RegExp(`\\b(?:rename|re-name|renaming)\\b|\\bcall (?:${CREW_WORDS}) (?!to\\b|back\\b|up\\b|on\\b|in\\b|off\\b|for\\b|over\\b|when\\b|if\\b)[a-z'’-]+(?: [a-z'’-]+)?$|\\bchange (?:his|her|their|your|the [a-z]+'?s|${CREW_WORDS.split('|').filter((w) => !w.includes(' ')).map((w) => `${w}'?s`).join('|')}) name\\b|\\byour name is (?:now )?\\b|\\bfrom now on (?:you(?:'re| are)|(?:he|she|they)(?:'s| is| are)) (?:called|named)\\b|\\bname (?:the )?(?:planet|system|station|colony|star|nebula|moon)\\b`);
+
+export function renameRequest(raw: string): 'ship' | 'self' | 'crew' | null {
+  const t = raw.trim().toLowerCase().replace(/[?!.]+$/, '').replace(/\s+/g, ' ');
+  if (RENAME_SHIP.test(t)) return 'ship';
+  if (RENAME_SELF.test(t)) return 'self';
+  if (RENAME_CREW.test(t)) return 'crew';
+  return null;
+}
 
 function bridgeCommand(input: string, ctx?: InterpreterContext): BridgeOp | null {
   const t = input.trim().toLowerCase().replace(/[?!.]+$/, '').replace(/\s+/g, ' ');
   const duty = ctx?.duty;
+  const rename = renameRequest(t);
+  if (rename) return { type: 'bridge', op: 'rename', scenario: rename };
   if (duty && !ctx?.channel) {
     // Answering the call waiting on the bridge (a hail, a distress call, a request).
     if (duty.incoming && !PATROL.test(t)) {

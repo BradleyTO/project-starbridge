@@ -1,10 +1,11 @@
 import type { TemplateFn } from '../../engine/scenario';
+import { formalOf } from '../../engine/captain';
 
 const pick = (v: Record<string, string | number>, xs: string[]) => xs[Number(v.v ?? 0) % xs.length];
 
 export const BRIDGE_SCENARIO_TEMPLATES: Record<string, TemplateFn> = {
   bridgeIntro0: () => 'The ISV Halcyon holds station on the edge of Agency survey space. The bridge hums quietly; the viewscreen shows nothing but stars.',
-  bridgeIntro1: () => 'Captain on the bridge. All quiet, all systems green. Nothing on the board — the simulation archive is ready whenever you want a drill.',
+  bridgeIntro1: (_v, s) => `${formalOf(s)} on the bridge. All quiet, all systems green. Nothing on the board — the simulation archive is ready whenever you want a drill.`,
   bridgeStatus: (v) => `All quiet, Captain. Hull ${v.hull}%, shields ${v.shields}, weapons ${v.weapons}, ${v.alert} alert. No contacts, no standing mission. The simulation archive is ready if you want a drill.`,
   bridgeNoContacts: () => 'No contacts within sensor range, Captain. Just us and the stars.',
   bridgeNoMission: () => 'No standing mission, Captain. We are on station.',
@@ -16,9 +17,9 @@ export const BRIDGE_SCENARIO_TEMPLATES: Record<string, TemplateFn> = {
   simDebriefXo: (v) => `Debrief, Captain: ${v.objectives}. It was a simulation — nothing out there has changed. Say "list simulations" to choose another, or open the archive.`,
   simEndedByOrder: () => 'The simulation ends at your order. The holographic overlay dissolves; the bridge of the Halcyon returns around you.',
   simEndedByOrderXo: () => 'Simulation ended, Captain. Nothing from it was recorded. We are back on station.',
-  dutyCommissionComms: () => 'Priority transmission from Fleet Command, Captain. Admiral Kaine has confirmed your commission. We are on active duty.',
+  dutyCommissionComms: (_v, s) => `Priority transmission from Fleet Command for ${formalOf(s)}. Admiral Kaine has confirmed your commission. We are on active duty.`,
   dutyCommissionXo: () => 'Congratulations, Captain. The crew are with you. From here on, it is real.',
-  dutyWelcomeBack: () => 'Fleet Command confirms your return to active duty, Captain. Your orders, your ship and your record stand exactly as you left them.',
+  dutyWelcomeBack: (_v, s) => `Fleet Command confirms your return to active duty, ${formalOf(s)}. Your orders, your ship and your record stand exactly as you left them.`,
   dutyReserve: () => 'Fleet Command acknowledges: the Halcyon stands down to reserve status. Your career is preserved and the canonical timeline is frozen until you return. The simulator stays open.',
   dutyNoCommission: () => 'There is no commission awaiting an answer, Captain.',
   surveyReport: (v) => `${v.n} systems within exploration range: ${v.list}.`,
@@ -33,7 +34,7 @@ export const BRIDGE_SCENARIO_TEMPLATES: Record<string, TemplateFn> = {
   // ---- v0.5 Phase D: Active Duty traffic, patrol, course, science, first contact
   dutyDebriefNarr: (v) => `MISSION COMPLETE — ${v.title}. ${v.summary} The Halcyon resumes her patrol.`,
   dutyDebriefXo: (v) => `Debrief, Captain: ${v.objectives}. It is in the record — this one was real. We are back on patrol.`,
-  bridgeIntroDuty: () => 'Captain on the bridge. We are on patrol in the Tessarine border survey. Say "continue the patrol" and the hours pass; whatever reaches us comes straight to you.',
+  bridgeIntroDuty: (_v, s) => `${formalOf(s)} on the bridge. We are on patrol in the Tessarine border survey. Say "continue the patrol" and the hours pass; whatever reaches us comes straight to you.`,
   dutyStatusReport: (v) => `On patrol at ${v.location}, Captain. Hull ${v.hull}%, shields ${v.shields}, weapons ${v.weapons}, ${v.alert} alert.${v.waiting ? ` Waiting on your answer: ${v.waiting}.` : ''}${v.contact ? ` The ${v.contact} is on sensors.` : ''}`,
   dutyNoMission: () => 'Nothing waiting on us, Captain. We are on patrol; anything that comes in will come to you.',
   dutyWaiting: (v) => `Waiting on your answer, Captain: ${v.title}.`,

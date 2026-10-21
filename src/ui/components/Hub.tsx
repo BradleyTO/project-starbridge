@@ -1,7 +1,7 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 
 export type HubTab = 'universe' | 'archive' | 'record' | 'voices' | 'settings';
-const LABELS: Record<HubTab, string> = { universe: 'Active Duty', archive: 'Mission Archive', record: "Captain's Record", voices: 'Crew voices', settings: 'Settings (dev)' };
+const LABELS: Record<HubTab, string> = { universe: 'Active Duty', archive: 'Mission Archive', record: 'Service Record', voices: 'Crew voices', settings: 'Settings (dev)' };
 
 /** Full-screen bridge overlay holding the mode hub's sections. */
 export function Hub({ tab, onTab, onClose, tabs, children, credits }: { tab: HubTab; onTab(t: HubTab): void; onClose(): void; tabs: HubTab[]; children: ReactNode; credits?: ReactNode }) {

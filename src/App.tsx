@@ -39,11 +39,15 @@ import { TRAINING } from './universe/archive';
 import { expandAliases } from './universe/familiarity';
 import type { BridgeSession, CanonicalSession } from './universe/sessions';
 import { arriveOnBridge, handleDutyRequest, withDuty } from './dutyBridge';
+import { withCaptain } from './engine/captain';
+import type { CaptainAddress } from './engine/types';
+import { CaptainNamePrompt } from './ui/components/CaptainNamePrompt';
+import type { RecordSection } from './ui/components/RecordPanel';
 import './App.css';
 
 const BEAT_MS = 3500;
 const VOICE_KEY = 'starbridge.voice';
-const APP_VERSION = '0.6.1';
+const APP_VERSION = '0.7.0';
 const TRAINING_ID = TRAINING[0].id;
 const AMBIENT_MS = 22000;
 const interpreter = new OfflineInterpreter();
@@ -73,11 +77,16 @@ interface Debrief {
   success: boolean;
   seed: number | string;
   meta: Extract<SessionMeta, { timeline: 'simulation' }>;
+  /** v0.7: the after-action report filed for this run (Training Record). */
+  evaluationId?: string;
 }
+
+/** v0.7: the captain's address for dialogue, refreshed by the app on every render. */
+let captainAddress: CaptainAddress | null = null;
 
 /** The idle bridge (optionally with a debrief of the simulation that just ended). */
 function bridgeState(seed: number | string, debrief?: { title: string; summary: string; objectives: string; canonical?: boolean } | 'ended'): WorldState {
-  const b = createBridge(seed);
+  const b = withCaptain(createBridge(seed), captainAddress);
   if (!debrief) return b;
   const done = completeIntro(b, scenarioFor(b.scenarioId));
   const reports =
@@ -120,14 +129,40 @@ function initialSeed(): number | string {
 
 export default function App() {
   const { universe, rev, touch } = useUniverse(APP_VERSION);
+  captainAddress = universe.address();
   // v0.5: the app opens on the idle bridge. ?seed=N seeds the bridge and the first simulation launched from it.
   const [firstSeed] = useState(() => initialSeed());
   const nextSimSeed = useRef<number | string | null>(new URLSearchParams(window.location.search).get('seed') ? firstSeed : null);
   const [meta, setMeta] = useState<SessionMeta>(() => ({ timeline: 'bridge', title: BRIDGE_TITLE }));
   const [state, dispatch] = useReducer(reducer, undefined, () => withDuty(universe, bridgeState(firstSeed)));
+  /** v0.7: open the Service Record at a section (optionally on one after-action report). */
+  const openRecord = (section: RecordSection, report: string | null = null) => {
+    setRecordView({ section, report });
+    setHubTab('record');
+  };
+  /** v0.7: a name change re-stamps how the crew addresses the captain; progress is untouched. */
+  const restampCaptain = () => {
+    const next = withCaptain(stateRef.current, universe.address());
+    if (next !== stateRef.current) {
+      dispatch({ type: 'replace', state: next });
+      stateRef.current = next;
+    }
+  };
+  const renameCaptain = (name: string) => {
+    const r = universe.setCaptainName(name);
+    if (r.ok) {
+      captainAddress = universe.address();
+      restampCaptain();
+      touch();
+    }
+    return r.ok ? ({ ok: true } as const) : r;
+  };
   const [hubTab, setHubTab] = useState<HubTab | null>(null);
   const [debrief, setDebrief] = useState<Debrief | null>(null);
   const [showCommission, setShowCommission] = useState(false);
+  // v0.7: the one-time naming prompt (new captains and pre-v0.7 saves), and the Service Record view.
+  const [askName, setAskName] = useState(() => universe.needsName());
+  const [recordView, setRecordView] = useState<{ section: RecordSection; report: string | null }>({ section: 'overview', report: null });
   const onBridge = meta.timeline === 'bridge';
   const timeline: Timeline = meta.timeline === 'bridge' ? 'simulation' : meta.timeline;
   const scenario = scenarioFor(state.scenarioId);
@@ -225,11 +260,11 @@ export default function App() {
         // A finished run is filed: simulations in simulation history, canonical missions through the commit gate.
         if (res.state.outcome && !before.outcome) {
           if (m.timeline === 'simulation') {
-            universe.finishSimulation({ timeline: 'simulation', runId: m.runId, archiveId: m.archiveId, conditions: m.conditions, scenarioId: res.state.scenarioId, state: res.state }, res.state);
+            const evaluation = universe.finishSimulation({ timeline: 'simulation', runId: m.runId, archiveId: m.archiveId, conditions: m.conditions, scenarioId: res.state.scenarioId, state: res.state }, res.state);
             // v0.5: the simulation ends and the captain is back on the bridge, with a debrief.
             const o = res.state.outcome;
             const met = res.state.objectives.filter((x) => x.status === 'complete').length;
-            setDebrief({ title: o.title, summary: o.summary, success: o.success, seed: res.state.seed, meta: m });
+            setDebrief({ title: o.title, summary: o.summary, success: o.success, seed: res.state.seed, meta: m, evaluationId: evaluation?.id });
             returnToBridge.current?.(bridgeState(res.state.seed, { title: o.title, summary: o.summary, objectives: `${met} of ${res.state.objectives.length} objectives met` }), `Simulation complete: ${o.title}. Back on the bridge.`);
           } else if (m.timeline === 'canonical') {
             universe.finishCanonical(canonicalOf(m, res.state));
@@ -246,8 +281,9 @@ export default function App() {
 
 
 
-  const reset = (next: WorldState, msg: string) => {
+  const reset = (raw: WorldState, msg: string) => {
     cancelSpeech();
+    const next = withCaptain(raw, universe.address());
     dispatch({ type: 'replace', state: next });
     stateRef.current = next;
     setSession((n) => n + 1);
@@ -514,7 +550,7 @@ export default function App() {
           )}
         </div>
         <nav className="controls" aria-label="Simulation controls">
-          <button className="btn hub-btn" onClick={() => setHubTab(luOn ? 'universe' : 'archive')} data-testid="open-hub" title="Active Duty, Mission Archive, Captain's Record">Hub</button>
+          <button className="btn hub-btn" onClick={() => setHubTab(luOn ? 'universe' : 'archive')} data-testid="open-hub" title="Active Duty, Mission Archive, Service Record">Hub</button>
           {introRunning && (
             <button className="btn ghost" onClick={() => dispatch({ type: 'skipIntro' })} data-testid="skip-intro">Skip intro</button>
           )}
@@ -538,16 +574,37 @@ export default function App() {
 
       <ModeBanner timeline={timeline} bridge={onBridge} duty={duty} conditions={meta.timeline === 'simulation' ? meta.conditions : undefined} title={meta.title} />
       {toast && <div className="toast" role="status" data-testid="toast">{toast}</div>}
-      {showCommission && duty === 'pending' && <CommissionCeremony onAccept={acceptCommission} onLater={() => { setShowCommission(false); flash('Fleet Command will wait. Answer from the Active Duty tab, or say "I accept the commission".'); }} />}
+      {askName && (
+        <CaptainNamePrompt
+          current={universe.profile().name}
+          onSave={(name) => {
+            const r = renameCaptain(name);
+            if (r.ok) {
+              setAskName(false);
+              flash(`Entered in the record: ${universe.address().formal}.`);
+            }
+            return r;
+          }}
+          onDismiss={() => {
+            const n = universe.dismissNamePrompt();
+            setAskName(false);
+            captainAddress = universe.address();
+            restampCaptain();
+            touch();
+            flash(`Recorded as ${n}. Change it any time in the Service Record.`);
+          }}
+        />
+      )}
+      {!askName && showCommission && duty === 'pending' && <CommissionCeremony captain={universe.address()} onAccept={acceptCommission} onLater={() => { setShowCommission(false); flash('Fleet Command will wait. Answer from the Active Duty tab, or say "I accept the commission".'); }} />}
       {hubTab && (
-        <Hub tab={hubTab} onTab={setHubTab} onClose={() => setHubTab(null)} tabs={['universe', 'archive', 'record', 'voices', 'settings']}>
+        <Hub tab={hubTab} onTab={(t) => { if (t === 'record') setRecordView({ section: 'overview', report: null }); setHubTab(t); }} onClose={() => { setHubTab(null); setRecordView({ section: 'overview', report: null }); }} tabs={['universe', 'archive', 'record', 'voices', 'settings']}>
           {hubTab === 'universe' && <UniversePanel key={rev} universe={universe} actions={universeActions} />}
           {hubTab === 'archive' && <ArchivePanel key={rev} entries={universe.archive()} actions={{ ...archiveActions, onResume: universeActions.onResume }} />}
-          {hubTab === 'record' && <RecordPanel key={rev} canon={universe.canon()} familiarity={universe.familiarity()} />}
+          {hubTab === 'record' && <RecordPanel key={`${recordView.section}-${recordView.report ?? ''}`} canon={universe.canon()} familiarity={universe.familiarity()} profile={universe.profile()} service={universe.service()} training={universe.training()} onRename={renameCaptain} initialSection={recordView.section} initialReport={recordView.report} />}
           {hubTab === 'voices' && (
             <VoicePanel members={voiceMembers} cast={voiceCast} voices={deviceVoices} settings={voiceSettings} supported={speechSynthesisSupported()} onSettings={updateVoiceSettings} onPreview={previewVoice} />
           )}
-          {hubTab === 'settings' && <SettingsPanel key={rev} universe={universe} onChange={(msg) => { touch(); flash(msg); }} onDuty={onDuty} />}
+          {hubTab === 'settings' && <SettingsPanel key={rev} universe={universe} onChange={(msg) => { captainAddress = universe.address(); restampCaptain(); touch(); flash(msg); }} onDuty={onDuty} />}
         </Hub>
       )}
 
@@ -566,6 +623,7 @@ export default function App() {
                 <span className="tag sim">Simulated outcome</span>
                 <button className="btn restart" onClick={() => enter(rerun(debrief.seed, debrief.meta), debrief.meta.title, `Running it again — seed ${debrief.seed}.`)} data-testid="outcome-same">Run it again</button>
                 <button className="btn ghost" onClick={() => { const seed = randomSeed(); enter(universe.replayVariation(debrief.meta.archiveId, seed), debrief.meta.title, `New variation — seed ${seed}.`); }} data-testid="outcome-new">New variation</button>
+                {debrief.evaluationId && <button className="btn" onClick={() => openRecord('training', debrief.evaluationId)} data-testid="outcome-aar">Read the after-action report</button>}
                 <button className="btn load" onClick={() => setHubTab('archive')} data-testid="outcome-archive">Mission Archive</button>
                 <button className="btn ghost" onClick={() => setDebrief(null)} data-testid="outcome-dismiss">Dismiss</button>
               </div>
@@ -613,7 +671,7 @@ export default function App() {
         </aside>
       </main>
       <footer className="footer">
-        Project Starbridge v{APP_VERSION} (crew voices) · Simulation Mode & Active Duty · Original fiction and artwork · Typed orders always available; voice where supported.
+        Project Starbridge v{APP_VERSION} (evaluation & records) · Simulation Mode & Active Duty · Original fiction and artwork · Typed orders always available; voice where supported.
       </footer>
     </div>
   );

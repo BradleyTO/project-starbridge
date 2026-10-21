@@ -15,8 +15,17 @@ const check = (name, pass, detail = '') => {
   console.log(`${pass ? 'PASS' : 'FAIL'} ${name}${detail ? ' — ' + detail : ''}`);
 };
 
+const presetName = () => {
+  try {
+    if (!sessionStorage.getItem('smoke.askName') && !localStorage.getItem('starbridge.profile.v1')) localStorage.setItem('starbridge.profile.v1', JSON.stringify({ schema: 'starbridge.profile', version: 1, name: 'Rowan Ashby', prompted: true, history: [] }));
+  } catch {}
+};
 const stubs = () => {
   window.__spoken = [];
+  // v0.7: earlier sections run as an already-named captain (the naming prompt has its own section).
+  try {
+    if (!sessionStorage.getItem('smoke.askName') && !localStorage.getItem('starbridge.profile.v1')) localStorage.setItem('starbridge.profile.v1', JSON.stringify({ schema: 'starbridge.profile', version: 1, name: 'Rowan Ashby', prompted: true, history: [] }));
+  } catch {}
   if ('speechSynthesis' in window) {
     window.speechSynthesis.speak = (u) => window.__spoken.push(u.text);
     window.speechSynthesis.cancel = () => {};
@@ -690,6 +699,7 @@ for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape',
   const MANY = [['Samantha', 'en-US'], ['Alex', 'en-US'], ['Daniel', 'en-GB'], ['Kate', 'en-GB'], ['Serena', 'en-GB'], ['Arthur', 'en-GB'], ['Martha', 'en-GB'], ['Karen', 'en-AU'], ['Catherine', 'en-AU'], ['Moira', 'en-IE'], ['Tessa', 'en-ZA'], ['Victoria', 'en-US'], ['Susan', 'en-US'], ['Fred', 'en-US'], ['Google US English', 'en-US', false], ['Zarvox', 'en-US'], ['Thomas', 'fr-FR']];
   const CREW = ['computer', 'marrow', 'rask', 'varga', 'adeyemi', 'szabo', 'okafor', 'osei', 'narrator'];
   const ctx7 = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await ctx7.addInitScript(presetName);
   await ctx7.addInitScript(voiceMock, MANY);
   const p7 = await ctx7.newPage();
   p7.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
@@ -764,6 +774,7 @@ for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape',
 
   // Scarce voices (like an iPhone with two English voices): shared voices, separated by pitch/rate.
   const ctx8 = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await ctx8.addInitScript(presetName);
   await ctx8.addInitScript(voiceMock, [['Samantha', 'en-US'], ['Daniel', 'en-GB']]);
   const p8 = await ctx8.newPage();
   p8.on('console', (m) => m.type() === 'error' && errors.push(m.text()));

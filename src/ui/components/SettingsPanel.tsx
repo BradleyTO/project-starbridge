@@ -1,3 +1,4 @@
+import { RANKS, isRankId, rankOf } from '../../career/ranks';
 import type { Universe } from '../../universe/controller';
 import type { ResetPolicy } from '../../universe/types';
 
@@ -20,6 +21,24 @@ export function SettingsPanel({ universe, onChange, onDuty }: { universe: Univer
         Active Duty subscription (dev toggle)
       </label>
       <p className="muted small" data-testid="duty-status-setting">Duty status: {DUTY_LABEL[universe.dutyStatus()]}</p>
+      <h3>Rank (development)</h3>
+      <label className="row">
+        Rank
+        <select
+          value={universe.service().rank}
+          disabled={!universe.canon()}
+          onChange={(e) => {
+            const id = e.target.value;
+            if (isRankId(id) && universe.setRank(id)) onChange(`Rank set to ${rankOf(id).title} (dev). Address: ${universe.address().formal}.`);
+          }}
+          data-testid="dev-rank"
+        >
+          {RANKS.map((r) => (
+            <option key={r.id} value={r.id}>{r.title}</option>
+          ))}
+        </select>
+      </label>
+      <p className="muted small">Testing only: in play, promotions come from ISA review of training, service, judgment and qualifications, and the captain may accept, defer or decline. Needs Active Duty.</p>
       <h3>Daily canonical allowance</h3>
       <label className="row">
         New canonical missions per day

@@ -303,3 +303,25 @@
 .voice-controls select { background: #11151f; color: var(--ink); border: 1px solid #2a4b74; border-radius: 8px; padding: 4px 6px; min-height: 32px; max-width: 220px; }
 .voice-controls label { display: flex; gap: 6px; align-items: center; }
 .voice-controls input[type=range] { width: 90px; }
+
+/* v0.7 Service Record, after-action reports and the naming prompt */
+.name-form { display: grid; gap: 0.5rem; margin-top: 0.75rem; }
+.name-form input { flex: 1; min-width: 0; }
+.record-tabs { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0.5rem 0 0.75rem; }
+.personnel-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.25rem 0.9rem; margin: 0.4rem 0 0.75rem; }
+.personnel-grid dt { color: var(--muted, #8fa3b8); font-size: 0.85em; }
+.personnel-grid dd { margin: 0; overflow-wrap: anywhere; }
+.competencies, .evaluations, .aar-list { list-style: none; padding: 0; margin: 0.3rem 0 0.8rem; display: grid; gap: 0.4rem; }
+.aar { display: grid; gap: 0.6rem; overflow-wrap: anywhere; }
+.aar h4 { margin: 0.4rem 0 0.2rem; }
+.aar-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0.75rem; }
+.aar-head .btn { margin-top: 0.4rem; }
+.small-btn { padding: 0.1rem 0.5rem; font-size: 0.8em; }
+.band-unassessed { opacity: 0.65; }
+.band-developing { border-color: #c9a04a; color: #e0bd6e; }
+.band-competent { border-color: #5aa0c9; color: #8cc4e6; }
+.band-proficient { border-color: #4fb38a; color: #7fd6af; }
+.band-distinguished { border-color: #b78cf0; color: #d2b6ff; }
+.judg-reckless { color: #f08a7a; }
+.judg-principled, .judg-responsible { color: #7fd6af; }
+@media (max-width: 600px) { .personnel-grid { grid-template-columns: 1fr; } }

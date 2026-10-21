@@ -11,6 +11,7 @@
  *   course      — "Helm, set a course for Veyra" (Active Duty: the app moves the Halcyon in canonical time)
  *   patrol      — "Continue the patrol" (Active Duty: canonical hours pass until something reaches the bridge)
  *   respond     — answering the hail / distress call / request waiting on the bridge
+ *   rename      — v0.7: "rename the ship" / "call helm Bob" are declined politely (only the captain's name can change)
  *
  * The engine records a UI request on the WorldState; the app performs the transition (opening the
  * archive or loading a simulation). Nothing here touches the canonical universe.
@@ -86,6 +87,9 @@ export function reduceBridge(s: WorldState, action: BridgeAction, hooks: Scenari
     case 'survey':
       if (hooks.bridge) return hooks.bridge(s, action, rng);
       return { state: s, reports: [say('sensors', 'bridgeSurveyBusy')] };
+    case 'rename':
+      // v0.7: only the captain's own name can change (Service Record → Personnel). Nothing else is renamed.
+      return { state: s, reports: [say('xo', action.scenario === 'self' ? 'renameSelf' : action.scenario === 'ship' ? 'renameShip' : 'renameOther')] };
     case 'chat':
       if (hooks.bridge) {
         const r = hooks.bridge(s, action, rng);
@@ -118,6 +122,9 @@ export function crewChat(s: WorldState, action: BridgeAction, rng: Rng): Report[
 
 export const BRIDGE_TEMPLATES: Record<string, (v: Record<string, string | number>) => string> = {
   bridgeArchiveOpen: () => 'Simulation archive open on your display, Captain.',
+  renameShip: () => 'With respect, Captain, the Halcyon’s name is on her ISA registry, and it is not ours to change. She stays the Halcyon.',
+  renameOther: () => 'I am afraid not, Captain. People keep the names they were given, and so do ships, worlds and the Agency’s departments. Your own name is the one the record lets you change.',
+  renameSelf: () => 'Your name on the record is yours to set, Captain: open the Hub, Service Record, Personnel. Nothing else on the record changes.',
   bridgeSimLoading: (v) => `Loading ${v.title}. Holographic overlay engaging — this is a simulation; nothing in it changes the real universe.`,
   bridgeNoSuchSim: (v) => `There is no simulation called "${v.name}" in the archive. Say "list simulations" to hear what is available.`,
   bridgeSimList: (v) => `${v.n} training simulation${Number(v.n) === 1 ? '' : 's'} on file: ${v.list}. Say, for example, "begin the ${v.example} simulation".`,
