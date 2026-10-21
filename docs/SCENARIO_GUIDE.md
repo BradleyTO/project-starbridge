@@ -340,7 +340,7 @@ Then:
 5. Add the catalogue entry and the registry line.
 6. Write `tests/simNN/` (§11) and play each ending yourself first (a scratch `_explore.test.ts` that prints the log is the fastest way; delete it afterwards).
 7. Add the smoke block.
-8. Update the README scenario list and the CHANGELOG, and bump the minor version.
+8. Update the README scenario list and the CHANGELOG, and bump the patch version (e.g. 0.7.0 to 0.7.1); minor versions are reserved for milestones.
 9. Run all checks, commit in small chunks, push (no force), confirm Vercel READY, and run the live smoke test. Mark the entry **done** in the roadmap once it is live and verified.
 
 ## 13. Known limits of the shared engine (v0.6)
