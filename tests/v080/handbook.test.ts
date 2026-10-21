@@ -31,8 +31,8 @@ const scenarioOf = (n: number) => SIMULATIONS.find((x) => x.number === n)?.scena
 const srcFiles = (dir: string): string[] => readdirSync(dir).flatMap((f) => (statSync(join(dir, f)).isDirectory() ? srcFiles(join(dir, f)) : /\.tsx?$/.test(f) ? [join(dir, f)] : []));
 
 describe('the regulation database', () => {
-  it('is the First Edition, Draft 2: 42 articles in chapters A–I and Annex T', () => {
-    expect(HANDBOOK.edition).toBe('First Edition, Draft 2, pending approval');
+  it('is the First Edition, Draft 3: 42 articles in chapters A–I and Annex T', () => {
+    expect(HANDBOOK.edition).toBe('First Edition, Draft 3, pending approval');
     expect(ARTICLES).toHaveLength(42);
     expect(CHAPTERS.map((c) => c.id)).toEqual(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'T']);
     const per = Object.fromEntries(CHAPTERS.map((c) => [c.id, ARTICLES.filter((a) => a.chapter === c.id).length]));
@@ -63,7 +63,7 @@ describe('the regulation database', () => {
       }
     }
   });
-  it('legal status and enforcement are as approved in Draft 2', () => {
+  it('legal status and enforcement are as approved in Draft 2 (unchanged in Draft 3)', () => {
     expect(ARTICLES.filter((a) => a.legalStatus === 'provisional').map((a) => a.id).sort()).toEqual(['border-accords-2', 'border-accords-9']);
     expect(ARTICLES.filter((a) => a.enforcement.status === 'evaluated').map((a) => a.id).sort()).toEqual(['reg-12', 'reg-7.1', 'reg-7.3', 'service-2', 'service-5']);
     expect(ARTICLES.filter((a) => a.enforcement.status === 'partial')).toHaveLength(20);
@@ -73,6 +73,13 @@ describe('the regulation database', () => {
     expect(textAt('roe-1', 0)?.text).toBe('ISA weapons are never used against non-combatants who pose no threat.');
     expect(textAt('roe-1', 1)?.text).toBe(article('roe-1')!.text);
     expect(textAt('cmd-1', 0)).toBeUndefined();
+  });
+  it('enforcement notes are player-facing: no release numbers or developer terms (Draft 3)', () => {
+    for (const a of ARTICLES) expect(a.enforcement.note, a.id).not.toMatch(/v\d+\.\d|\bplanned\b|\bfix\b|evaluator|descriptor|commit gate|\bengine\b|implemented|\bcode\b/i);
+  });
+  it('says "the ISA" throughout; the title block spells out the name once', () => {
+    expect(JSON.stringify({ ARTICLES, CHAPTERS, FRONT_MATTER })).not.toMatch(/Agency/);
+    expect(HANDBOOK.issuer).toBe('Intergalactic Space Agency (ISA)');
   });
   it('ships no drafting material (status flags, change notes, appendices, approver)', () => {
     const shipped = JSON.stringify({ ARTICLES, CHAPTERS, FRONT_MATTER });
@@ -227,7 +234,7 @@ describe('spoiler safety', () => {
     expect(enforcementNoteVisible(article('health-1')!, playedScenarios({ evaluations: [{ scenarioId: 'tallis-quarantine' }], archived: [] }), scenarioOf)).toBe(true);
     expect(enforcementNoteVisible(article('cmd-1')!, none, scenarioOf)).toBe(true);
   });
-  it('exactly the three after-played references from Draft 2', () => {
+  it('exactly the three after-played references from Draft 2 (unchanged in Draft 3)', () => {
     const after = ARTICLES.flatMap((a) => a.training.filter((t) => t.afterPlayed).map((t) => `${a.id}:${t.simulation}`)).sort();
     expect(after).toEqual(['asylum-1:1', 'border-accords-9:1', 'quarantine-2:2']);
   });
@@ -280,9 +287,10 @@ describe('print export', () => {
     const { exportMarkdown } = await import('../../src/handbook/export');
     const safe = exportMarkdown();
     const all = exportMarkdown({ all: true });
-    expect(safe).not.toContain("Protecting a person who has asked for the Agency's help.");
-    expect(safe).not.toContain('Checked in Quarantine at Tallis Gate');
-    expect(all).toContain("Protecting a person who has asked for the Agency's help.");
+    expect(safe).not.toContain("Protecting a person who has asked for the ISA's help.");
+    expect(safe).not.toContain('Assessed in Quarantine at Tallis Gate');
+    expect(all).toContain('Assessed in Quarantine at Tallis Gate');
+    expect(all).toContain("Protecting a person who has asked for the ISA's help.");
     expect(all).toContain('shown in game only after this simulation has been run');
   });
 });

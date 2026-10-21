@@ -1,6 +1,6 @@
 # Scenario roadmap: 30 training simulations
 
-Project Starbridge will ship with 30 training simulations. The player commands the **ISV Halcyon** of the **Intergalactic Space Agency (ISA)**, the fleet of **the Agency**. The **Tessarine Directorate** is a rival power. Everything here is original fiction.
+Project Starbridge will ship with 30 training simulations. The player commands the **ISV Halcyon** of the **Intergalactic Space Agency (ISA)**, called **the ISA** in play. The **Tessarine Directorate** is a rival power. Everything here is original fiction.
 
 These are meant to work like real captains' training simulations:
 - **Every simulation is a different event.** No two share a core situation, a central dilemma or the shape of their solution.

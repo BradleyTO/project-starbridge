@@ -5,7 +5,7 @@ This guide explains how to add a training simulation to Project Starbridge in on
 **Ground rules:**
 - Original fiction only.
 - Deterministic, seeded and offline: no network, no AI, no `Math.random`, no wall clock.
-- The player is the ISV Halcyon of the Intergalactic Space Agency (ISA), the fleet of the Agency. The Tessarine Directorate is a rival.
+- The player commands the ISV Halcyon, a ship of the Intergalactic Space Agency (ISA); in player-facing text it is always "the ISA". The Tessarine Directorate is a rival.
 - **Do not change the shared engine's behaviour for existing simulations.** The full test suite must stay green with the Kestrel tests untouched.
 
 ## 1. How the pieces fit

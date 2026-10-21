@@ -11,9 +11,9 @@ export type * from './types';
 export const HANDBOOK = {
   code: 'ISA-COM-001',
   title: "Captain's Code and Operational Regulations",
-  issuer: 'Intergalactic Space Agency',
+  issuer: 'Intergalactic Space Agency (ISA)',
   issuedBy: 'Issued by ISA Fleet Command to commanding officers of ISA vessels',
-  edition: 'First Edition, Draft 2, pending approval',
+  edition: 'First Edition, Draft 3, pending approval',
   revision: 1,
 } as const;
 

@@ -5,33 +5,33 @@
  * (his ship) for the Tessarine Directorate (his side). Internal 'concord' ids are unchanged.
  */
 import { describe, expect, it } from 'vitest';
-import { execSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { join } from 'node:path';
 import { renameLegacyText } from '../../src/engine/naming';
 
-const files = execSync('git ls-files src', { encoding: 'utf8' }).split('\n').filter((f) => /\.(ts|tsx)$/.test(f) && f !== 'src/engine/naming.ts');
+/**
+ * Every source file on disk, not `git ls-files`: a file that is new and not yet committed must be
+ * checked too (v0.8.0 passed locally with its uncommitted handbook files invisible to this test).
+ */
+const walk = (dir: string): string[] => readdirSync(dir).flatMap((f) => (statSync(join(dir, f)).isDirectory() ? walk(join(dir, f)) : [join(dir, f).split('\\').join('/')]));
+const files = walk('src').filter((f) => /\.(ts|tsx)$/.test(f) && f !== 'src/engine/naming.ts');
 const src = files.map((f) => [f, readFileSync(f, 'utf8')] as const);
 const FORMAL = ['src/ui/components/CommissionCeremony.tsx', 'src/ui/components/ShipStatus.tsx', 'src/ui/components/CaptainNamePrompt.tsx'];
-/**
- * v0.8.1: the Captain's Handbook (ISA-COM-001) is a formal document whose wording is locked
- * (tests/v080/fixtures/handbook-lock.json) and may change only by a new revision Brad approves.
- * Its title page names the issuer in full, and Draft 2 says "the Agency" in the places pinned
- * below. They are exempt here, pending Brad's ruling, and no other use may be added.
- */
-const HANDBOOK_FORMAL = ['src/handbook/articles.ts', 'src/handbook/index.ts'];
-const HANDBOOK_AGENCY_PINNED = 11;
+/** v0.8.1: the Captain's Handbook title block (ISA-COM-001) is a formal screen: it spells out the name once. */
+const HANDBOOK_TITLE = 'src/handbook/index.ts';
 
 describe('naming consistency', () => {
   it('no bare "Agency" in source (the ISA is "the ISA")', () => {
-    const all = src.flatMap(([f, t]) => t.split('\n').map((l, i) => [f, i + 1, l] as const)).filter(([, , l]) => /(?<!Space )\bAgency\b|\bAGENCY\b/.test(l));
-    const bad = all.filter(([f]) => f !== 'src/handbook/articles.ts');
+    expect(files).toContain('src/handbook/articles.ts');
+    const bad = src.flatMap(([f, t]) => t.split('\n').map((l, i) => [f, i + 1, l] as const)).filter(([, , l]) => /(?<!Space )\bAgency\b|\bAGENCY\b/.test(l));
     expect(bad.map(([f, n, l]) => `${f}:${n}: ${l.trim().slice(0, 80)}`)).toEqual([]);
-    // The handbook's locked Draft 2 wording: exactly the pinned lines, never more.
-    expect(all.length - bad.length).toBe(HANDBOOK_AGENCY_PINNED);
   });
   it('"Intergalactic Space Agency" appears only on formal screens', () => {
     const where = src.filter(([, t]) => /Intergalactic Space Agency/.test(t)).map(([f]) => f).sort();
-    expect(where).toEqual([...FORMAL, ...HANDBOOK_FORMAL].sort());
+    expect(where).toEqual([...FORMAL, HANDBOOK_TITLE].sort());
+    // Once on the handbook's title block, as "Intergalactic Space Agency (ISA)".
+    expect(readFileSync(HANDBOOK_TITLE, 'utf8').match(/Intergalactic Space Agency/g)).toEqual(['Intergalactic Space Agency']);
+    expect(readFileSync(HANDBOOK_TITLE, 'utf8')).toContain("issuer: 'Intergalactic Space Agency (ISA)'");
   });
   it('no "Admiralty"; Vane commands the Ashen Covenant', () => {
     for (const [f, t] of src) {

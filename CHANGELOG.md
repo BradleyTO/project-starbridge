@@ -2,11 +2,22 @@
 
 All notable changes to Project Starbridge are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [0.8.1] — 2026-10-21 — Handbook Draft 3: "the ISA" throughout
+
+The Captain's Handbook moves to **First Edition, Draft 3, pending approval**, following Brad's ruling that it says "the ISA" throughout. No change to grading, evaluation outcomes or crew refusal behaviour.
+
+### Changed
+- **"The ISA" in the handbook.** Every "the Agency" in the articles and the preamble now reads "the ISA", with no change of meaning: the F and Annex T chapter summaries, D.2 ("ISA Fleet Command directs the ISA's ships"), F.1 (explanation and training purpose), H.1 (text and explanation), the H.3 improper example, the introduction, and the definition of ISA Fleet Command. The title block spells out **Intergalactic Space Agency (ISA)** once, as a formal screen.
+- **Enforcement notes are player-facing.** Release numbers, "planned fix" remarks and developer terms (evaluator, descriptor, commit gate, engine) are gone. Each note now says plainly what the game assesses today and what it does not yet assess, for example "Reports assess who fired first and whether weapons were locked as a threat, but they currently count a lawful warning shot as firing first." Statuses are unchanged (5 evaluated, 20 partially, 17 not yet).
+- **Edition label:** "First Edition, Draft 3, pending approval". Draft wording is not an issued revision, so article revision numbers stay at 1. Revision 0 (the v0.7 wording) and the 15 legacy titles and texts returned by `src/evaluation/regulations.ts` are byte-identical. The wording lock (`tests/v080/fixtures/handbook-lock.json`) was updated deliberately: only the revision-1 text of `orders-2` and `contact-1` changed.
+- Docs: SCENARIO_GUIDE and SCENARIO_ROADMAP no longer say "the fleet of the Agency".
 
 ### Fixed
-- **Main was red after v0.8.0.** `tests/v071/naming-consistency.test.ts` failed 2 of 641 unit tests: the handbook's locked Draft 2 wording says "the Agency" (11 lines in `src/handbook/articles.ts`) and its title page names the "Intergalactic Space Agency" (`src/handbook/articles.ts`, `src/handbook/index.ts`), which the v0.7.1 naming rule allows only on the three formal screens. The handbook wording is locked and may change only by a revision Brad approves, so no article text was touched: the test now treats the handbook as a formal document and pins exactly those 11 lines (no new bare "Agency" anywhere else, none added to the handbook). Pending Brad's ruling on whether the next revision should say "the ISA".
-- No change to game code, handbook text, grading or crew behaviour; the deployed build is unchanged.
+- **Main was red after v0.8.0.** `tests/v071/naming-consistency.test.ts` failed 2 of 641 unit tests because the handbook said "the Agency" on 11 lines and named the "Intergalactic Space Agency" outside the formal screens. Commit 130d2c4 pinned those lines as a temporary exemption. That exemption is now removed: the handbook follows the normal naming rule, and its title block is the only extra formal screen (one spelled-out name).
+- **Why v0.8.0's local run was green.** The naming test listed files with `git ls-files src`, and the v0.8.0 suite ran before the new handbook files were committed, so the test never saw them. It now walks `src/` on disk, and asserts that it sees the handbook database, so uncommitted files are checked too.
+
+### Tests
+- New handbook checks: no "Agency" anywhere in the shipped handbook text, the issuer reads "Intergalactic Space Agency (ISA)", and no enforcement note contains a release number or developer term. The spoiler and export tests were updated for the new note wording.
 
 ## [0.8.0] — 2026-10-21 — The Captain's Handbook (foundation)
 

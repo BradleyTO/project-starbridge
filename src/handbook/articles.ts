@@ -1,7 +1,7 @@
 /**
  * ISA-COM-001, Captain's Code and Operational Regulations: the authoritative regulation database.
  *
- * First generated from the approved Draft 2 handbook source; from v0.8.0 this file is the database the
+ * Generated from the handbook source (Draft 3); from v0.8.0 this file is the database the
  * game, the export and the tests read. Rules for editing it (docs/SCENARIO_GUIDE.md §6b):
  *  - Ids are permanent and never reused. Never rename, renumber or reword an article without the
  *    project owner's approval; an approved change adds a revision and keeps the earlier text.
@@ -40,7 +40,7 @@ export const CHAPTERS: readonly HandbookChapter[] = [
   {
     "id": "F",
     "title": "Protection, Asylum and Custody",
-    "summary": "Persons who seek the protection of the Agency, and persons held aboard an ISA ship."
+    "summary": "Persons who seek the protection of the ISA, and persons held aboard an ISA ship."
   },
   {
     "id": "G",
@@ -60,7 +60,7 @@ export const CHAPTERS: readonly HandbookChapter[] = [
   {
     "id": "T",
     "title": "Annex T: Treaties and Instruments the ISA Observes",
-    "summary": "Treaties are agreements between the ISA and other powers or colonies. They are not ISA regulations. They are reproduced here so that captains can read the obligations the Agency has accepted; the ISA articles that tell a captain how to comply are cross-referenced."
+    "summary": "Treaties are agreements between the ISA and other powers or colonies. They are not ISA regulations. They are reproduced here so that captains can read the obligations the ISA has accepted; the ISA articles that tell a captain how to comply are cross-referenced."
   }
 ];
 
@@ -111,7 +111,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "in-force",
     "enforcement": {
       "status": "not-yet",
-      "note": "No evaluator or crew check."
+      "note": "Not assessed in after-action reports, and no crew member checks it."
     },
     "topics": [
       "duties of command",
@@ -162,7 +162,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "in-force",
     "enforcement": {
       "status": "not-yet",
-      "note": "No evaluator or crew check."
+      "note": "Not assessed in after-action reports, and no crew member checks it."
     },
     "topics": [
       "chain of command",
@@ -214,7 +214,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "in-force",
     "enforcement": {
       "status": "not-yet",
-      "note": "Standing orders run in the engine, but no evaluation checks them against this article."
+      "note": "Standing orders are carried out, but after-action reports do not yet assess them against this article."
     },
     "topics": [
       "delegation",
@@ -270,7 +270,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "in-force",
     "enforcement": {
       "status": "partial",
-      "note": "An order to fire on non-combatants is recorded as a concern, but it is filed as a breach of B.1, not as an order under A.4 (planned v0.8.2 fix)."
+      "note": "An order to fire on non-combatants is recorded as a concern, but reports currently file it under Article B.1 rather than as an order under this article."
     },
     "topics": [
       "accountability",
@@ -327,7 +327,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "in-force",
     "enforcement": {
       "status": "not-yet",
-      "note": "Foundational; not checked directly."
+      "note": "A foundational principle; not assessed directly."
     },
     "topics": [
       "no one above the law",
@@ -391,7 +391,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "in-force",
     "enforcement": {
       "status": "partial",
-      "note": "Tactical refuses locks and fire on civilian, friendly or surrendered ships with people aboard. But a refused order is reported as \"Breached\", and warning shots at such ships are not yet refused (planned v0.8.2)."
+      "note": "Tactical declines to lock on or fire at civilian, friendly or surrendered vessels with people aboard. A declined order is currently still reported as \"Breached\", and warning shots at such vessels are not yet declined."
     },
     "topics": [
       "rules of engagement",
@@ -462,7 +462,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "in-force",
     "enforcement": {
       "status": "partial",
-      "note": "The evaluator checks who fired first and weapons locks used as threats, but it still grades a lawful warning shot as firing first (planned v0.8.2 fix)."
+      "note": "Reports assess who fired first and whether weapons were locked as a threat, but they currently count a lawful warning shot as firing first."
     },
     "topics": [
       "rules of engagement",
@@ -530,7 +530,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "in-force",
     "enforcement": {
       "status": "partial",
-      "note": "Shields down under a hostile lock is checked. The exception for a necessary, logged risk to save life is not."
+      "note": "Shields down under a hostile weapons lock is assessed. The exception for a necessary, logged risk to save life is not yet taken into account."
     },
     "topics": [
       "rules of engagement",
@@ -588,7 +588,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "in-force",
     "enforcement": {
       "status": "partial",
-      "note": "Returning fire after being fired on is graded responsible. Necessity and proportion, and stopping when the threat ends, are not checked."
+      "note": "Returning fire after being fired on is assessed as responsible. Necessity, proportion and stopping when the threat ends are not yet assessed."
     },
     "topics": [
       "rules of engagement",
@@ -642,7 +642,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "in-force",
     "enforcement": {
       "status": "not-yet",
-      "note": "Warning shots are never refused, and they are graded as firing first. Planned v0.8.2 behaviour change: Tactical declines warning shots that fail B.5 (including at a disabled vessel), cites B.5 and proposes another approach; lawful warning shots are not penalised."
+      "note": "Warning shots are not yet declined by Tactical when they fail this article, and reports currently count any warning shot, even a lawful one, as firing first."
     },
     "topics": [
       "rules of engagement",
@@ -717,7 +717,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "in-force",
     "enforcement": {
       "status": "partial",
-      "note": "Civilian safety and abandonment are reported, but abandonment is graded without the circumstances test in C.4."
+      "note": "Civilian safety and withdrawal are reported, but a withdrawal is currently assessed without the circumstances test in Article C.4."
     },
     "topics": [
       "duty of care",
@@ -780,7 +780,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "in-force",
     "enforcement": {
       "status": "partial",
-      "note": "Checked in Quarantine at Tallis Gate (isolation before a team crosses); not checked for other away teams.",
+      "note": "Assessed in Quarantine at Tallis Gate (isolation before a team crosses); not yet assessed for other away teams.",
       "noteSimulations": [
         2
       ]
@@ -829,7 +829,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "in-force",
     "enforcement": {
       "status": "not-yet",
-      "note": "In force. Disciplinary enforcement stays inactive until Active Duty reliably supports acknowledgements, referrals, legitimate exceptions and recordkeeping; distress calls can currently be ignored without a record."
+      "note": "In force. Disciplinary review of distress calls is not yet active: until Active Duty can record acknowledgements, referrals and legitimate exceptions, a distress call can be ignored without a record."
     },
     "topics": [
       "distress call",
@@ -892,7 +892,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "in-force",
     "enforcement": {
       "status": "not-yet",
-      "note": "Abandonment is graded without weighing ship condition, threats, time, resources, alternatives or attempts made (planned v0.8.2)."
+      "note": "A withdrawal is currently assessed without weighing the ship's condition, threats, time, resources, alternatives or attempts made."
     },
     "topics": [
       "withdrawal",
@@ -945,7 +945,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "in-force",
     "enforcement": {
       "status": "evaluated",
-      "note": "Non-compliance and lapsed directives open a review, which is mitigated where a lifesaving response was under way."
+      "note": "Non-compliance and lapsed directives open a disciplinary review, which is mitigated where a lifesaving response was under way."
     },
     "topics": [
       "lawful directive",
@@ -965,7 +965,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "citation": "ISA-COM-001 Art. D.2",
     "title": "Authority of ISA Fleet Command, and a captain's recourse",
     "origin": "new",
-    "text": "ISA Fleet Command directs the ships of the Agency, and its lawful directives bind the captains who receive them. A captain who doubts a directive may request clarification, enter a formal objection, refuse it on the grounds in Articles D.3 to D.6, or appeal a decision under Article I.3. A dispute between a captain and ISA Fleet Command is resolved by ISA review on the evidence and the applicable articles; neither the captain's judgment nor Fleet Command's is presumed correct.",
+    "text": "ISA Fleet Command directs the ISA's ships, and its lawful directives bind the captains who receive them. A captain who doubts a directive may request clarification, enter a formal objection, refuse it on the grounds in Articles D.3 to D.6, or appeal a decision under Article I.3. A dispute between a captain and ISA Fleet Command is resolved by ISA review on the evidence and the applicable articles; neither the captain's judgment nor Fleet Command's is presumed correct.",
     "explanation": "Fleet Command's authority is real but limited by these regulations. Fleet Command can be wrong without bad faith: it may have incomplete information, intelligence it cannot share, political pressure, or a different reading of the law. A captain can also be wrong. That is why disputes go to review on the evidence rather than being settled by rank or by refusal. Where the dispute concerns Fleet Command's own alleged misconduct, it may be referred to the ISA Office of Independent Review (Article I.3).",
     "appliesWhen": "Whenever a captain doubts or disputes a directive.",
     "exceptions": "Recourse does not suspend a lawful directive, except where it is refused on the grounds in Articles D.3 to D.6. Requesting clarification is always allowed and is never misconduct.",
@@ -994,13 +994,13 @@ export const ARTICLES: readonly HandbookArticle[] = [
         "rev": 1,
         "edition": "First Edition",
         "title": "Authority of ISA Fleet Command, and a captain's recourse",
-        "text": "ISA Fleet Command directs the ships of the Agency, and its lawful directives bind the captains who receive them. A captain who doubts a directive may request clarification, enter a formal objection, refuse it on the grounds in Articles D.3 to D.6, or appeal a decision under Article I.3. A dispute between a captain and ISA Fleet Command is resolved by ISA review on the evidence and the applicable articles; neither the captain's judgment nor Fleet Command's is presumed correct."
+        "text": "ISA Fleet Command directs the ISA's ships, and its lawful directives bind the captains who receive them. A captain who doubts a directive may request clarification, enter a formal objection, refuse it on the grounds in Articles D.3 to D.6, or appeal a decision under Article I.3. A dispute between a captain and ISA Fleet Command is resolved by ISA review on the evidence and the applicable articles; neither the captain's judgment nor Fleet Command's is presumed correct."
       }
     ],
     "legalStatus": "in-force",
     "enforcement": {
       "status": "partial",
-      "note": "A directive can be questioned (Fleet Command replies) or refused, and refusals are reviewed. Formal objection, appeal and independent review are not implemented."
+      "note": "A directive can be questioned (Fleet Command replies) or refused, and refusals are reviewed. Formal objection, appeal and independent review are not yet available."
     },
     "topics": [
       "fleet command authority",
@@ -1105,7 +1105,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "in-force",
     "enforcement": {
       "status": "partial",
-      "note": "The review judges fitness on hull integrity alone (below 60%), not on operational capability."
+      "note": "The review currently judges fitness on hull integrity alone (below 60%), not on the ship's operational capability."
     },
     "topics": [
       "fitness for duty",
@@ -1221,7 +1221,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "in-force",
     "enforcement": {
       "status": "partial",
-      "note": "Only treaty grounds can be given, and every such refusal is reprimanded. Grounds under these regulations and the good-faith guidance standard are not implemented."
+      "note": "Only treaty grounds can be given for a refusal, and every such refusal is currently reprimanded. Grounds under these regulations and the good-faith guidance standard are not yet applied."
     },
     "topics": [
       "unlawful directive",
@@ -1279,7 +1279,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "in-force",
     "enforcement": {
       "status": "partial",
-      "note": "Tactical refuses unlawful fire and explains why. No other officer refuses unlawful orders."
+      "note": "Tactical declines unlawful fire and explains why. No other officer declines unlawful orders yet."
     },
     "topics": [
       "unlawful order",
@@ -1343,7 +1343,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "in-force",
     "enforcement": {
       "status": "partial",
-      "note": "Commitments on the record are tracked and graded kept or broken. Deception about life-critical facts is not checked."
+      "note": "Commitments made on the record are tracked and assessed as kept or broken. Deception about facts on which lives depend is not yet assessed."
     },
     "topics": [
       "honesty",
@@ -1401,7 +1401,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "in-force",
     "enforcement": {
       "status": "not-yet",
-      "note": "Bluffs are possible in play but not evaluated against this article."
+      "note": "Bluffs are possible, but they are not yet assessed against this article."
     },
     "topics": [
       "ruse",
@@ -1461,7 +1461,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "in-force",
     "enforcement": {
       "status": "not-yet",
-      "note": "No check."
+      "note": "Not yet assessed."
     },
     "topics": [
       "logs",
@@ -1483,7 +1483,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "title": "Asylum",
     "origin": "existing-reworded",
     "text": "A person who asks for the ISA's protection is not handed to another power except as this article allows. The captain hears the person's claim, extends protection while it is decided, and refers it to ISA Fleet Command. The person may be handed over only on Fleet Command's decision and only with credible assurance that they will not be harmed.",
-    "explanation": "When someone asks for the Agency's protection, listen, keep them safe, and tell Fleet Command. They are handed over only if Fleet Command decides so and there is credible assurance they will not be harmed.",
+    "explanation": "When someone asks for the ISA's protection, listen, keep them safe, and tell Fleet Command. They are handed over only if Fleet Command decides so and there is credible assurance they will not be harmed.",
     "appliesWhen": "Whenever a person asks the ship for protection from another power, whether aboard or in reach.",
     "exceptions": "If Fleet Command cannot be reached in time, protection continues until it can. Protection does not oblige the captain to use force forbidden by Chapter B.",
     "examples": {
@@ -1500,7 +1500,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
       {
         "simulation": 1,
         "title": "The Kestrel Incident",
-        "purpose": "Protecting a person who has asked for the Agency's help.",
+        "purpose": "Protecting a person who has asked for the ISA's help.",
         "afterPlayed": true
       },
       {
@@ -1528,7 +1528,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "in-force",
     "enforcement": {
       "status": "partial",
-      "note": "A handover is graded as a breach. The procedure (hear, protect, refer) is not checked, and the article is marked upheld whenever the person ends up aboard (planned v0.8.2 fix)."
+      "note": "A handover is assessed as a breach. The procedure (hear, protect, refer) is not yet assessed, and the article is currently marked upheld whenever the person ends up aboard."
     },
     "topics": [
       "asylum",
@@ -1587,7 +1587,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "in-force",
     "enforcement": {
       "status": "not-yet",
-      "note": "No check."
+      "note": "Not yet assessed."
     },
     "topics": [
       "custody",
@@ -1639,7 +1639,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "in-force",
     "enforcement": {
       "status": "partial",
-      "note": "Checked in Quarantine at Tallis Gate (diagnosis first, isolation ward or screened transport, exposed team).",
+      "note": "Assessed in Quarantine at Tallis Gate (diagnosis first, isolation ward or screened transport, exposed team).",
       "noteSimulations": [
         2
       ]
@@ -1713,7 +1713,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "in-force",
     "enforcement": {
       "status": "not-yet",
-      "note": "No check."
+      "note": "Not yet assessed."
     },
     "topics": [
       "medical authority",
@@ -1733,8 +1733,8 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "citation": "ISA-COM-001 Art. H.1",
     "title": "First contact",
     "origin": "new",
-    "text": "When the ship encounters a people not previously known to the ISA, the captain makes contact peacefully, does not threaten or coerce, respects a wish to be left alone, makes no commitment on the Agency's behalf beyond what ISA Fleet Command has authorised, and reports the contact to Fleet Command. Membership of the ISA is discussed only with a people that asks about it.",
-    "explanation": "Arrive in peace, listen more than you speak, leave if you are asked to, promise nothing you cannot deliver, and tell Fleet Command. Not every people wants to join the Agency, and none is pressed to.",
+    "text": "When the ship encounters a people not previously known to the ISA, the captain makes contact peacefully, does not threaten or coerce, respects a wish to be left alone, makes no commitment on the ISA's behalf beyond what ISA Fleet Command has authorised, and reports the contact to Fleet Command. Membership of the ISA is discussed only with a people that asks about it.",
+    "explanation": "Arrive in peace, listen more than you speak, leave if you are asked to, promise nothing you cannot deliver, and tell Fleet Command. Not every people wants to join the ISA, and none is pressed to.",
     "appliesWhen": "To any first contact with a people or civilization not previously known to the ISA.",
     "exceptions": "The right of self-defence in Article B.4 is unaffected.",
     "examples": {
@@ -1760,13 +1760,13 @@ export const ARTICLES: readonly HandbookArticle[] = [
         "rev": 1,
         "edition": "First Edition",
         "title": "First contact",
-        "text": "When the ship encounters a people not previously known to the ISA, the captain makes contact peacefully, does not threaten or coerce, respects a wish to be left alone, makes no commitment on the Agency's behalf beyond what ISA Fleet Command has authorised, and reports the contact to Fleet Command. Membership of the ISA is discussed only with a people that asks about it."
+        "text": "When the ship encounters a people not previously known to the ISA, the captain makes contact peacefully, does not threaten or coerce, respects a wish to be left alone, makes no commitment on the ISA's behalf beyond what ISA Fleet Command has authorised, and reports the contact to Fleet Command. Membership of the ISA is discussed only with a people that asks about it."
       }
     ],
     "legalStatus": "in-force",
     "enforcement": {
       "status": "not-yet",
-      "note": "First-contact outcomes depend on the captain's approach, but conduct is not evaluated against this article."
+      "note": "First-contact outcomes depend on the captain's approach, but conduct is not yet assessed against this article."
     },
     "topics": [
       "first contact",
@@ -1826,7 +1826,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "in-force",
     "enforcement": {
       "status": "partial",
-      "note": "Forcing or firing on the Tallis Gate quarantine is reflected in the ending and in Annex T.4 findings; not checked elsewhere.",
+      "note": "Forcing or firing on the Tallis Gate quarantine is reflected in the outcome and in Annex T.4 findings; not assessed elsewhere.",
       "noteSimulations": [
         2
       ]
@@ -1854,7 +1854,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "exceptions": "Humanitarian rescue is covered by Border Accords Art. 4 (Annex T.1). Self-defence (Article B.4).",
     "examples": {
       "proper": "Challenged by a Directorate officer asserting his government's claim, the captain answers that the ship is on a rescue covered by the Accords and logs the challenge.",
-      "improper": "The captain orders a Directorate vessel out of the region \"in the name of the Agency\"."
+      "improper": "The captain orders a Directorate vessel out of the region \"in the name of the ISA\"."
     },
     "related": [
       "border-accords-2",
@@ -1887,7 +1887,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "in-force",
     "enforcement": {
       "status": "not-yet",
-      "note": "No check."
+      "note": "Not yet assessed."
     },
     "topics": [
       "disputed space",
@@ -1933,7 +1933,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "in-force",
     "enforcement": {
       "status": "partial",
-      "note": "Evaluations record the descriptor version, not the article revision, and missed exercise objectives are listed as improvements (planned v0.8.2 labelling)."
+      "note": "Reports record which version of the exercise assessed them, not the article revision, and missed exercise objectives are currently listed as areas to improve."
     },
     "topics": [
       "regulations in force",
@@ -1977,7 +1977,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "in-force",
     "enforcement": {
       "status": "evaluated",
-      "note": "Simulation evaluations go only to the Training Record; the canonical record is changed only through the commit gate."
+      "note": "Simulation results go only to the Training Record; the Service Record changes only through Active Duty."
     },
     "topics": [
       "training record",
@@ -2023,7 +2023,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "in-force",
     "enforcement": {
       "status": "partial",
-      "note": "Reviews apply a written rule to evidence fixed when they open, and the refusal reason is the only explanation. The good-faith guidance standard, appeals, temporary measures and independent review are not implemented."
+      "note": "Reviews apply a written rule to the evidence fixed when they open, and the reason given for a refusal is the only explanation considered. The good-faith guidance standard, appeals, temporary measures and independent review are not yet available."
     },
     "topics": [
       "review",
@@ -2070,7 +2070,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "in-force",
     "enforcement": {
       "status": "not-yet",
-      "note": "Loss-of-ship inquiry not yet implemented."
+      "note": "No board of inquiry is convened yet."
     },
     "topics": [
       "board of inquiry",
@@ -2112,7 +2112,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "in-force",
     "enforcement": {
       "status": "evaluated",
-      "note": "Reserve status freezes the canonical timeline and is never recorded as misconduct or refusal."
+      "note": "Reserve status pauses the canonical timeline and is never recorded as misconduct or refusal."
     },
     "topics": [
       "inactive duty",
@@ -2153,7 +2153,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "in-force",
     "enforcement": {
       "status": "not-yet",
-      "note": "Promotion offers are not yet in play."
+      "note": "Promotion offers are not yet made."
     },
     "topics": [
       "promotion",
@@ -2212,7 +2212,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "in-force",
     "enforcement": {
       "status": "partial",
-      "note": "Applied in the Fleet Command reply and the disciplinary review, and cited when a standoff is resolved by negotiation."
+      "note": "Applied in Fleet Command replies and disciplinary reviews, and cited when a standoff is resolved by negotiation."
     },
     "topics": [
       "border accords",
@@ -2263,7 +2263,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "provisional",
     "enforcement": {
       "status": "not-yet",
-      "note": "Stated in mission narration only."
+      "note": "Stated in mission briefings and narration only; not assessed."
     },
     "topics": [
       "border accords",
@@ -2315,7 +2315,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "provisional",
     "enforcement": {
       "status": "not-yet",
-      "note": "Present as a hidden fact in one simulation; not evaluated."
+      "note": "Present as a hidden fact in one simulation; not assessed."
     },
     "topics": [
       "border accords",
@@ -2375,7 +2375,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "in-force",
     "enforcement": {
       "status": "partial",
-      "note": "Checked in Quarantine at Tallis Gate (evidence to the Warden, restraint toward the picket).",
+      "note": "Assessed in Quarantine at Tallis Gate (evidence to the Warden, restraint toward the picket).",
       "noteSimulations": [
         2
       ]
@@ -2438,7 +2438,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
     "legalStatus": "in-force",
     "enforcement": {
       "status": "partial",
-      "note": "Checked in Quarantine at Tallis Gate by whether an outbreak occurred, not by whether isolation was knowingly omitted.",
+      "note": "Assessed in Quarantine at Tallis Gate by whether an outbreak occurred, not by whether isolation was knowingly omitted.",
       "noteSimulations": [
         2
       ]
@@ -2462,7 +2462,7 @@ export const FRONT_MATTER: readonly HandbookSection[] = [
   {
     "id": "introduction",
     "title": "Introduction",
-    "body": "The Intergalactic Space Agency exists to explore, to render aid, and to keep the peace on the frontier. Its ships go where help is needed and where the unknown begins. Its captains carry the Agency's authority far from any superior, and with it the duty to use that authority well.\n\nThis handbook is issued to every commanding officer of an ISA vessel. It sets out the regulations that govern command: when force may be used and when it may not, what a captain owes to civilians and crew, how orders bind and when they may be refused, and how conduct is reviewed. It is a working reference. Read it before you need it, and consult it when you do.\n\nThe regulations rest on five principles:\n\n1. **Life first.** The safety of the people in your care comes before every other objective.\n2. **Force last.** Talk before you threaten, and threaten before you fire. Use only the force the situation requires.\n3. **Lawful authority.** Lawful orders are carried out. No order makes a forbidden act lawful, and no one, from a crew member to ISA Fleet Command, is above these regulations.\n4. **Honesty on the record.** Say what is true when lives depend on it, keep your word, and keep honest logs.\n5. **Accountability.** Every officer answers for the orders they give and the decisions they make, judged fairly on what they knew at the time.\n\nThese regulations exist before the conduct they govern. No captain will be judged by a rule written afterwards (Article I.1).\n\nEach article states two things separately. Its **legal status** says whether it is law in the ISA: *In force*, or *Provisional* (in force on the stated terms while its final text is settled). Its **enforcement status** says how far the ship's systems and ISA Training Command's after-action evaluations currently check it: *Evaluated*, *Partially evaluated* or *Not yet evaluated*. An article that is not yet evaluated still applies in full. It binds every captain and crew member, and conduct under it can still be reviewed; it simply is not yet assessed automatically."
+    "body": "The ISA exists to explore, to render aid, and to keep the peace on the frontier. Its ships go where help is needed and where the unknown begins. Its captains carry the ISA's authority far from any superior, and with it the duty to use that authority well.\n\nThis handbook is issued to every commanding officer of an ISA vessel. It sets out the regulations that govern command: when force may be used and when it may not, what a captain owes to civilians and crew, how orders bind and when they may be refused, and how conduct is reviewed. It is a working reference. Read it before you need it, and consult it when you do.\n\nThe regulations rest on five principles:\n\n1. **Life first.** The safety of the people in your care comes before every other objective.\n2. **Force last.** Talk before you threaten, and threaten before you fire. Use only the force the situation requires.\n3. **Lawful authority.** Lawful orders are carried out. No order makes a forbidden act lawful, and no one, from a crew member to ISA Fleet Command, is above these regulations.\n4. **Honesty on the record.** Say what is true when lives depend on it, keep your word, and keep honest logs.\n5. **Accountability.** Every officer answers for the orders they give and the decisions they make, judged fairly on what they knew at the time.\n\nThese regulations exist before the conduct they govern. No captain will be judged by a rule written afterwards (Article I.1).\n\nEach article states two things separately. Its **legal status** says whether it is law in the ISA: *In force*, or *Provisional* (in force on the stated terms while its final text is settled). Its **enforcement status** says how far the ship's systems and ISA Training Command's after-action evaluations currently check it: *Evaluated*, *Partially evaluated* or *Not yet evaluated*. An article that is not yet evaluated still applies in full. It binds every captain and crew member, and conduct under it can still be reviewed; it simply is not yet assessed automatically."
   },
   {
     "id": "how-to-use",
@@ -2472,6 +2472,6 @@ export const FRONT_MATTER: readonly HandbookSection[] = [
   {
     "id": "definitions",
     "title": "Definitions",
-    "body": "- **Commanding officer, captain.** The officer in command of an ISA vessel, of any operational rank.\n- **ISA Fleet Command.** The command authority of the Intergalactic Space Agency, including the admirals it appoints and the departments that act in its name (including Training Command).\n- **Directive.** An order from ISA Fleet Command to a vessel. A *mandatory* directive must be carried out, questioned, or formally refused (Chapter D).\n- **Lawful order.** An order that does not require an act these regulations or a treaty in Annex T forbid.\n- **Non-combatant vessel.** As defined in Article B.1.\n- **Persons in the ship's care.** People aboard the ship, and people whose rescue or protection the ship has undertaken.\n- **Reasonable commanding officer.** The standard by which judgments are assessed: what a competent, careful captain would have decided, with the information available at the time. Facts learned only later neither condemn nor excuse a decision.\n- **Exercise objective.** A goal set for a training simulation. Exercise objectives are training goals, not regulations (Article I.1)."
+    "body": "- **Commanding officer, captain.** The officer in command of an ISA vessel, of any operational rank.\n- **ISA Fleet Command.** The command authority of the ISA, including the admirals it appoints and the departments that act in its name (including Training Command).\n- **Directive.** An order from ISA Fleet Command to a vessel. A *mandatory* directive must be carried out, questioned, or formally refused (Chapter D).\n- **Lawful order.** An order that does not require an act these regulations or a treaty in Annex T forbid.\n- **Non-combatant vessel.** As defined in Article B.1.\n- **Persons in the ship's care.** People aboard the ship, and people whose rescue or protection the ship has undertaken.\n- **Reasonable commanding officer.** The standard by which judgments are assessed: what a competent, careful captain would have decided, with the information available at the time. Facts learned only later neither condemn nor excuse a decision.\n- **Exercise objective.** A goal set for a training simulation. Exercise objectives are training goals, not regulations (Article I.1)."
   }
 ];

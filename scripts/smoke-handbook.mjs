@@ -47,7 +47,7 @@ export async function handbookSmoke({ browser, URL, SHOTS, check, errors, stubs 
   await send('Computer, open the handbook');
   check('v0.8.0: "computer, open the handbook" opens the handbook contents on the idle bridge', (await pg.locator('[data-testid=hub]').count()) === 1 && (await view()) === 'contents');
   const contents = await pg.innerText('[data-testid=handbook-contents]');
-  check('v0.8.0: contents show ISA-COM-001, the edition label and every chapter', /ISA-COM-001/.test(contents) && /First Edition, Draft 2, pending approval/i.test(contents) && ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'T'].every((c) => contents.includes(c === 'T' ? 'Annex T' : `Chapter ${c}.`)), contents.slice(0, 200));
+  check('v0.8.0: contents show ISA-COM-001, the edition label and every chapter', /ISA-COM-001/.test(contents) && /First Edition, Draft 3, pending approval/i.test(contents) && ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'T'].every((c) => contents.includes(c === 'T' ? 'Annex T' : `Chapter ${c}.`)), contents.slice(0, 200));
   check('v0.8.0: contents list all 42 articles', (await pg.locator('.hb-toc-articles li').count()) === 42);
   check('v0.8.0: drafting appendices are not shipped', !/Appendix|Concordance|Register of changes|Drafting notes|\[EXISTING|\[NEW\]|Brad/i.test(contents));
   const width = await pg.evaluate(() => document.querySelector('.hb-paper > div > p.hb-issued')?.getBoundingClientRect().width ?? 0);
