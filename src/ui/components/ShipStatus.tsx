@@ -26,7 +26,7 @@ export function ShipStatus({ ship, torpedoes, targetName }: { ship: Ship; torped
         <ShipGlyph />
         <div>
           <div className="ship-name">{ship.name}</div>
-          <div className="ship-reg">{ship.classification} · Intergalactic Star Agency</div>
+          <div className="ship-reg">{ship.classification} · Intergalactic Space Agency</div>
         </div>
       </div>
       <div className="nav-readout" data-testid="nav-readout">

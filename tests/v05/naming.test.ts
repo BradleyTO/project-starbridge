@@ -1,4 +1,4 @@
-/** v0.5.1: the Concord / Concord Exploration Service (CSV) are now the Agency / Intergalactic Star Agency (ISV). */
+/** v0.5.1: the Concord / Concord Exploration Service (CSV) are now the Agency / Intergalactic Space Agency (ISV; Star → Space in v0.7.0). */
 import { describe, expect, it } from 'vitest';
 import { K, start } from '../helpers';
 import { renameLegacyNames, renameLegacyText } from '../../src/engine/naming';
@@ -15,7 +15,7 @@ const make = (storage = memoryStorage()) => new Universe({ repo: localRepository
 describe('legacy display names are rewritten', () => {
   it.each([
     ['CSV Halcyon', 'ISV Halcyon'],
-    ['Survey cruiser · Concord Exploration Service', 'Survey cruiser · Intergalactic Star Agency'],
+    ['Survey cruiser · Concord Exploration Service', 'Survey cruiser · Intergalactic Space Agency'],
     ['Admiral Odessa Kaine, Concord Fleet Command', 'Admiral Odessa Kaine, ISA Fleet Command'],
     ['registry CES-7140', 'registry ISA-7140'],
     ['We have crossed into Concord space.', 'We have crossed into Agency space.'],

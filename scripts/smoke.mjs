@@ -454,7 +454,7 @@ for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape',
   check('v0.5: app opens on the idle bridge', (await mode()) === 'bridge' && /holds station/.test(await all5()));
   {
     const page = await p5.innerText('body');
-    check('v0.5.1 names: the ISV Halcyon of the Intergalactic Star Agency', /ISV Halcyon/i.test(page) && /Intergalactic Star Agency/i.test(page), page.slice(0, 200));
+    check('v0.5.1 names: the ISV Halcyon of the Intergalactic Space Agency', /ISV Halcyon/i.test(page) && /Intergalactic Space Agency/i.test(page), page.slice(0, 200));
     check('v0.5.1 names: no Concord / CSV leftovers on the bridge', !/\bConcord\b|\bCSV\b/i.test(page));
   }
   check('v0.5: idle bridge has no contacts, no objectives, no emergency', (await p5.locator('[data-testid=contact-kestrel]').count()) === 0 && (await p5.locator('[data-testid=contact-cruiser]').count()) === 0 && !/distress|warship/i.test(await all5()));
@@ -502,7 +502,7 @@ for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape',
   check('v0.5: first activation shows the commission ceremony', (await p5.locator('[data-testid=commission]').count()) === 1);
   {
     const cer = await p5.innerText('[data-testid=commission]');
-    check('v0.5.1 names: the commission comes from ISA Fleet Command', /ISA Fleet Command/i.test(cer) && /Intergalactic Star Agency/i.test(cer) && !/Concord|CSV/i.test(cer), cer.slice(0, 200));
+    check('v0.5.1 names: the commission comes from ISA Fleet Command', /ISA Fleet Command/i.test(cer) && /Intergalactic Space Agency/i.test(cer) && !/Concord|CSV/i.test(cer), cer.slice(0, 200));
   }
   await p5.screenshot({ path: `${SHOTS}/v05-03-commission.png` });
   await p5.click('[data-testid=commission-accept]');

@@ -8,7 +8,7 @@ export function CommissionCeremony({ onAccept, onLater }: { onAccept(): void; on
         <p className="ceremony-speaker">Admiral Odessa Kaine, ISA Fleet Command</p>
         <blockquote>
           <p>Captain. Your training record has been reviewed by the Admiralty, and it has been found sufficient.</p>
-          <p>By order of the Intergalactic Star Agency, you are hereby called to active duty in command of the survey cruiser <strong>Halcyon</strong>, assigned to the Tessarine border sector. From this hour, what you do out there is real. It will be recorded, it will be remembered, and the galaxy will go on from it.</p>
+          <p>By order of the Intergalactic Space Agency, you are hereby called to active duty in command of the survey cruiser <strong>Halcyon</strong>, assigned to the Tessarine border sector. From this hour, what you do out there is real. It will be recorded, it will be remembered, and the galaxy will go on from it.</p>
           <p>The simulator stays open to you, as it always has. Use it. Then come home and do the work.</p>
           <p>Do you accept the commission?</p>
         </blockquote>

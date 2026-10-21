@@ -21,7 +21,7 @@ const FIRM = new Set(['demand', 'refuse', 'negotiate']);
 const PEACEFUL = new Set(['declarePeaceful', 'greet', 'offerCooperation', 'humanitarian', 'appeal', 'promise', 'agree', 'legal', 'trade', 'requestAssist', 'offerAsylum']);
 /** Words that make an otherwise peaceful line an aggressive one ("we come in peace, but our guns are ready"). */
 const THREAT = /\b(or else|guns|weapons (are )?(ready|armed|hot)|destroy|surrender|submit|we will take|by force|annex|you will obey|comply or)\b/i;
-const FIRM_WORDS = /\b(we (demand|require|insist)|you (must|will) (let|allow|tell)|(?:agency|isa|concord|intergalactic star agency) (territory|space|claim)|under (?:agency|isa|concord|intergalactic star agency) (law|authority)|by order of)\b/i;
+const FIRM_WORDS = /\b(we (demand|require|insist)|you (must|will) (let|allow|tell)|(?:agency|isa|concord|intergalactic (?:space|star) agency) (territory|space|claim)|under (?:agency|isa|concord|intergalactic (?:space|star) agency) (law|authority)|by order of)\b/i;
 
 export function approachOf(line: SpeakAction): Approach | null {
   const I = new Set(line.intents);

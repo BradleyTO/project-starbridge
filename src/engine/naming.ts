@@ -1,4 +1,9 @@
 /**
+ * Naming migrations for stored display text.
+ *
+ * v0.7.0: the fleet service is the Intergalactic SPACE Agency (ISA); v0.5.1–v0.6.1 said
+ * "Intergalactic Star Agency". The abbreviation (ISA) and ship prefix (ISV) are unchanged.
+ *
  * v0.5.1 naming migration. The player's faction was "the Concord" and its fleet
  * the "Concord Exploration Service" (ship prefix CSV); they are now "the Agency",
  * the "Intergalactic Star Agency" (ISA), ships prefixed ISV. Stored saves, the
@@ -8,11 +13,13 @@
  * Directorate is not touched.
  */
 const RULES: [RegExp, string][] = [
-  [/Concord Exploration Service/g, 'Intergalactic Star Agency'],
-  [/CONCORD EXPLORATION SERVICE/g, 'INTERGALACTIC STAR AGENCY'],
+  [/Intergalactic Star Agency/g, 'Intergalactic Space Agency'],
+  [/INTERGALACTIC STAR AGENCY/g, 'INTERGALACTIC SPACE AGENCY'],
+  [/Concord Exploration Service/g, 'Intergalactic Space Agency'],
+  [/CONCORD EXPLORATION SERVICE/g, 'INTERGALACTIC SPACE AGENCY'],
   [/Concord Fleet Command/g, 'ISA Fleet Command'],
   [/CONCORD FLEET COMMAND/g, 'ISA FLEET COMMAND'],
-  [/the Concord Fleet\b/g, 'the Intergalactic Star Agency'],
+  [/the Concord Fleet\b/g, 'the Intergalactic Space Agency'],
   [/\bCES-(\d+)/g, 'ISA-$1'],
   [/\bCES\b/g, 'ISA'],
   [/\bCSV(?= [A-Z])/g, 'ISV'],
@@ -24,7 +31,7 @@ const RULES: [RegExp, string][] = [
 
 /** Rewrite one string's legacy faction names. */
 export function renameLegacyText(s: string): string {
-  if (!/Concord|CONCORD|CSV|CES/.test(s)) return s;
+  if (!/Concord|CONCORD|CSV|CES|Star Agency|STAR AGENCY/.test(s)) return s;
   let out = s;
   for (const [re, to] of RULES) out = out.replace(re, to);
   return out;
