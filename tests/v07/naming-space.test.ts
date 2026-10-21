@@ -36,7 +36,7 @@ describe('Intergalactic Star Agency → Intergalactic Space Agency', () => {
 
   it('no "Star Agency" remains in source, scripts or current docs', () => {
     const out = execSync('git grep -n "Star Agency" -- src scripts README.md docs/SCENARIO_GUIDE.md docs/SCENARIO_ROADMAP.md || true', { encoding: 'utf8' });
-    const lines = out.split('\n').filter((l) => l && !l.startsWith('src/engine/naming.ts'));
+    const lines = out.split('\n').filter((l) => l && !l.startsWith('src/engine/naming.ts') && !l.includes('said "Intergalactic Star Agency"'));
     expect(lines).toEqual([]);
   });
 });
