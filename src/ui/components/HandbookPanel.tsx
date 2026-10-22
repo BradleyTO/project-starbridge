@@ -1,130 +1,57 @@
-import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import {
-  ARTICLES,
-  CHAPTERS,
-  ENFORCEMENT_LABEL,
-  FRONT_MATTER,
+  ANNEX_NOTE,
   HANDBOOK,
-  LEGAL_LABEL,
+  PARTS,
+  PREAMBLE,
   article,
-  chapter,
-  chapterArticles,
-  chapterLabel,
-  enforcementNoteVisible,
+  citationLabel,
+  part as partOf,
+  partSections,
   resolve,
   search,
-  visibleTraining,
-  type ChapterId,
-  type HandbookArticle,
+  type HandbookView,
+  type Section,
 } from '../../handbook';
 
-/** v0.8.0: what the Captain's Handbook is showing. Kept by the app so a bridge command can open it anywhere. */
-export type HandbookView =
-  | { kind: 'contents' }
-  | { kind: 'front'; id: string }
-  | { kind: 'chapter'; id: ChapterId }
-  | { kind: 'article'; id: string }
-  | { kind: 'search'; query: string };
+export type { HandbookView };
 
 interface Props {
   view: HandbookView;
   onView(v: HandbookView): void;
-  /** Scenario ids the Training Record shows were run (after-played training references stay hidden otherwise). */
-  played: Set<string>;
-  scenarioOf(simulation: number): string | undefined;
 }
 
 type Go = (v: HandbookView) => void;
+const anchor = (n: string) => `hb-${n.replace('.', '-')}`;
 
-/** Inline Markdown subset (**bold**, *italic*, `code`) with article numbers ("Article B.4") linked. */
-function Inline({ text, go }: { text: string; go: Go }) {
-  const out: ReactNode[] = [];
-  const re = /(\*\*[^*]+\*\*|\*[^*\s][^*]*\*|`[^`]+`|\b(?:[A-I]|T)\.\d{1,2}\b)/g;
-  let last = 0;
-  let k = 0;
-  for (const m of text.matchAll(re)) {
-    const tok = m[0];
-    if (m.index! > last) out.push(text.slice(last, m.index));
-    if (tok.startsWith('**')) out.push(<strong key={k++}>{tok.slice(2, -2)}</strong>);
-    else if (tok.startsWith('`')) out.push(<code key={k++}>{tok.slice(1, -1)}</code>);
-    else if (tok.startsWith('*')) out.push(<em key={k++}>{tok.slice(1, -1)}</em>);
-    else {
-      const a = resolve(tok);
-      out.push(a ? <ArticleLink key={k++} a={a} go={go} label={tok} /> : tok);
-    }
-    last = m.index! + tok.length;
-  }
-  if (last < text.length) out.push(text.slice(last));
-  return <>{out}</>;
-}
-
-/** Block Markdown subset: paragraphs, "- " and "1. " lists. */
-function Prose({ md, go }: { md: string; go: Go }) {
-  const blocks = md.split(/\n{2,}/);
+function Crumb({ go }: { go: Go }) {
   return (
-    <>
-      {blocks.map((b, i) => {
-        const lines = b.split('\n');
-        if (lines.every((l) => /^- /.test(l))) return <ul key={i}>{lines.map((l, j) => <li key={j}><Inline text={l.slice(2)} go={go} /></li>)}</ul>;
-        if (lines.every((l) => /^\d+\. /.test(l))) return <ol key={i}>{lines.map((l, j) => <li key={j}><Inline text={l.replace(/^\d+\. /, '')} go={go} /></li>)}</ol>;
-        if (lines.every((l) => /^> ?/.test(l))) return <blockquote key={i}><Inline text={lines.map((l) => l.replace(/^> ?/, '')).join(' ')} go={go} /></blockquote>;
-        return <p key={i}><Inline text={b.replace(/\n/g, ' ')} go={go} /></p>;
-      })}
-    </>
-  );
-}
-
-function ArticleLink({ a, go, label }: { a: HandbookArticle; go: Go; label?: string }) {
-  return (
-    <a
-      href={`#handbook/${a.id}`}
-      className="hb-link"
-      data-article={a.id}
-      title={`Art. ${a.number}, ${a.title}`}
-      onClick={(e) => {
-        e.preventDefault();
-        go({ kind: 'article', id: a.id });
-      }}
-    >
-      {label ?? `Art. ${a.number}, ${a.title}`}
-    </a>
-  );
-}
-
-function Masthead() {
-  return (
-    <header className="hb-masthead">
-      <p className="hb-issuer">{HANDBOOK.issuer}</p>
-      <h2 className="hb-code">{HANDBOOK.code}</h2>
-      <p className="hb-title">{HANDBOOK.title}</p>
-      <p className="hb-edition" data-testid="handbook-edition">{HANDBOOK.edition}</p>
-    </header>
+    <p className="hb-crumb">
+      <a href="#handbook" className="hb-link" onClick={(e) => { e.preventDefault(); go({ kind: 'contents' }); }}>{HANDBOOK.code} · Contents</a>
+    </p>
   );
 }
 
 function Contents({ go }: { go: Go }) {
   return (
     <div data-testid="handbook-contents">
-      <Masthead />
-      <p className="hb-issued">{HANDBOOK.issuedBy}. Revision {HANDBOOK.revision}.</p>
+      <header className="hb-masthead">
+        <p className="hb-issuer">{HANDBOOK.issuer}</p>
+        <h2 className="hb-code">{HANDBOOK.code}</h2>
+        <p className="hb-title">{HANDBOOK.title}</p>
+        <p className="hb-edition" data-testid="handbook-edition">{HANDBOOK.edition}</p>
+        <p className="hb-issued">{HANDBOOK.issuedBy}</p>
+      </header>
+      <h3 className="hb-h">Preamble</h3>
+      <p className="hb-preamble" data-testid="handbook-preamble">{PREAMBLE}</p>
       <h3 className="hb-h">Contents</h3>
       <ol className="hb-toc">
-        {FRONT_MATTER.map((f) => (
-          <li key={f.id} className="hb-toc-front">
-            <a href={`#handbook/${f.id}`} className="hb-link" onClick={(e) => { e.preventDefault(); go({ kind: 'front', id: f.id }); }}>{f.title}</a>
-          </li>
-        ))}
-        {CHAPTERS.map((c) => (
-          <li key={c.id} className="hb-toc-chapter" data-chapter={c.id}>
-            <a href={`#handbook/ch-${c.id}`} className="hb-link hb-toc-ch" onClick={(e) => { e.preventDefault(); go({ kind: 'chapter', id: c.id }); }} data-testid={`handbook-chapter-link-${c.id}`}>{chapterLabel(c)}</a>
-            <ol className="hb-toc-articles">
-              {chapterArticles(c.id).map((a) => (
-                <li key={a.id}>
-                  <span className="hb-num">{a.number}</span> <ArticleLink a={a} go={go} label={a.title} />
-                  {a.legalStatus === 'provisional' && <span className="hb-badge">Provisional</span>}
-                </li>
-              ))}
-            </ol>
+        {PARTS.map((p) => (
+          <li key={p.part} data-part={p.part}>
+            <a href={`#handbook/${p.part === 'T' ? 'annex' : `article-${p.part}`}`} className="hb-link hb-toc-ch" data-testid={`handbook-part-link-${p.part}`} onClick={(e) => { e.preventDefault(); go({ kind: 'part', part: p.part }); }}>
+              {p.part === 'T' ? 'Annex' : p.label}. {p.title}
+            </a>
+            <span className="hb-toc-range">{p.part === 'T' ? `${p.first}–${p.last}` : `§${p.first}–${p.last}`}</span>
           </li>
         ))}
       </ol>
@@ -132,108 +59,42 @@ function Contents({ go }: { go: Go }) {
   );
 }
 
-function Chapter({ id, go }: { id: ChapterId; go: Go }) {
-  const c = chapter(id)!;
+function Rule({ s, focus }: { s: Section; focus?: boolean }) {
   return (
-    <div data-testid="handbook-chapter" data-chapter={id}>
-      <p className="hb-crumb"><a href="#handbook" className="hb-link" onClick={(e) => { e.preventDefault(); go({ kind: 'contents' }); }}>{HANDBOOK.code}</a></p>
-      <h2 className="hb-chapter-title">{chapterLabel(c)}</h2>
-      <p className="hb-lede">{c.summary}</p>
-      <ol className="hb-chapter-list">
-        {chapterArticles(id).map((a) => (
-          <li key={a.id}>
-            <p className="hb-chapter-art"><span className="hb-num">Art. {a.number}</span> <ArticleLink a={a} go={go} label={a.title} />{a.legalStatus === 'provisional' && <span className="hb-badge">Provisional</span>}</p>
-            <p className="hb-chapter-text">{a.text}</p>
-          </li>
-        ))}
-      </ol>
-    </div>
+    <li id={anchor(s.number)} className={focus ? 'hb-rule hb-focus' : 'hb-rule'} data-section={s.number} aria-current={focus ? 'true' : undefined}>
+      <span className="hb-rule-no">{s.number}</span>
+      <span className="hb-rule-text">
+        {s.annex && <strong>{s.annex.instrument}. {s.annex.title}. </strong>}
+        {s.annex?.provisional && <span className="hb-badge">Provisional</span>}
+        {s.annex?.provisional && ' '}
+        {s.text}
+      </span>
+    </li>
   );
 }
 
-function ArticleView({ a, go, played, scenarioOf }: { a: HandbookArticle; go: Go; played: Set<string>; scenarioOf: Props['scenarioOf'] }) {
-  const c = chapter(a.chapter)!;
-  const i = ARTICLES.indexOf(a);
-  const prev = ARTICLES[i - 1];
-  const next = ARTICLES[i + 1];
-  const refs = visibleTraining(a, played, scenarioOf);
-  const noteShown = enforcementNoteVisible(a, played, scenarioOf);
-  const related = a.related.map((r) => article(r)).filter((x): x is HandbookArticle => !!x);
+function Part({ p, section, go }: { p: string; section?: string; go: Go }) {
+  const info = partOf(p)!;
+  const i = PARTS.indexOf(info);
+  const prev = PARTS[i - 1];
+  const next = PARTS[i + 1];
+  const link = (x: typeof info, label: string) => (
+    <a href={`#handbook/${x.part}`} className="hb-link" data-testid="handbook-pager" onClick={(e) => { e.preventDefault(); go({ kind: 'part', part: x.part }); }}>{label}</a>
+  );
   return (
-    <article className="hb-article" data-testid="handbook-article" data-article={a.id}>
-      <p className="hb-crumb">
-        <a href="#handbook" className="hb-link" onClick={(e) => { e.preventDefault(); go({ kind: 'contents' }); }}>{HANDBOOK.code}</a>
-        <span aria-hidden="true"> › </span>
-        <a href={`#handbook/ch-${c.id}`} className="hb-link" onClick={(e) => { e.preventDefault(); go({ kind: 'chapter', id: c.id }); }}>{chapterLabel(c)}</a>
-      </p>
+    <article className="hb-article" data-testid="handbook-article" data-part={p} data-focus={section ?? ''}>
+      <Crumb go={go} />
       <header>
-        <p className="hb-artno">{a.chapter === 'T' ? `Annex ${a.number}` : `Article ${a.number}`}</p>
-        <h2 className="hb-article-title">{a.title}</h2>
-        <p className="hb-meta">
-          {a.citation} · Id <code>{a.id}</code> · Revision {a.revision}
-          {a.formerly && <> · formerly <em>{a.formerly}</em></>}
-        </p>
+        <p className="hb-artno">{p === 'T' ? 'Annex' : info.label}</p>
+        <h2 className="hb-article-title">{info.title}</h2>
       </header>
-      <section className="hb-text" aria-label="Authoritative text" data-testid="handbook-text">
-        <p className="hb-text-label">Authoritative text</p>
-        <p className="hb-text-body">{a.text}</p>
-      </section>
-      <p className="hb-status" data-testid="handbook-status">
-        <span><strong>Legal status:</strong> {LEGAL_LABEL[a.legalStatus]}</span>
-        <span><strong>Enforcement status:</strong> {ENFORCEMENT_LABEL[a.enforcement.status]}</span>
-        {noteShown ? (
-          <span className="hb-status-note" data-testid="handbook-enforcement-note">{a.enforcement.note}</span>
-        ) : (
-          <span className="hb-status-note" data-testid="handbook-enforcement-withheld">How this article is checked is described once you have run the training simulations that exercise it.</span>
-        )}
-      </p>
-      <section className="hb-commentary" aria-label="Commentary">
-        <p className="hb-commentary-label">Commentary</p>
-        <h4>Explanation</h4>
-        <Prose md={a.explanation} go={go} />
-        <h4>When it applies</h4>
-        <Prose md={a.appliesWhen} go={go} />
-        <h4>Exceptions</h4>
-        <Prose md={a.exceptions} go={go} />
-        <h4>Examples</h4>
-        <div className="hb-examples">
-          <div><p className="hb-ex-label">Proper</p><Prose md={a.examples.proper} go={go} /></div>
-          <div><p className="hb-ex-label">Improper</p><Prose md={a.examples.improper} go={go} /></div>
-        </div>
-        {related.length > 0 && (
-          <>
-            <h4>Related articles</h4>
-            <ul className="hb-related" data-testid="handbook-related">
-              {related.map((r) => <li key={r.id}><span className="hb-num">{r.number}</span> <ArticleLink a={r} go={go} label={r.title} /></li>)}
-            </ul>
-          </>
-        )}
-        {refs.length > 0 && (
-          <>
-            <h4>Training references</h4>
-            <ul className="hb-training" data-testid="handbook-training">
-              {refs.map((t) => (
-                <li key={t.simulation} data-sim={t.simulation}>
-                  <em>Training Simulation {String(t.simulation).padStart(3, '0')}: {t.title}</em>{t.planned && <span className="hb-badge">Planned</span>}. {t.purpose}
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-        {a.revisions.length > 1 && (
-          <details className="hb-revisions">
-            <summary>Revision history</summary>
-            <ol>
-              {a.revisions.map((r) => (
-                <li key={r.rev}><strong>Revision {r.rev}</strong> ({r.edition}). <em>{r.title}.</em> {r.text}</li>
-              ))}
-            </ol>
-          </details>
-        )}
-      </section>
+      {p === 'T' && <p className="hb-lede">{ANNEX_NOTE}</p>}
+      <ol className="hb-rules" data-testid="handbook-text">
+        {partSections(p).map((s) => <Rule key={s.number} s={s} focus={s.number === section} />)}
+      </ol>
       <nav className="hb-pager" aria-label="Articles">
-        {prev ? <ArticleLink a={prev} go={go} label={`‹ ${prev.number} ${prev.title}`} /> : <span />}
-        {next ? <ArticleLink a={next} go={go} label={`${next.number} ${next.title} ›`} /> : <span />}
+        {prev ? link(prev, `‹ ${prev.part === 'T' ? 'Annex' : prev.label}. ${prev.title}`) : <span />}
+        {next ? link(next, `${next.part === 'T' ? 'Annex' : next.label}. ${next.title} ›`) : <span />}
       </nav>
     </article>
   );
@@ -243,16 +104,20 @@ function Results({ query, go }: { query: string; go: Go }) {
   const hits = search(query);
   return (
     <div data-testid="handbook-results" data-query={query}>
-      <p className="hb-crumb"><a href="#handbook" className="hb-link" onClick={(e) => { e.preventDefault(); go({ kind: 'contents' }); }}>{HANDBOOK.code}</a></p>
+      <Crumb go={go} />
       <h2 className="hb-chapter-title">Search: “{query}”</h2>
       {hits.length === 0 ? (
-        <p className="hb-lede">No article matches. Try an article number such as B.1, or a subject such as “asylum”.</p>
+        <p className="hb-lede">Nothing matches. Try a number such as 3.3 or Article 5, or a subject such as “asylum”.</p>
       ) : (
         <ol className="hb-results">
-          {hits.map((h) => (
-            <li key={h.article.id} data-article={h.article.id}>
-              <p className="hb-chapter-art"><span className="hb-num">Art. {h.article.number}</span> <ArticleLink a={h.article} go={go} label={h.article.title} /></p>
-              <p className="hb-chapter-text">{h.article.text}</p>
+          {hits.map(({ section: s }) => (
+            <li key={s.number} data-section={s.number}>
+              <p className="hb-chapter-art">
+                <a href={`#handbook/${s.number}`} className="hb-link" onClick={(e) => { e.preventDefault(); go({ kind: 'part', part: s.part, section: s.number }); }}>
+                  {s.annex ? `Annex ${s.number}, ${s.annex.instrument}` : `§${s.number} ${s.partTitle}`}
+                </a>
+              </p>
+              <p className="hb-chapter-text">{s.text}</p>
             </li>
           ))}
         </ol>
@@ -262,56 +127,56 @@ function Results({ query, go }: { query: string; go: Go }) {
 }
 
 /**
- * v0.8.0: the Captain's Handbook (ISA-COM-001), read like an official publication. Display only: it
- * reads the regulation database and the Training Record, and changes nothing.
+ * v0.8.0: the Captain's Handbook (ISA-COM-001), read like an official publication. v0.8.2: the First Edition code
+ * only (title block, preamble, contents, Articles 1–11 and the Annex). Display only: it changes nothing.
  */
-export function HandbookPanel({ view, onView, played, scenarioOf }: Props) {
+export function HandbookPanel({ view, onView }: Props) {
   const [q, setQ] = useState(view.kind === 'search' ? view.query : '');
   const top = useRef<HTMLDivElement>(null);
-  // Each view mounts afresh (the app keys the panel on it): bring the top of the page into view.
+  const focus = view.kind === 'part' ? view.section : undefined;
+  // Each view mounts afresh (the app keys the panel on it): bring the top of the page, or the cited subsection, into view.
   useEffect(() => {
-    top.current?.scrollIntoView?.({ block: 'start' });
-  }, []);
+    const el = focus ? document.getElementById(anchor(focus)) : null;
+    if (el) el.scrollIntoView?.({ block: 'center' });
+    else top.current?.scrollIntoView?.({ block: 'start' });
+  }, [focus]);
   const go: Go = (v) => onView(v);
   const submit = () => {
     const t = q.trim();
     if (!t) return go({ kind: 'contents' });
     const exact = resolve(t);
-    go(exact ? { kind: 'article', id: exact.id } : { kind: 'search', query: t });
+    go(exact ? { kind: 'part', ...exact } : { kind: 'search', query: t });
   };
-  const a = view.kind === 'article' ? article(view.id) : undefined;
-  const f = view.kind === 'front' ? FRONT_MATTER.find((x) => x.id === view.id) : undefined;
+  const known = view.kind === 'part' && partOf(view.part);
   return (
     <div className="handbook" data-testid="handbook" data-view={view.kind} ref={top}>
       <form className="hb-search" role="search" onSubmit={(e) => { e.preventDefault(); submit(); }}>
         <button type="button" className="btn ghost hb-home" onClick={() => go({ kind: 'contents' })} data-testid="handbook-home">Contents</button>
-        <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Article number or subject (B.1, asylum, warning shot)" aria-label="Search the handbook" data-testid="handbook-search" />
+        <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Number or subject (3.3, Article 5, asylum)" aria-label="Search the handbook" data-testid="handbook-search" />
         <button type="submit" className="btn" data-testid="handbook-search-go">Search</button>
       </form>
       <div className="hb-paper">
         {view.kind === 'contents' && <Contents go={go} />}
-        {view.kind === 'chapter' && <Chapter id={view.id} go={go} />}
         {view.kind === 'search' && <Results query={view.query} go={go} />}
-        {a && <ArticleView a={a} go={go} played={played} scenarioOf={scenarioOf} />}
-        {view.kind === 'article' && !a && <p className="hb-lede">No article has the identifier “{view.id}”.</p>}
-        {f && (
-          <div data-testid="handbook-front" data-section={f.id}>
-            <p className="hb-crumb"><a href="#handbook" className="hb-link" onClick={(e) => { e.preventDefault(); go({ kind: 'contents' }); }}>{HANDBOOK.code}</a></p>
-            <h2 className="hb-chapter-title">{f.title}</h2>
-            <div className="hb-prose"><Prose md={f.body} go={go} /></div>
-          </div>
-        )}
+        {known && <Part p={view.part} section={view.section} go={go} />}
+        {view.kind === 'part' && !known && <p className="hb-lede">The code has no Article {view.part}.</p>}
       </div>
     </div>
   );
 }
 
-/** A regulation citation that opens its handbook article (reports and the Service Record). */
-export function CitationLink({ id, children, onOpen }: { id: string | undefined; children: ReactNode; onOpen?(id: string): void }) {
-  if (!id || !onOpen || !article(id)) return <Fragment>{children}</Fragment>;
+/**
+ * A regulation citation in a report or the Service Record: shown as its First Edition subsection
+ * ("§3.3 Use of Force", never the internal id) and, where it can, a link that opens that subsection.
+ * `fallback` (the stored citation) is shown only for a citation the handbook does not know.
+ */
+export function CitationLink({ id, fallback, onOpen }: { id: string | undefined; fallback: string; onOpen?(id: string): void }) {
+  const label = citationLabel(id) ?? fallback;
+  const a = id ? article(id) : undefined;
+  if (!a || !onOpen) return <Fragment><strong>{label}</strong></Fragment>;
   return (
-    <a href={`#handbook/${id}`} className="hb-cite" data-testid="citation-link" data-article={id} onClick={(e) => { e.preventDefault(); onOpen(id); }} title="Open this article in the Captain's Handbook">
-      {children}
+    <a href={`#handbook/${a.number}`} className="hb-cite" data-testid="citation-link" data-section={a.number} onClick={(e) => { e.preventDefault(); onOpen(a.id); }} title={`Open ${label} in the Captain's Handbook`}>
+      <strong>{label}</strong>
     </a>
   );
 }

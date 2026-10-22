@@ -83,7 +83,7 @@ export function AfterActionReport({ e, captain, onClose, onCite }: { e: Evaluati
         <ul className="aar-list" data-testid="aar-regulations">
           {e.regulations.map((r) => (
             <li key={r.id}>
-              <CitationLink id={r.id} onOpen={onCite}><strong>{r.title}</strong></CitationLink>: {r.applied}
+              <CitationLink id={r.id} fallback={r.title} onOpen={onCite} />: {r.applied}
             </li>
           ))}
         </ul>

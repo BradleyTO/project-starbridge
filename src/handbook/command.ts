@@ -1,14 +1,15 @@
 /**
  * v0.8.0: bridge commands that open the Captain's Handbook ("computer, open the handbook", "show me
- * article B.1", "show me the regulation on first contact", "what are the quarantine regulations").
+ * section 3.3", "show me article 3", "show me the regulation on first contact", "what are the quarantine
+ * regulations"). v0.8.2: they open the First Edition code at an article or subsection.
  *
  * Recognised before the interpreter runs, so a handbook request never reaches the engine: it issues no
  * order, takes no time and changes no state, on the idle bridge, in a simulation or on Active Duty.
- * The computer only opens the matching article or search results; no crew member recites or advises.
+ * The computer only opens the matching article, subsection or search results; no crew member recites or advises.
  */
-import { resolve, search } from './index';
+import { resolve, search, type HandbookView } from './index';
 
-export type HandbookRequest = { kind: 'contents' } | { kind: 'article'; id: string } | { kind: 'search'; query: string };
+export type HandbookRequest = HandbookView;
 
 const BOOK = String.raw`(?:(?:isa\s+)?(?:captain'?s\s+)?handbook|captain'?s\s+code|isa-com-001|(?:the\s+)?(?:isa\s+)?regulations|(?:the\s+)?(?:isa\s+)?rule\s*book)`;
 const SHOW = String.raw`(?:open|show(?:\s+me)?|display|bring\s+up|pull\s+up|put\s+up|call\s+up|let\s+me\s+see|i\s+(?:want|would\s+like|'d\s+like)\s+to\s+see|can\s+i\s+see|read\s+me|look\s+up|find(?:\s+me)?|get(?:\s+me)?)`;
@@ -37,10 +38,11 @@ function toRequest(query: string, single = true): HandbookRequest | null {
   const q = topic(query);
   if (!q || /^(?:the|our|isa|all|all the|ship's|every|current)$/.test(q)) return { kind: 'contents' };
   const exact = resolve(q);
-  if (exact) return { kind: 'article', id: exact.id };
-  // One clearly best match opens its article; otherwise the ranked results.
+  if (exact) return { kind: 'part', ...exact };
+  // One clearly best regulation opens at its subsection; otherwise the ranked results.
   const hits = search(q);
-  if (single && hits.length && (hits.length === 1 || hits[0].score >= 2 * hits[1].score)) return { kind: 'article', id: hits[0].article.id };
+  const other = hits.find((h) => h.section.id !== hits[0]?.section.id);
+  if (single && hits.length && (!other || hits[0].score >= 2 * other.score)) return { kind: 'part', part: hits[0].section.part, section: hits[0].section.number };
   return { kind: 'search', query: q };
 }
 
@@ -51,14 +53,14 @@ export function handbookRequest(text: string): HandbookRequest | null {
   let m: RegExpExecArray | null;
   // "open the handbook", "show me the regulations", "handbook".
   if (new RegExp(String.raw`^(?:${SHOW}\s+)?(?:the\s+|my\s+|our\s+)?${BOOK}(?:\s+contents|\s+table\s+of\s+contents)?$`).test(t)) return { kind: 'contents' };
-  // "show me article B.1", "open Art. B.1", "show me reg 7.2", "show me roe-1", "article B.1".
-  if ((m = new RegExp(String.raw`^(?:${SHOW}\s+)?(?:the\s+)?((?:article|art\.?|annex|reg(?:ulation)?\.?|rules?\s+of\s+engagement)\s*\S+(?:\s*\S+)?)$`).exec(t))) {
+  // "show me section 3.3", "show me §3.3", "open article 3", "show me the annex", "show me reg 7.2", "show me roe-1", "article B.1".
+  if ((m = new RegExp(String.raw`^(?:${SHOW}\s+)?(?:the\s+)?((?:article|art\.?|annex|section|sec\.?|subsection|§|reg(?:ulation)?\.?|rules?\s+of\s+engagement)\s*\S+(?:\s*\S+)?|annex)$`).exec(t))) {
     const a = resolve(m[1]);
-    if (a) return { kind: 'article', id: a.id };
+    if (a) return { kind: 'part', ...a };
   }
-  if ((m = new RegExp(String.raw`^${SHOW}\s+(?:the\s+)?([a-z][a-z0-9.\-]*\d)$`).exec(t))) {
+  if ((m = new RegExp(String.raw`^${SHOW}\s+(?:the\s+)?([a-z§][a-z0-9.\-]*\d|\d{1,2}\.\d{1,2})$`).exec(t))) {
     const a = resolve(m[1]);
-    if (a) return { kind: 'article', id: a.id };
+    if (a) return { kind: 'part', ...a };
   }
   // "show me the regulation on first contact", "find the rules about asylum".
   if ((m = new RegExp(String.raw`^(?:${SHOW}\s+)?(?:the\s+|our\s+|any\s+)?(?:isa\s+)?(${RULEWORD})\s+${ABOUT}\s+(.+)$`).exec(t))) return toRequest(m[2], !plural(m[1]));

@@ -1,4 +1,4 @@
-// v0.8.0 smoke: the Captain's Handbook. Imported by scripts/smoke.mjs; also runnable alone:
+// v0.8.0 smoke: the Captain's Handbook (v0.8.2: the First Edition code). Imported by scripts/smoke.mjs; also runnable alone:
 //   node scripts/smoke-handbook.mjs [url]   (Env: SHOTS_DIR, HANDBOOK_SHOTS for the release screenshots)
 import fs from 'node:fs';
 
@@ -9,8 +9,8 @@ export async function handbookSmoke({ browser, URL, SHOTS, check, errors, stubs 
   const REL = process.env.HANDBOOK_SHOTS;
   if (REL) fs.mkdirSync(REL, { recursive: true });
   const shot = async (pg, name, opts = {}) => {
-    await pg.screenshot({ path: `${SHOTS}/v080-${name}.png`, ...opts });
-    if (REL) fs.copyFileSync(`${SHOTS}/v080-${name}.png`, `${REL}/${name}.png`);
+    await pg.screenshot({ path: `${SHOTS}/v082-${name}.png`, ...opts });
+    if (REL) fs.copyFileSync(`${SHOTS}/v082-${name}.png`, `${REL}/${name}.png`);
   };
   const withSeed = (seed) => URL + (URL.includes('?') ? '&' : '?') + `seed=${seed}`;
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
@@ -33,10 +33,16 @@ export async function handbookSmoke({ browser, URL, SHOTS, check, errors, stubs 
   const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
   const diff = (a, b) => Object.keys(a).filter((k) => JSON.stringify(a[k]) !== JSON.stringify(b[k])).join(', ');
   const view = () => pg.getAttribute('[data-testid=handbook]', 'data-view');
-  const shownArticle = () => pg.getAttribute('[data-testid=handbook-article]', 'data-article');
-  const close = async () => { await pg.click('[data-testid=hub-close]'); await pg.waitForTimeout(200); };
+    const close = async () => { await pg.click('[data-testid=hub-close]'); await pg.waitForTimeout(200); };
   const searchFor = async (q) => { await pg.fill('[data-testid=handbook-search]', q); await pg.click('[data-testid=handbook-search-go]'); await pg.waitForTimeout(150); };
-  const resultIds = () => pg.evaluate(() => [...document.querySelectorAll('[data-testid=handbook-results] li[data-article]')].map((e) => e.getAttribute('data-article')));
+
+  const shownPart = () => pg.getAttribute('[data-testid=handbook-article]', 'data-part');
+  const shownFocus = () => pg.getAttribute('[data-testid=handbook-article]', 'data-focus');
+  const at = async () => `${await shownPart()}|${await shownFocus()}`;
+  const resultSections = () => pg.evaluate(() => [...document.querySelectorAll('[data-testid=handbook-results] li[data-section]')].map((e) => e.getAttribute('data-section')));
+  /** Text the player can read in the handbook: no internal ids or notes may appear in it. */
+  const INTERNAL = /(?<![\w-])(cmd-\d|roe-\d|care-\d|reg-\d+(?:\.\d)?|orders-\d|honesty-1|conduct-\d|asylum-\d|health-\d|contact-\d|service-\d|general-\d|border-accords-\d|quarantine-\d)(?![\w-])|Training Simulation|Enforcement status|Commentary|Revision \d/;
+  const leaks = async () => (await pg.innerText('[data-testid=handbook]')).match(INTERNAL)?.[0] ?? '';
 
   // --- idle bridge: open by voice command, read, close: nothing changes.
   await pg.goto(withSeed(7), { waitUntil: 'networkidle' });
@@ -45,52 +51,41 @@ export async function handbookSmoke({ browser, URL, SHOTS, check, errors, stubs 
   await send('status report', 400);
   let before = await snapshot();
   await send('Computer, open the handbook');
-  check('v0.8.0: "computer, open the handbook" opens the handbook contents on the idle bridge', (await pg.locator('[data-testid=hub]').count()) === 1 && (await view()) === 'contents');
+  check('v0.8.2: "computer, open the handbook" opens the contents on the idle bridge', (await pg.locator('[data-testid=hub]').count()) === 1 && (await view()) === 'contents');
   const contents = await pg.innerText('[data-testid=handbook-contents]');
-  check('v0.8.0: contents show ISA-COM-001, the edition label and every chapter', /ISA-COM-001/.test(contents) && /First Edition, Draft 3, pending approval/i.test(contents) && ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'T'].every((c) => contents.includes(c === 'T' ? 'Annex T' : `Chapter ${c}.`)), contents.slice(0, 200));
-  check('v0.8.0: contents list all 42 articles', (await pg.locator('.hb-toc-articles li').count()) === 42);
-  check('v0.8.0: drafting appendices are not shipped', !/Appendix|Concordance|Register of changes|Drafting notes|\[EXISTING|\[NEW\]|Brad/i.test(contents));
-  const width = await pg.evaluate(() => document.querySelector('.hb-paper > div > p.hb-issued')?.getBoundingClientRect().width ?? 0);
-  check('v0.8.0 desktop: comfortable reading width (≤ 760px measure)', width > 300 && width <= 760, `${Math.round(width)}px`);
-  await shot(pg, '01-handbook-contents', { fullPage: true });
+  check('v0.8.2: contents show ISA-COM-001, "First Edition", the preamble and Articles 1–11 and the Annex', /ISA-COM-001/.test(contents) && /First Edition/i.test(contents) && !/Draft|pending approval/i.test(contents) && /Preamble/i.test(contents) && /Article 1\. General Provisions/.test(contents) && /Article 11\. Records, Duty and Rank/.test(contents) && /Annex\. Treaties the ISA Observes/.test(contents), contents.slice(0, 200));
+  check('v0.8.2: the contents list 11 articles and the Annex', (await pg.locator('[data-testid=handbook-contents] .hb-toc li').count()) === 12);
+  check('v0.8.2: no internal ids, notes or drafting material in the contents', !(await leaks()) && !/Appendix|Concordance|\[NEW\]|Brad/i.test(contents), await leaks());
+  const width = await pg.evaluate(() => document.querySelector('[data-testid=handbook-preamble]')?.getBoundingClientRect().width ?? 0);
+  check('v0.8.2 desktop: comfortable reading width (≤ 760px measure)', width > 300 && width <= 760, `${Math.round(width)}px`);
+  await shot(pg, '01-contents', { fullPage: true });
   await close();
   let after = await snapshot();
-  check('v0.8.0: opening and closing the handbook on the idle bridge changes nothing', same(before, after), diff(before, after));
+  check('v0.8.2: opening and closing the handbook on the idle bridge changes nothing', same(before, after), diff(before, after));
 
-  // --- Hub entry, chapter view, article view, search.
+  // --- Hub entry, an article, search by number, old citation and topic.
   await pg.click('[data-testid=open-hub]');
   await pg.click('[data-testid=hub-tab-handbook]');
-  check('v0.8.0: the Command Hub has a Captain\'s Handbook tab', (await view()) !== null);
-  await pg.click('[data-testid=handbook-chapter-link-B]');
-  check('v0.8.0: a chapter view lists its articles', (await pg.getAttribute('[data-testid=handbook-chapter]', 'data-chapter')) === 'B' && (await pg.locator('.hb-chapter-list > li').count()) === 5);
-  await searchFor('B.1');
-  check('v0.8.0: searching "B.1" opens Art. B.1 (roe-1)', (await shownArticle()) === 'roe-1');
+  check('v0.8.2: the Command Hub has a Captain\'s Handbook tab', (await view()) !== null);
+  await pg.click('[data-testid=handbook-part-link-3]');
   const art = await pg.innerText('[data-testid=handbook-article]');
-  check('v0.8.0: an article shows authoritative text apart from the commentary', (await pg.locator('[data-testid=handbook-text]').count()) === 1 && /Authoritative text/i.test(art) && /Commentary/i.test(art) && /Explanation/.test(art) && /Examples/.test(art));
-  check('v0.8.0: an article shows its legal and enforcement status', /Legal status:\s*In force/.test(art) && /Enforcement status:\s*Partially evaluated/.test(art));
-  check('v0.8.0: an article shows its permanent id, revision and former citation', /roe-1/.test(art) && /Revision 1/.test(art) && /formerly Rules of Engagement §1/.test(art));
-  await shot(pg, '02-article-B1', { fullPage: true });
-  await pg.locator('[data-testid=handbook-related] a[data-article=roe-5]').click();
-  await pg.waitForTimeout(150);
-  check('v0.8.0: a related-article link opens that article', (await shownArticle()) === 'roe-5');
-  for (const [q, id] of [['Art. B.1', 'roe-1'], ['roe-1', 'roe-1'], ['Reg. 7.2', 'reg-7.2']]) {
+  check('v0.8.2: Article 3 lists its nine subsections', (await shownPart()) === '3' && (await pg.locator('[data-testid=handbook-article] .hb-rule').count()) === 9 && /Use of Force/.test(art) && /while reasonable peaceful alternatives remain available/.test(art));
+  check('v0.8.2: an article shows only the code (no ids, commentary, training references or status lines)', !(await leaks()) && !/Explanation|Examples|Legal status|formerly/i.test(art), await leaks());
+  await shot(pg, '02-article-3', { fullPage: true });
+  for (const [q, want] of [['3.3', '3|3.3'], ['§3.3', '3|3.3'], ['Art. 3', '3|'], ['Article 5', '5|'], ['Reg. 7.2', '5|5.5'], ['Rules of Engagement §1', '3|3.3'], ['B.1', '3|3.3'], ['Annex T.2', 'T|T.2']]) {
     await searchFor(q);
-    check(`v0.8.0: search "${q}" finds ${id}`, (await shownArticle()) === id);
+    check(`v0.8.2: search "${q}" opens ${want.replace('|', ' at ') || want}`, (await at()) === want, await at());
   }
-  const topics = [['pathogen', 'health-1'], ['quarantine', 'quarantine-1'], ['biological containment', 'health-1'], ['rules of engagement', 'roe-1'], ['unlawful order', 'orders-1'], ['first contact', 'contact-1'], ['asylum', 'asylum-1'], ['warning shot', 'roe-5']];
-  for (const [q, id] of topics) {
+  check('v0.8.2: a cited subsection is highlighted', (await pg.locator('.hb-rule.hb-focus[data-section="T.2"]').count()) === 1);
+  const topics = [['pathogen', ['8.1', '8.2']], ['quarantine', ['T.4', 'T.5']], ['biological containment', ['8.1', '8.2']], ['rules of engagement', ['3.1', '3.2', '3.3', '3.4', '3.5', '3.6', '3.7', '3.8', '3.9']], ['unlawful order', ['5.8', '5.9', '5.10']], ['first contact', ['9.1', '9.2']], ['asylum', ['7.1', '7.2', '7.3']], ['warning shot', ['3.6', '3.7', '3.8']]];
+  for (const [q, want] of topics) {
     await searchFor(q);
-    const ids = await resultIds();
-    check(`v0.8.0: topic search "${q}" ranks ${id} in the top three`, ids.slice(0, 3).includes(id), ids.slice(0, 5).join(' '));
+    const got = await resultSections();
+    check(`v0.8.2: topic search "${q}" ranks §${want[0]} or its siblings in the top three`, got.slice(0, 3).some((n) => want.includes(n)), got.slice(0, 5).join(' '));
   }
   await searchFor('quarantine');
-  await shot(pg, '03-search-results', { fullPage: true });
-  // Spoiler-safe: an after-played reference is hidden before the simulation has been run.
-  await searchFor('asylum-1');
-  const asy = await pg.innerText('[data-testid=handbook-article]');
-  check('v0.8.0: after-played training references stay hidden until the simulation is run', !/Training Simulation 001/.test(asy) && /Training Simulation 019/.test(asy), asy.slice(-400));
-  await searchFor('health-1');
-  check('v0.8.0: an enforcement note that describes an unplayed simulation is withheld', (await pg.locator('[data-testid=handbook-enforcement-withheld]').count()) === 1 && !/Tallis Gate \(/.test(await pg.innerText('[data-testid=handbook-status]')));
+  check('v0.8.2: search results show no internal ids', !(await leaks()), await leaks());
+  await shot(pg, '03-search', { fullPage: true });
   await close();
 
   // --- in a simulation: the bridge command opens the handbook mid-run; the run is untouched.
@@ -101,22 +96,25 @@ export async function handbookSmoke({ browser, URL, SHOTS, check, errors, stubs 
   await send('scan the freighter', 500);
   before = await snapshot();
   await send('show me the regulation on first contact');
-  check('v0.8.0: in a simulation, "show me the regulation on first contact" opens Art. H.1', (await shownArticle()) === 'contact-1');
-  await shot(pg, '04-bridge-command-in-simulation');
+  check('v0.8.2: in a simulation, "show me the regulation on first contact" opens §9.1', (await at()) === '9|9.1', await at());
+  await shot(pg, '06-bridge-command-in-simulation');
   await close();
   await send('what are the quarantine regulations');
-  const qr = await resultIds();
-  check('v0.8.0: "what are the quarantine regulations" shows ranked results', (await view()) === 'search' && qr.includes('quarantine-1') && qr.includes('quarantine-2') && qr.includes('health-1'), qr.join(' '));
+  const qr = await resultSections();
+  check('v0.8.2: "what are the quarantine regulations" shows ranked results', (await view()) === 'search' && qr.includes('T.4') && qr.includes('T.5') && qr.includes('8.1'), qr.join(' '));
+  await close();
+  await send('show me section 3.3');
+  check('v0.8.2: "show me section 3.3" opens §3.3 in a simulation', (await at()) === '3|3.3', await at());
   await close();
   await send('show me article B.1');
-  check('v0.8.0: "show me article B.1" opens Art. B.1 in a simulation', (await shownArticle()) === 'roe-1');
+  check('v0.8.2: "show me article B.1" (a draft number) opens §3.3 in a simulation', (await at()) === '3|3.3', await at());
   await close();
   after = await snapshot();
-  check('v0.8.0: the simulation is exactly where it was after the handbook (clock, turn, log, objectives, saves)', same(before, after), diff(before, after));
+  check('v0.8.2: the simulation is exactly where it was after the handbook (clock, turn, log, objectives, saves)', same(before, after), diff(before, after));
   await send('wait', 400);
-  check('v0.8.0: the simulation carries on after the handbook', (await snapshot()).clock !== before.clock);
+  check('v0.8.2: the simulation carries on after the handbook', (await snapshot()).clock !== before.clock);
 
-  // --- report citations open their articles; after the run, the hidden reference appears.
+  // --- report citations: "§3.3 Use of Force", no ids, each opens its subsection.
   for (const c of ['charge the jump drive', 'wait', 'wait', 'jump']) await send(c, 350);
   await pg.waitForTimeout(800);
   await pg.click('[data-testid=outcome-aar]');
@@ -124,16 +122,17 @@ export async function handbookSmoke({ browser, URL, SHOTS, check, errors, stubs 
   const links = pg.locator('[data-testid=aar-regulations] [data-testid=citation-link]');
   const nLinks = await links.count();
   const nRegs = await pg.locator('[data-testid=aar-regulations] li').count();
-  check('v0.8.0: every regulation cited in the after-action report is a link', nRegs > 0 && nLinks === nRegs, `${nLinks}/${nRegs}`);
+  check('v0.8.2: every regulation cited in the after-action report is a link', nRegs > 0 && nLinks === nRegs, `${nLinks}/${nRegs}`);
+  const labels = await links.allInnerTexts();
+  check('v0.8.2: report citations read "§n Title" or "Annex T.n, …", with no internal ids', labels.every((l) => /^(§\d{1,2}\.\d{1,2} [A-Z]|Annex T\.\d, )/.test(l) && !INTERNAL.test(l)), labels.join(' | '));
+  check('v0.8.2: the report regulations list shows no internal ids', !INTERNAL.test(await pg.innerText('[data-testid=aar-regulations]')));
   await links.first().scrollIntoViewIfNeeded();
   await links.first().hover();
-  await shot(pg, '05-report-citation-link');
-  const citeId = await links.first().getAttribute('data-article');
+  await shot(pg, '05-report-citation');
+  const citeAt = await links.first().getAttribute('data-section');
   await links.first().click();
   await pg.waitForTimeout(200);
-  check('v0.8.0: clicking a report citation opens its article', (await shownArticle()) === citeId, citeId);
-  await searchFor('asylum-1');
-  check('v0.8.0: after the run, the after-played reference is shown', /Training Simulation 001/.test(await pg.innerText('[data-testid=handbook-article]')));
+  check('v0.8.2: clicking a report citation opens its subsection', (await shownFocus()) === citeAt, `${citeAt} → ${await at()}`);
   await close();
 
   // --- Active Duty: open and close mid-mission; the canonical mission is untouched.
@@ -150,25 +149,28 @@ export async function handbookSmoke({ browser, URL, SHOTS, check, errors, stubs 
   await skipIntro();
   await send('scan the freighter', 500);
   before = await snapshot();
-  check('v0.8.0: Active Duty mission under way', before.mode === 'canonical', before.mode);
+  check('v0.8.2: Active Duty mission under way', before.mode === 'canonical', before.mode);
   await send('computer, open the handbook');
-  check('v0.8.0: the handbook opens on Active Duty', (await view()) === 'contents');
+  check('v0.8.2: the handbook opens on Active Duty', (await view()) === 'contents');
   await searchFor('warning shot');
   await close();
+  await send('show me §5.9');
+  check('v0.8.2: "show me §5.9" opens §5.9 on Active Duty', (await at()) === '5|5.9', await at());
+  await close();
   after = await snapshot();
-  check('v0.8.0: Active Duty is exactly where it was after the handbook (clock, log, saves)', same(before, after), diff(before, after));
+  check('v0.8.2: Active Duty is exactly where it was after the handbook (clock, log, saves)', same(before, after), diff(before, after));
 
   // --- phone width.
   await pg.setViewportSize({ width: 390, height: 844 });
   await pg.waitForTimeout(200);
-  await send('show me article D.7');
+  await send('show me article 7');
   await pg.waitForTimeout(200);
-  check('v0.8.0 phone: the handbook opens an article', (await shownArticle()) === 'orders-1');
+  check('v0.8.2 phone: the handbook opens Article 7', (await shownPart()) === '7' && (await pg.locator('[data-testid=handbook-article] .hb-rule').count()) === 4);
   const ov = await pg.evaluate(() => Math.max(document.documentElement.scrollWidth, document.querySelector('.hub-backdrop')?.scrollWidth ?? 0) - window.innerWidth);
-  check('v0.8.0 phone: no horizontal overflow in the handbook', ov <= 0, `overflow ${ov}px`);
-  const fs16 = await pg.evaluate(() => parseFloat(getComputedStyle(document.querySelector('.hb-text-body')).fontSize));
-  check('v0.8.0 phone: authoritative text is set at a readable size (≥ 16px)', fs16 >= 16, `${fs16}px`);
-  await shot(pg, '06-phone-article', { fullPage: true });
+  check('v0.8.2 phone: no horizontal overflow in the handbook', ov <= 0, `overflow ${ov}px`);
+  const fs16 = await pg.evaluate(() => parseFloat(getComputedStyle(document.querySelector('.hb-rule-text')).fontSize));
+  check('v0.8.2 phone: the code is set at a readable size (≥ 16px)', fs16 >= 16, `${fs16}px`);
+  await shot(pg, '04-phone', { fullPage: true });
   await close();
   await ctx.close();
 }

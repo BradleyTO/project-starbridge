@@ -81,18 +81,18 @@ There are two linked clocks. The **tactical clock** runs inside any bridge sessi
 
 All names, ships, factions and artwork are original. The interface is *inspired by* classic sci-fi console design but uses no copyrighted artwork, fonts or names.
 
-## Captain's Handbook (v0.8.0)
+## Captain's Handbook (v0.8.0; First Edition since v0.8.2)
 
-The ISA's regulations are published in-game as **ISA-COM-001, *Captain's Code and Operational Regulations*** (First Edition, Draft 3, pending approval): 42 articles in nine chapters and an annex of treaties. Open it from the **Command Hub → Captain's Handbook**, or say so on the bridge, in a simulation or on Active Duty:
+The ISA's regulations are published in-game as **ISA-COM-001, *Captain's Code and Operational Regulations*, First Edition**: a one-paragraph preamble, 11 articles of short numbered rules (71 subsections, readable in about ten minutes) and an annex of the treaties the ISA observes. Open it from the **Command Hub → Captain's Handbook**, or say so on the bridge, in a simulation or on Active Duty:
 
 - "Computer, open the handbook"
-- "Show me article B.1" (also "Art. D.7", "Reg. 7.2", "roe-1")
+- "Show me section 3.3" (also "§3.3", "article 5", "the annex", and older citations such as "Reg. 7.2", "Rules of Engagement §1" or "B.1")
 - "Show me the regulation on first contact"
 - "What are the quarantine regulations?"
 
-Opening the handbook issues no order and takes no time; close it and you are exactly where you were. Each article sets its **authoritative text** apart from the commentary (explanation, when it applies, exceptions, examples, related articles, training references) and states its **legal status** and **enforcement status**, meaning how far the game checks it today. Training references never describe a simulation, and those that would give something away appear only after you have run it. Regulations cited in after-action reports and disciplinary reviews are links to their articles.
+Opening the handbook issues no order and takes no time; close it and you are exactly where you were. The handbook shows only the code itself. Search finds a subsection or article number, an older citation or a subject ("asylum", "warning shot", "quarantine"). Regulations cited in after-action reports and disciplinary reviews read like "§3.3 Use of Force" and open that subsection.
 
-`npm run handbook:export` writes the handbook as Markdown (`handbook-export/ISA-COM-001.md`) from the same database the game uses (`src/handbook/articles.ts`). Article ids are permanent; the wording changes only by an approved revision (see SCENARIO_GUIDE §6b).
+`npm run handbook:export` writes the First Edition as Markdown (`handbook-export/ISA-COM-001.md`) from the same database the game uses (`src/handbook/code.ts` for the text, `src/handbook/articles.ts` for the permanent regulation ids behind it). Ids are permanent; the wording changes only by an approved revision (see SCENARIO_GUIDE §6b).
 
 ## Service Record, after-action reports and your name (v0.7)
 
@@ -393,7 +393,7 @@ The app deploys to Vercel as a Vite static site plus serverless functions in `ap
 - **Canonical time moves only on patrol, travel and missions.** Waiting on the bridge, chatting, or a long first-contact conversation does not advance the galaxy clock.
 - **v0.7 limits.** No promotions, Fleet Command requests channel, qualifications or board of inquiry in play yet (data models and unit tests only). The captain's name is used in the personnel record, reports, the commission and the bridge greeting, not yet throughout every scenario's dialogue (scenario NPCs still say "Captain"). Rank changes are available only from the development selector in Settings. Evaluation describes the final state and a turn trace; it is deterministic and rule-based, not an AI judgment.
 - **v0.7.1 limits (idle bridge and Fleet Command).** "Hail the ISA" / "contact Fleet Command" is a one-shot exchange with an offline duty officer (your training record, and what is coming), not a persistent channel; assignment, supply, personnel and legal requests come later. With exactly one contact on sensors, an unrecognised ship name still hails that contact. "Who is out there?" is not recognised (use "any contacts?" or "scan"). In simulations, generic class words ("freighter", "cruiser") still refer to that scenario's ships. Held-out Fleet/career phrasings passed 12/12, 10/10 and 7/7 negatives on the first run, but they were written by the same author who then built the classifier.
-- **v0.8.0 / v0.8.1 limits (handbook).** The handbook is the First Edition, Draft 3, pending approval. Evaluations and crew refusals still apply the pre-edition (v0.7) wording, which the handbook keeps as revision 0. They move to the First Edition text in handbook Stage 3, with the behaviour changes that the enforcement notes describe; until then, for example, a refused order is still reported as B.1 "Breached". Crew do not quote or explain regulations yet (handbook Stage 2). Bridge commands are rule-based: a phrasing they don't catch goes to the interpreter as usual. Use the Hub tab or search instead.
+- **Handbook limits (v0.8.0–v0.8.2).** The handbook is the approved First Edition, but evaluations and crew refusals still apply the pre-edition (v0.7) wording, which the database keeps as revision 0. A report therefore shows the First Edition citation ("§3.1 Use of Force") beside the v0.7 sentence it applied. Evaluations move to the First Edition text in handbook Stage 3; until then, for example, a refused order is still reported as §3.3 "Breached". Crew do not quote or explain regulations yet (handbook Stage 2). Bridge commands are rule-based: a phrasing they don't catch goes to the interpreter as usual. Use the Hub tab or search instead.
 - **v0.6.1 crew voices are untested on real devices.**
   - Casting and the speech queue are tested with mocked voice lists (unit tests and the smoke test), not by listening.
   - Which voices exist depends on the device and the voices installed. iOS Safari often exposes only a few English voices (plus novelty ones, which are excluded). Android Chrome usually exposes one voice per locale. Desktop Chrome on Windows has three local voices plus cloud "Google" voices, which are off by default.
@@ -413,6 +413,7 @@ The app deploys to Vercel as a Vite static site plus serverless functions in `ap
 - [x] **v0.7** — Evaluation & Records Foundation: the captain's name, ranks (data), after-action reports, competencies in words, Training and Service Records, and the Fleet request foundation (offline).
 - [x] **v0.8.0** — Captain's Handbook foundation: the ISA-COM-001 regulation database, in-game handbook, search, bridge commands, clickable citations and print export (no grading changes).
 - [x] **v0.8.1** — Handbook Draft 3: "the ISA" throughout, player-facing enforcement notes.
+- [x] **v0.8.2** — ISA-COM-001 First Edition: the condensed code (11 articles, 71 subsections, Annex), citations shown as "§3.3 Use of Force".
 - [ ] **Handbook Stages 2 and 3** (each takes the next free version number when it ships; nightly simulations keep bumping the patch version) — Crew who cite and explain regulations; evaluations, refusals and reviews moved to the approved First Edition wording.
 - [ ] **Next** — Server-side AI narration and character responses with schema validation, timeouts, usage limits and template fallback; server-side accounts and credits.
 - [ ] **Milestone 4** — Branching outcomes, mission evaluation, full save/resume, voice controls.

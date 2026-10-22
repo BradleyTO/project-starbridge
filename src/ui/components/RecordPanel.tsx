@@ -15,6 +15,9 @@ import { AfterActionReport } from './AfterActionReport';
 import { CitationLink } from './HandbookPanel';
 import { citedArticle } from '../../handbook';
 
+/** v0.8.2: a stored disciplinary rule without its v0.7 citation label (the citation is shown as the First Edition subsection). Display only. */
+const ruleText = (rule: string) => (citedArticle(rule) ? rule.slice(rule.indexOf(':') + 1).trim() : rule);
+
 const CLASS: Record<WorldEvent['classification'], string> = {
   assignment: 'Voluntary',
   distress: 'Distress',
@@ -217,8 +220,8 @@ function History({ canon, service, onOpen, onCite }: { canon: DeepReadonly<Canon
               <ul className="discipline" data-testid="discipline">
                 {canon.discipline.map((d) => (
                   <li key={d.id} data-testid={`discipline-${d.id}`} data-finding={d.finding}>
-                    <CitationLink id={citedArticle(d.rule)?.id} onOpen={onCite}><strong>{d.rule.split(':')[0]}</strong></CitationLink> ({d.trigger}): {d.finding === 'pending' ? `pending; finding due ${clockLabel(d.openedAt + 12 * 60)}` : d.finding === 'no-action' ? 'closed, no action' : 'formal reprimand'}
-                    <div className="muted small">{d.rule} Evidence: {d.evidence.join(' ')}</div>
+                    <CitationLink id={citedArticle(d.rule)?.id} fallback={d.rule.split(':')[0]} onOpen={onCite} /> ({d.trigger}): {d.finding === 'pending' ? `pending; finding due ${clockLabel(d.openedAt + 12 * 60)}` : d.finding === 'no-action' ? 'closed, no action' : 'formal reprimand'}
+                    <div className="muted small">{ruleText(d.rule)} Evidence: {d.evidence.join(' ')}</div>
                   </li>
                 ))}
               </ul>

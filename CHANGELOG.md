@@ -2,6 +2,26 @@
 
 All notable changes to Project Starbridge are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.8.2] — 2026-10-21 — ISA-COM-001 First Edition
+
+Brad approved the condensed code as the **First Edition** of ISA-COM-001, with four amendments. The in-game handbook now shows only the code. No change to grading, evaluation outcomes, disciplinary findings or crew refusal behaviour.
+
+### Changed
+- **The First Edition code** (`src/handbook/code.ts`): a one-paragraph preamble, 11 articles with 71 one-sentence subsections ("shall", "shall not", "may"), and an Annex of 5 treaty provisions (Border Accords Arts. 2 and 9 marked Provisional). Edition label: "First Edition".
+  - Amendments at approval: §3.1 "while reasonable peaceful alternatives remain available"; §5.9 the duty to refuse covers orders contrary to this Code or to an applicable treaty; new §7.2, no handover where credible evidence indicates a serious risk of persecution, torture or grave harm, even with assurances (the former §7.2–7.3 are now §7.3–7.4); §10.7 personnel may go directly to the Office of Independent Review, without Fleet Command's permission, when Fleet Command's own conduct is in question.
+- **Regulation records** (`src/handbook/articles.ts`): 44 permanent ids (the 42 draft ids plus `general-1`, extraordinary circumstances, and `general-2`, lawful but poor decisions), each mapped to its subsections; no id lost or reused. Revision 1 is the approved First Edition text; revision 0 (the v0.7 wording of the 15 pre-edition ids) is byte-identical, and `src/evaluation/regulations.ts` still returns the same 15 ids, titles and texts. Draft wording was never issued and is not a revision. Draft 3's commentary, examples, training references (with their after-played flags), enforcement notes and draft numbers are kept as hidden internal data (`internal`), never shown to the player.
+- **Captain's Handbook:** title block, preamble, contents, one page per article listing its subsections, and the Annex. Commentary, status lines, training references, revision history, ids and related links are no longer shown. A cited subsection opens highlighted.
+- **Search** finds subsection and article numbers ("3.3", "§3.3", "Art. 3", "Article 3", "T.2", "the Annex"), older citations and draft numbers ("Reg. 7.2", "Rules of Engagement §1", "B.1") at their First Edition subsection, and topics (the existing aliases, plus a few for the amendments). A bare treaty name ("Border Accords") is now a search rather than a citation of Art. 4.
+- **Bridge commands** also take "show me section 3.3", "show me §5.9", "open article 5" and "show me the annex", on station, in a simulation and on Active Duty, still without changing state.
+- **Citations in reports and the Service Record** read "§3.3 Use of Force" (or "Annex T.2, Border Accords, Art. 4"), never an id, and open that subsection. Stored reports, findings, verdicts and ids are unchanged; disciplinary reviews show the stored sentence after the citation.
+- `npm run handbook:export` emits the First Edition code only (the `--all` option is gone: there are no player-facing training references left to include).
+- SCENARIO_GUIDE §6b: new simulations cite permanent ids chosen by First Edition subsection (written "§3.3 (roe-1)" in notes), add training references only in the hidden data, and never add or reword regulations.
+
+### Tests
+- `tests/v080/handbook.test.ts` rewritten for the First Edition: shape (11 / 71 / 5), the amendments, mapping completeness (every id resolves to a subsection, every subsection has an id), search by number, old citation and topic (every alias finds its regulation), bridge commands, internal spoiler data, export and the wording lock. The lock (`tests/v080/fixtures/handbook-lock.json`) now pins every subsection, the preamble and each id's subsections and revisions; revision-0 hashes are unchanged from v0.8.1.
+- New `tests/v082/first-edition-view.test.ts`: the rendered handbook and report citations show no internal ids, notes or training references; reports cite "§n Title" while the stored v0.7 citations are unchanged.
+- No evaluator or refusal test changed; no existing test asserted a rendered citation label.
+
 ## [0.8.1] — 2026-10-21 — Handbook Draft 3: "the ISA" throughout
 
 The Captain's Handbook moves to **First Edition, Draft 3, pending approval**, following Brad's ruling that it says "the ISA" throughout. No change to grading, evaluation outcomes or crew refusal behaviour.

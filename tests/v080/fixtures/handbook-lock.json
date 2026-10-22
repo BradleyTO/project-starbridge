@@ -1,311 +1,526 @@
 {
- "cmd-1": {
-  "number": "A.1",
-  "revision": 1,
-  "revisions": [
-   "1:42508c1be1335c6e"
-  ]
+ "sections": {
+  "1.1": "295032c74242ab49",
+  "1.2": "ad1f75fb46fa64fe",
+  "1.3": "3fc79941ff9c587a",
+  "1.4": "a88a9a271ca864be",
+  "1.5": "379b122428192d26",
+  "1.6": "5dce0e4955084ac7",
+  "1.7": "753da62747f8fb07",
+  "1.8": "9b45563938b1306d",
+  "2.1": "688addd2f9f50f35",
+  "2.2": "2a52e7391d933f64",
+  "2.3": "6be617c11be2c75f",
+  "2.4": "1fea64929c762cfe",
+  "2.5": "68fef277b157879a",
+  "2.6": "15887ea6f74bc925",
+  "3.1": "fd496bffde6e0c77",
+  "3.2": "fb6f772a2ae41849",
+  "3.3": "e6e89c989752d23d",
+  "3.4": "73e16e59264f9402",
+  "3.5": "1e5582d4c2e25af9",
+  "3.6": "24805f9a7e2c4a1c",
+  "3.7": "8e26bab5797df8e3",
+  "3.8": "5ba3037566e1e518",
+  "3.9": "7190ae3299440174",
+  "4.1": "664538e2885300ea",
+  "4.2": "5b5f576d21f3e582",
+  "4.3": "e05d2b690a28651a",
+  "4.4": "636a17e3be6b57b0",
+  "4.5": "bbbed98bb04bbc3e",
+  "4.6": "8d179b20979be0e7",
+  "4.7": "dbaf3a1df32d8796",
+  "5.1": "9bf54ca9a0b6b3c8",
+  "5.2": "35931c3de556daac",
+  "5.3": "f3a488c5f29e5c4f",
+  "5.4": "2efb8c635d67f364",
+  "5.5": "484df519b2e2c394",
+  "5.6": "1e38e6fc00519e68",
+  "5.7": "95571f192745afe6",
+  "5.8": "76f74c391aa4d8c4",
+  "5.9": "7763ef4fdf1e8a50",
+  "5.10": "1e3de77899612680",
+  "6.1": "7e2dd7883c5a4bc5",
+  "6.2": "500ec270882911ff",
+  "6.3": "35bfa182c7228b45",
+  "6.4": "76dea8e121c96a7b",
+  "7.1": "74b36eeda8524ced",
+  "7.2": "403dd72d7839cf75",
+  "7.3": "83055c72320d0ae1",
+  "7.4": "335926edfab987e0",
+  "8.1": "458012182000b635",
+  "8.2": "bc037893cc988259",
+  "8.3": "6294a7eba44d09ff",
+  "9.1": "15eff44ec6466468",
+  "9.2": "d358fb8cf0ccfc8f",
+  "9.3": "7714ad7218414978",
+  "9.4": "e6f9e91606961e93",
+  "9.5": "f7f85ee21eb47bdf",
+  "9.6": "534aad2836a17739",
+  "9.7": "f97e9a01019bd05f",
+  "9.8": "2ef98eeb335279d6",
+  "10.1": "b6774ed8483755ac",
+  "10.2": "af6ea1263ea053fb",
+  "10.3": "2a546748c90b927e",
+  "10.4": "d61b5c14b2e77a4a",
+  "10.5": "d0a9dc98c99799e3",
+  "10.6": "f5942871189e8610",
+  "10.7": "9958bd8dfc43f941",
+  "10.8": "a42bc10294da201e",
+  "11.1": "204188ee7afe2323",
+  "11.2": "29aa16fcff90740a",
+  "11.3": "6777ee88451ef04f",
+  "11.4": "4a74aafe271a019a",
+  "T.1": "2fe6d9881f91cd3a",
+  "T.2": "3ac326b6aecf8731",
+  "T.3": "6dc096ca88a27bbe",
+  "T.4": "6d4e49a9eeee525c",
+  "T.5": "786f27d46b783a21"
  },
- "cmd-2": {
-  "number": "A.2",
-  "revision": 1,
-  "revisions": [
-   "1:cbd9ef1d593a1fad"
-  ]
+ "records": {
+  "cmd-5": {
+   "sections": [
+    "1.1",
+    "1.2"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:2d3cfe2454e8d9e8"
+   ]
+  },
+  "service-1": {
+   "sections": [
+    "1.3",
+    "1.8"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:fe54b2dbc955b69e"
+   ]
+  },
+  "cmd-4": {
+   "sections": [
+    "1.4",
+    "2.6"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:2e88078e1fb2f2b0"
+   ]
+  },
+  "general-1": {
+   "sections": [
+    "1.5",
+    "1.6"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:6a4d03391b354b6f"
+   ]
+  },
+  "general-2": {
+   "sections": [
+    "1.7"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:d9f53c1caed04d7d"
+   ]
+  },
+  "cmd-1": {
+   "sections": [
+    "2.1",
+    "2.2"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:79da8627ade1bd11"
+   ]
+  },
+  "cmd-2": {
+   "sections": [
+    "2.3",
+    "2.4"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:a81da050044b48e6"
+   ]
+  },
+  "cmd-3": {
+   "sections": [
+    "2.5"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:7c3b23a43b20ab71"
+   ]
+  },
+  "roe-2": {
+   "sections": [
+    "3.1",
+    "3.2"
+   ],
+   "revision": 1,
+   "revisions": [
+    "0:94c317726e127bb6",
+    "1:548e118f8b05eab5"
+   ]
+  },
+  "roe-1": {
+   "sections": [
+    "3.3",
+    "3.4"
+   ],
+   "revision": 1,
+   "revisions": [
+    "0:5ca4300e165ee6ee",
+    "1:9c1dacaa028a67fd"
+   ]
+  },
+  "roe-4": {
+   "sections": [
+    "3.5"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:79acb5b950f134fb"
+   ]
+  },
+  "roe-5": {
+   "sections": [
+    "3.6",
+    "3.7",
+    "3.8"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:b5f3b088c12c3fe1"
+   ]
+  },
+  "roe-3": {
+   "sections": [
+    "3.9"
+   ],
+   "revision": 1,
+   "revisions": [
+    "0:6c89c4cc2fad54ea",
+    "1:75f53c742149b534"
+   ]
+  },
+  "care-1": {
+   "sections": [
+    "4.1"
+   ],
+   "revision": 1,
+   "revisions": [
+    "0:342e4b8ea381a905",
+    "1:7c291f564b29c95f"
+   ]
+  },
+  "care-2": {
+   "sections": [
+    "4.2"
+   ],
+   "revision": 1,
+   "revisions": [
+    "0:0525ba546eb332ad",
+    "1:e4cf0cd8d8405da9"
+   ]
+  },
+  "care-3": {
+   "sections": [
+    "4.3",
+    "4.4"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:707e70ec44dbe5aa"
+   ]
+  },
+  "care-4": {
+   "sections": [
+    "4.5",
+    "4.6",
+    "4.7"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:3d97cae322f0bbee"
+   ]
+  },
+  "reg-12": {
+   "sections": [
+    "5.1"
+   ],
+   "revision": 1,
+   "revisions": [
+    "0:7f579015f12b31bd",
+    "1:7c313e69dcc4c94f"
+   ]
+  },
+  "orders-2": {
+   "sections": [
+    "5.2",
+    "5.3"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:fd24fc2c1021f4ba"
+   ]
+  },
+  "reg-7.1": {
+   "sections": [
+    "5.4"
+   ],
+   "revision": 1,
+   "revisions": [
+    "0:29ed333996a1cdb2",
+    "1:54e8f6b5030b7de1"
+   ]
+  },
+  "reg-7.2": {
+   "sections": [
+    "5.5"
+   ],
+   "revision": 1,
+   "revisions": [
+    "0:d20364666f445b07",
+    "1:2d942dc01aa81334"
+   ]
+  },
+  "reg-7.3": {
+   "sections": [
+    "5.6"
+   ],
+   "revision": 1,
+   "revisions": [
+    "0:6167680979c7f10c",
+    "1:f7a28bd233f73d5d"
+   ]
+  },
+  "reg-7.4": {
+   "sections": [
+    "5.7"
+   ],
+   "revision": 1,
+   "revisions": [
+    "0:29c680e70db2a43a",
+    "1:1ca9a832ba560553"
+   ]
+  },
+  "orders-1": {
+   "sections": [
+    "5.8",
+    "5.9",
+    "5.10"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:0febc38e6815cc46"
+   ]
+  },
+  "honesty-1": {
+   "sections": [
+    "6.1"
+   ],
+   "revision": 1,
+   "revisions": [
+    "0:34e519aadc13e2ef",
+    "1:778016c00d8ea6a5"
+   ]
+  },
+  "conduct-1": {
+   "sections": [
+    "6.2",
+    "6.3"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:fad9b31d7bb6c271"
+   ]
+  },
+  "conduct-2": {
+   "sections": [
+    "6.4"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:24c054a6ded50572"
+   ]
+  },
+  "asylum-1": {
+   "sections": [
+    "7.1",
+    "7.2",
+    "7.3"
+   ],
+   "revision": 1,
+   "revisions": [
+    "0:f56369e07405609d",
+    "1:448c50380f440494"
+   ]
+  },
+  "asylum-2": {
+   "sections": [
+    "7.4"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:a8ff6f4357272df8"
+   ]
+  },
+  "health-1": {
+   "sections": [
+    "8.1",
+    "8.2"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:3b5beaa58601f85d"
+   ]
+  },
+  "health-2": {
+   "sections": [
+    "8.3"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:85f3b5da0561d79a"
+   ]
+  },
+  "contact-1": {
+   "sections": [
+    "9.1",
+    "9.2"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:023791cd304bdb3a"
+   ]
+  },
+  "contact-2": {
+   "sections": [
+    "9.3",
+    "9.4",
+    "9.5",
+    "9.8"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:f275a60ca28c2402"
+   ]
+  },
+  "contact-3": {
+   "sections": [
+    "9.6",
+    "9.7"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:63daac1a770594db"
+   ]
+  },
+  "service-3": {
+   "sections": [
+    "10.1",
+    "10.2",
+    "10.3",
+    "10.4",
+    "10.5",
+    "10.6",
+    "10.7"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:862072f6dffd751e"
+   ]
+  },
+  "service-4": {
+   "sections": [
+    "10.8"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:2579c30012aa8c24"
+   ]
+  },
+  "service-2": {
+   "sections": [
+    "11.1",
+    "11.2"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:330e56f7da464eb6"
+   ]
+  },
+  "service-5": {
+   "sections": [
+    "11.3"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:36f245cb88bc1f3d"
+   ]
+  },
+  "service-6": {
+   "sections": [
+    "11.4"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:fa713b9ced823821"
+   ]
+  },
+  "border-accords-2": {
+   "sections": [
+    "T.1"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:026448c37859bf23"
+   ]
+  },
+  "border-accords-4": {
+   "sections": [
+    "T.2"
+   ],
+   "revision": 1,
+   "revisions": [
+    "0:4a14c966d7f32af4",
+    "1:77864c0520ffb475"
+   ]
+  },
+  "border-accords-9": {
+   "sections": [
+    "T.3"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:629ff69d289dd025"
+   ]
+  },
+  "quarantine-1": {
+   "sections": [
+    "T.4"
+   ],
+   "revision": 1,
+   "revisions": [
+    "0:dc7556211713efb8",
+    "1:d0f1e8cbbf9fad4f"
+   ]
+  },
+  "quarantine-2": {
+   "sections": [
+    "T.5"
+   ],
+   "revision": 1,
+   "revisions": [
+    "0:80581db6691c057a",
+    "1:7be11a6f5b4f273d"
+   ]
+  }
  },
- "cmd-3": {
-  "number": "A.3",
-  "revision": 1,
-  "revisions": [
-   "1:de3c22cd61c84d03"
-  ]
- },
- "cmd-4": {
-  "number": "A.4",
-  "revision": 1,
-  "revisions": [
-   "1:686ddae8169945a8"
-  ]
- },
- "cmd-5": {
-  "number": "A.5",
-  "revision": 1,
-  "revisions": [
-   "1:f339887a3404b88a"
-  ]
- },
- "roe-1": {
-  "number": "B.1",
-  "revision": 1,
-  "revisions": [
-   "0:5ca4300e165ee6ee",
-   "1:75864777e37a6584"
-  ]
- },
- "roe-2": {
-  "number": "B.2",
-  "revision": 1,
-  "revisions": [
-   "0:94c317726e127bb6",
-   "1:0f235dd8a0f15ba2"
-  ]
- },
- "roe-3": {
-  "number": "B.3",
-  "revision": 1,
-  "revisions": [
-   "0:6c89c4cc2fad54ea",
-   "1:5d22ba5c787b79e1"
-  ]
- },
- "roe-4": {
-  "number": "B.4",
-  "revision": 1,
-  "revisions": [
-   "1:0ed248916a61fe95"
-  ]
- },
- "roe-5": {
-  "number": "B.5",
-  "revision": 1,
-  "revisions": [
-   "1:63346d3de4d4e458"
-  ]
- },
- "care-1": {
-  "number": "C.1",
-  "revision": 1,
-  "revisions": [
-   "0:342e4b8ea381a905",
-   "1:2a42571c3dafdd50"
-  ]
- },
- "care-2": {
-  "number": "C.2",
-  "revision": 1,
-  "revisions": [
-   "0:0525ba546eb332ad",
-   "1:41685bd2ef3273a1"
-  ]
- },
- "care-3": {
-  "number": "C.3",
-  "revision": 1,
-  "revisions": [
-   "1:5a22ef383a350e08"
-  ]
- },
- "care-4": {
-  "number": "C.4",
-  "revision": 1,
-  "revisions": [
-   "1:14b7bb3181c56089"
-  ]
- },
- "reg-12": {
-  "number": "D.1",
-  "revision": 1,
-  "revisions": [
-   "0:7f579015f12b31bd",
-   "1:5784b7eb6f664ef0"
-  ]
- },
- "orders-2": {
-  "number": "D.2",
-  "revision": 1,
-  "revisions": [
-   "1:06912ea48b024c29"
-  ]
- },
- "reg-7.1": {
-  "number": "D.3",
-  "revision": 1,
-  "revisions": [
-   "0:29ed333996a1cdb2",
-   "1:d4aa7dde24d18b6a"
-  ]
- },
- "reg-7.2": {
-  "number": "D.4",
-  "revision": 1,
-  "revisions": [
-   "0:d20364666f445b07",
-   "1:193e1e89c406cc95"
-  ]
- },
- "reg-7.3": {
-  "number": "D.5",
-  "revision": 1,
-  "revisions": [
-   "0:6167680979c7f10c",
-   "1:bae99a03f5e1dc2b"
-  ]
- },
- "reg-7.4": {
-  "number": "D.6",
-  "revision": 1,
-  "revisions": [
-   "0:29c680e70db2a43a",
-   "1:3ade51a6b3afba87"
-  ]
- },
- "orders-1": {
-  "number": "D.7",
-  "revision": 1,
-  "revisions": [
-   "1:f5f67e3dda8cb888"
-  ]
- },
- "honesty-1": {
-  "number": "E.1",
-  "revision": 1,
-  "revisions": [
-   "0:34e519aadc13e2ef",
-   "1:66833dfaf6999c0f"
-  ]
- },
- "conduct-1": {
-  "number": "E.2",
-  "revision": 1,
-  "revisions": [
-   "1:b279791ee680486a"
-  ]
- },
- "conduct-2": {
-  "number": "E.3",
-  "revision": 1,
-  "revisions": [
-   "1:e30728023029e295"
-  ]
- },
- "asylum-1": {
-  "number": "F.1",
-  "revision": 1,
-  "revisions": [
-   "0:f56369e07405609d",
-   "1:a189609225226839"
-  ]
- },
- "asylum-2": {
-  "number": "F.2",
-  "revision": 1,
-  "revisions": [
-   "1:e03c9c2e18a649c4"
-  ]
- },
- "health-1": {
-  "number": "G.1",
-  "revision": 1,
-  "revisions": [
-   "1:6d229da696a6c2c1"
-  ]
- },
- "health-2": {
-  "number": "G.2",
-  "revision": 1,
-  "revisions": [
-   "1:8ad108c627db889c"
-  ]
- },
- "contact-1": {
-  "number": "H.1",
-  "revision": 1,
-  "revisions": [
-   "1:146735dff000528d"
-  ]
- },
- "contact-2": {
-  "number": "H.2",
-  "revision": 1,
-  "revisions": [
-   "1:039f8b49bdcd4b4b"
-  ]
- },
- "contact-3": {
-  "number": "H.3",
-  "revision": 1,
-  "revisions": [
-   "1:a32a54d7ee7856f6"
-  ]
- },
- "service-1": {
-  "number": "I.1",
-  "revision": 1,
-  "revisions": [
-   "1:08825ee9d0d7eae1"
-  ]
- },
- "service-2": {
-  "number": "I.2",
-  "revision": 1,
-  "revisions": [
-   "1:13d940c23c9b8516"
-  ]
- },
- "service-3": {
-  "number": "I.3",
-  "revision": 1,
-  "revisions": [
-   "1:92277e6fe5835ed5"
-  ]
- },
- "service-4": {
-  "number": "I.4",
-  "revision": 1,
-  "revisions": [
-   "1:ec1169d4d14294e1"
-  ]
- },
- "service-5": {
-  "number": "I.5",
-  "revision": 1,
-  "revisions": [
-   "1:135e105df9afeed6"
-  ]
- },
- "service-6": {
-  "number": "I.6",
-  "revision": 1,
-  "revisions": [
-   "1:3532c731d4bd430e"
-  ]
- },
- "border-accords-4": {
-  "number": "T.1",
-  "revision": 1,
-  "revisions": [
-   "0:4a14c966d7f32af4",
-   "1:77864c0520ffb475"
-  ]
- },
- "border-accords-2": {
-  "number": "T.2",
-  "revision": 1,
-  "revisions": [
-   "1:026448c37859bf23"
-  ]
- },
- "border-accords-9": {
-  "number": "T.3",
-  "revision": 1,
-  "revisions": [
-   "1:629ff69d289dd025"
-  ]
- },
- "quarantine-1": {
-  "number": "T.4",
-  "revision": 1,
-  "revisions": [
-   "0:dc7556211713efb8",
-   "1:d0f1e8cbbf9fad4f"
-  ]
- },
- "quarantine-2": {
-  "number": "T.5",
-  "revision": 1,
-  "revisions": [
-   "0:80581db6691c057a",
-   "1:7be11a6f5b4f273d"
-  ]
- }
+ "preamble": "2827f89980b2dd96"
 }

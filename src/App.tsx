@@ -34,8 +34,7 @@ import { Hub, type HubTab } from './ui/components/Hub';
 import { RecordPanel } from './ui/components/RecordPanel';
 import { HandbookPanel, type HandbookView } from './ui/components/HandbookPanel';
 import { handbookRequest, type HandbookRequest } from './handbook/command';
-import { playedScenarios } from './handbook';
-import { SIMULATIONS } from './scenarios/catalogue';
+import { viewOf } from './handbook';
 import { ArchivePanel } from './ui/components/ArchivePanel';
 import { UniversePanel } from './ui/components/UniversePanel';
 import { SettingsPanel } from './ui/components/SettingsPanel';
@@ -51,7 +50,7 @@ import './App.css';
 
 const BEAT_MS = 3500;
 const VOICE_KEY = 'starbridge.voice';
-const APP_VERSION = '0.8.1';
+const APP_VERSION = '0.8.2';
 const TRAINING_ID = TRAINING[0].id;
 const AMBIENT_MS = 22000;
 const interpreter = new OfflineInterpreter();
@@ -131,9 +130,6 @@ function initialSeed(): number | string {
   return q && q.trim() ? q.trim() : randomSeed();
 }
 
-/** v0.8.0: catalogue number to scenario id (handbook training references). */
-const scenarioOfSim = (n: number) => SIMULATIONS.find((x) => x.number === n)?.scenarioId;
-
 export default function App() {
   const { universe, rev, touch } = useUniverse(APP_VERSION);
   captainAddress = universe.address();
@@ -176,7 +172,7 @@ export default function App() {
     setHandbookView(v);
     setHubTab('handbook');
   };
-  const openArticle = (id: string) => openHandbook({ kind: 'article', id });
+  const openArticle = (id: string) => openHandbook(viewOf(id) ?? { kind: 'contents' });
   const openHandbookRef = useRef(openHandbook);
   openHandbookRef.current = openHandbook;
   const onBridge = meta.timeline === 'bridge';
@@ -260,7 +256,7 @@ export default function App() {
 
   const onCommand = useCallback(
     async (text: string) => {
-      // v0.8.0: "computer, open the handbook" / "show me article B.1": opens the handbook and nothing else.
+      // v0.8.0: "computer, open the handbook" / "show me section 3.3": opens the handbook and nothing else.
       // It never reaches the interpreter or the engine, so no order is issued, no time passes and no state changes.
       const hb = handbookRequest(text);
       if (hb) {
@@ -624,7 +620,7 @@ export default function App() {
           {hubTab === 'universe' && <UniversePanel key={rev} universe={universe} actions={universeActions} />}
           {hubTab === 'archive' && <ArchivePanel key={rev} entries={universe.archive()} actions={{ ...archiveActions, onResume: universeActions.onResume }} />}
           {hubTab === 'record' && <RecordPanel key={`${recordView.section}-${recordView.report ?? ''}`} canon={universe.canon()} familiarity={universe.familiarity()} profile={universe.profile()} service={universe.service()} training={universe.training()} onRename={renameCaptain} initialSection={recordView.section} initialReport={recordView.report} onCite={openArticle} />}
-          {hubTab === 'handbook' && <HandbookPanel key={JSON.stringify(handbookView)} view={handbookView} onView={setHandbookView} played={playedScenarios(universe.training())} scenarioOf={scenarioOfSim} />}
+          {hubTab === 'handbook' && <HandbookPanel key={JSON.stringify(handbookView)} view={handbookView} onView={setHandbookView} />}
           {hubTab === 'voices' && (
             <VoicePanel members={voiceMembers} cast={voiceCast} voices={deviceVoices} settings={voiceSettings} supported={speechSynthesisSupported()} onSettings={updateVoiceSettings} onPreview={previewVoice} />
           )}
