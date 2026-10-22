@@ -46,6 +46,15 @@ export const SIMULATIONS: readonly SimulationInfo[] = [
     ['quarantine at tallis gate', 'tallis gate', 'tallis', 'quarantine', 'mercy of ilun', 'ilun', 'pilgrim', 'liner'],
     ['quarantine at tallis gate', 'tallis gate', 'tallis'],
   ),
+  entry(
+    3,
+    'TRN-quiet',
+    'quiet-signal',
+    'The Quiet Signal',
+    'Someone is signalling by silence in the beam of the Teyma pulsar, and they only understand answers. A Directorate signals ship is listening too. What are they asking, and what do they want? Seeded: every run can differ.',
+    ['the quiet signal', 'quiet signal', 'quiet', 'teyma pulsar', 'teyma', 'pulsar'],
+    ['the quiet signal', 'quiet signal'],
+  ),
 ];
 
 const NUMBER_WORDS: Record<string, number> = {

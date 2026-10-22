@@ -2,6 +2,25 @@
 
 All notable changes to Project Starbridge are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.8.3] — 2026-10-22 — Training Simulation 003: The Quiet Signal
+
+Nightly simulation build. Third of 30 training simulations. No change to the engine, grading, evaluation rules, crew refusal behaviour or ISA-COM-001 wording.
+
+### Added
+- **Training Simulation 003: The Quiet Signal** (`src/scenarios/quiet/`). The senders, in an unarmed courier sitting in the Teyma pulsar's beam, signal by blanking pulses and speak only in answers. The Directorate signals ship *Cantor* (Signals Director Halia Brenn) is decoding the same signal.
+  - **Primary challenge:** the comms officer cracking a code (Lt. Szabo). **Secondary:** patience.
+  - Seeded, deterministic and offline: the grammar (primes, shapes or the periodic table) and a decoy reading, whether Szabo's early lean is right, the senders' intent (greeting, farewell or a glitch warning) and patience, and the Director's temperament (scholar, rival or hardliner), accuracy and timing.
+  - Officer expertise matters: Szabo decodes only when tasked; Varga's pulsar timing and the main dish rigged as a receiver speed her up; a partial decode offers two readings and a lean.
+  - Unconventional options: echo the question back to buy time; ask Brenn to hold; decode jointly (a hardliner takes the data and races you); block her transmission by putting the Halcyon in her beam.
+  - Endings — success: Contact Established, A Shared Vocabulary, A Polite Farewell, Warning Heeded. Failure or partial: The Directorate Answered (partial), Warning Unshared (partial), Misread, Silence, Caught in the Glitch, Incident at Teyma, Withdrawn, Halcyon Lost; Stalemate as a thirty-minute backstop.
+  - Listed in the catalogue and Mission Archive; launch with "Computer, begin the Quiet Signal simulation" (also "the Teyma pulsar", "simulation three"). Voice hints for the senders and Director Brenn.
+  - Evaluation data (§6b): objectives with priorities, ending tiers, judgment markers, regulations §3.3 (roe-1), §3.1 (roe-2) and §6.1 (honesty-1). Warning a rival of the glitch is a labelled **exercise objective**: no First Edition subsection covers a duty to warn of a hazard to navigation.
+- Hidden handbook training references (internal data, not shown to the player): §9.1 First contact's reference to #3 is no longer marked planned; §2.5 Delegation of authority gains a reference to #3.
+
+### Tests
+- New `tests/sim03/`: setup and seed variation, determinism, scripted playthroughs reaching every ending through the offline interpreter, a 60-seed sweep, a fuzz run with state invariants and name-leak checks, Rask's refusal, the beam-block, answer parsing, catalogue/launch/archive/save-load, timeline isolation (canon byte-identical), and the evaluation pair: waiting for the decode is graded exemplary, answering blind and getting lucky is graded mixed, for the same ending.
+- Smoke: a sim03 block lists, launches, plays seed 6 to Contact Established and opens its after-action report.
+
 ## [0.8.2] — 2026-10-21 — ISA-COM-001 First Edition
 
 Brad approved the condensed code as the **First Edition** of ISA-COM-001, with four amendments. The in-game handbook now shows only the code. No change to grading, evaluation outcomes, disciplinary findings or crew refusal behaviour.

@@ -10,7 +10,7 @@ A browser-based, AI-assisted **starship command simulator**. You command the exp
 
 - `First Officer, give me a status report` · `Okafor, how are the engines?` (small talk, answered from the ship's state)
 - `Science, what systems are within exploration range?`
-- `Computer, open the simulation archive` · `Computer, list simulations` (or `what simulations are available`) · `Computer, begin the Kestrel Incident simulation` · `Computer, begin the Tallis Gate simulation` · `run simulation two` (typed or spoken). A simulation starts **only** on request; `begin the simulation` with no name starts #1.
+- `Computer, open the simulation archive` · `Computer, list simulations` (or `what simulations are available`) · `Computer, begin the Kestrel Incident simulation` · `Computer, begin the Tallis Gate simulation` · `Computer, begin the Quiet Signal simulation` · `run simulation two` (typed or spoken). A simulation starts **only** on request; `begin the simulation` with no name starts #1.
 - Inside a simulation, `Computer, end the simulation` (or the End sim button) returns you to the bridge. A simulation that reaches an ending returns you to the bridge with a debrief card (run it again, new variation, archive).
 
 **Two products (described only; there are no payments):**
@@ -115,7 +115,7 @@ With **Voice on**, each bridge officer, the ship's computer, the narrator and th
   - the computer always keeps its calm base settings.
 - **With no usable voice,** everyone uses the browser default at different pitches and rates.
 - **Offline by default.** Cloud voices (Chrome's "Google …", Edge's "Online (Natural)") and Apple's novelty voices are not used. A checkbox in the panel allows the cloud voices.
-- **Scenarios declare voice hints for their characters** (see [docs/SCENARIO_GUIDE.md](docs/SCENARIO_GUIDE.md) §6a). #1 and #2 do.
+- **Scenarios declare voice hints for their characters** (see [docs/SCENARIO_GUIDE.md](docs/SCENARIO_GUIDE.md) §6a). #1, #2 and #3 do.
 
 ## Training simulations
 
@@ -123,7 +123,8 @@ With **Voice on**, each bridge officer, the ship's computer, the narrator and th
 |---|---|---|
 | 1 | **The Kestrel Incident** | playable |
 | 2 | **Quarantine at Tallis Gate** | playable (v0.6.0) |
-| 3–30 | see [docs/SCENARIO_ROADMAP.md](docs/SCENARIO_ROADMAP.md) | planned, one per day |
+| 3 | **The Quiet Signal** | playable (v0.8.3) |
+| 4–30 | see [docs/SCENARIO_ROADMAP.md](docs/SCENARIO_ROADMAP.md) | planned, one per day |
 
 Every simulation is listed in the Mission Archive and by `Computer, list simulations`, and can be started by name or number. How to write one is in [docs/SCENARIO_GUIDE.md](docs/SCENARIO_GUIDE.md).
 
@@ -145,6 +146,24 @@ Endings:
 - **Failure or partial:** **Fire at the Gate** (the liner is destroyed), **Outbreak at Tallis Gate**, **Fever Aboard** (the Halcyon is quarantined), **Incident at Tallis Gate** (you fire on the colony's picket), **Liner Abandoned**, **The Long Road** (an untreated fever on a six-hour tow), **The Gate Run** (Sabeth forces the line), **Stalemate**, **Halcyon Lost**.
 
 Rask will not fire on the liner. Every ending is reached by a scripted test (see `tests/sim02/`).
+
+### #3 — The Quiet Signal
+
+The Halcyon is surveying the **Teyma pulsar** when its timing develops gaps: a small, unarmed courier sitting in the beam is blanking pulses on purpose. **The senders** speak only in answers. They ask questions in a grammar nobody aboard knows yet, and an unanswered or wrong answer reads to them as hostility. The Tessarine Directorate signals ship **Cantor** (Signals Director Halia Brenn) is listening too, and may answer first.
+
+The seed decides:
+
+- **the grammar** of the code (prime numbers, shapes or the periodic table) and the misleading second reading Lt. Szabo's partial decode will offer, and whether her early lean is right;
+- **what the senders want:** to greet us, to say goodbye, or to warn of a coming pulsar glitch;
+- **their patience,** and **the Director's temperament** (scholar, rival or hardliner), whether her own decode is right and when she transmits.
+
+Lt. Szabo (Comms) is the key: only she can crack the code, and she works faster with Varga's pulsar timing and the main dish rigged as a receiver ("Szabo, work on the code", "scan the pulsar", "use the main dish as a receiver", "Szabo, how close are you?", "Szabo, send them 13"). Echoing the question back buys time once. Brenn can be asked to hold, offered a joint decode (a hardliner takes the data and races you), or physically blocked by putting the Halcyon in her beam.
+
+Endings:
+- **Success:** **Contact Established**, **A Shared Vocabulary** (decoded jointly with the Directorate), **A Polite Farewell**, **Warning Heeded** (every ship clear of the glitch).
+- **Failure or partial:** **The Directorate Answered** (partial), **Warning Unshared** (partial: the Halcyon got clear, the Cantor did not), **Misread**, **Silence**, **Caught in the Glitch**, **Incident at Teyma**, **Withdrawn**, **Halcyon Lost**, and a thirty-minute **Stalemate** backstop.
+
+Rask will not target the unarmed courier. Every ending is reached by a scripted test (see `tests/sim03/`).
 
 ## Simulation #1 — The Kestrel Incident
 
@@ -414,6 +433,7 @@ The app deploys to Vercel as a Vite static site plus serverless functions in `ap
 - [x] **v0.8.0** — Captain's Handbook foundation: the ISA-COM-001 regulation database, in-game handbook, search, bridge commands, clickable citations and print export (no grading changes).
 - [x] **v0.8.1** — Handbook Draft 3: "the ISA" throughout, player-facing enforcement notes.
 - [x] **v0.8.2** — ISA-COM-001 First Edition: the condensed code (11 articles, 71 subsections, Annex), citations shown as "§3.3 Use of Force".
+- [x] **v0.8.3** — Training Simulation 003: The Quiet Signal.
 - [ ] **Handbook Stages 2 and 3** (each takes the next free version number when it ships; nightly simulations keep bumping the patch version) — Crew who cite and explain regulations; evaluations, refusals and reviews moved to the approved First Edition wording.
 - [ ] **Next** — Server-side AI narration and character responses with schema validation, timeouts, usage limits and template fallback; server-side accounts and credits.
 - [ ] **Milestone 4** — Branching outcomes, mission evaluation, full save/resume, voice controls.

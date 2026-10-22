@@ -50,7 +50,7 @@ import './App.css';
 
 const BEAT_MS = 3500;
 const VOICE_KEY = 'starbridge.voice';
-const APP_VERSION = '0.8.2';
+const APP_VERSION = '0.8.3';
 const TRAINING_ID = TRAINING[0].id;
 const AMBIENT_MS = 22000;
 const interpreter = new OfflineInterpreter();

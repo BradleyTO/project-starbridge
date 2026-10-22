@@ -457,6 +457,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
       ],
       "training": [
         {
+          "simulation": 3,
+          "title": "The Quiet Signal",
+          "purpose": "Letting a specialist finish the work before acting on it."
+        },
+        {
           "simulation": 14,
           "title": "Starfall",
           "purpose": "Trusting a junior officer with a task only they can carry out.",
@@ -2071,8 +2076,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
         {
           "simulation": 3,
           "title": "The Quiet Signal",
-          "purpose": "Patience and trust in the communications officer when meaning is uncertain.",
-          "planned": true
+          "purpose": "Patience and trust in the communications officer when meaning is uncertain."
         }
       ],
       "enforcement": {

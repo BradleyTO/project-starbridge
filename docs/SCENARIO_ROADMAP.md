@@ -32,7 +32,7 @@ Premises can be adjusted when a scenario is built. The core event, the primary c
 |---|---|---|---|---|---|
 | 1 | The Kestrel Incident | A crippled freighter hides a fugitive from a Directorate cruiser in contested space | Reading people and detecting lies | Lt. Szabo (Comms) | **done** (v0.2–v0.5) |
 | 2 | Quarantine at Tallis Gate | A sick pilgrim liner is held at a colony's quarantine line | Relying on the science officer (evidence before action) | Lt. Varga (Science) | **done** (v0.6.0) |
-| 3 | The Quiet Signal | A message hidden in a pulsar's silences, answered only in mathematics | The comms officer cracking a code | Lt. Szabo (Comms) | planned |
+| 3 | The Quiet Signal | A message hidden in a pulsar's silences, answered only in mathematics | The comms officer cracking a code | Lt. Szabo (Comms) | **done** (v0.8.3) |
 | 4 | Reactor Night | The Halcyon's own reactor cascades; no enemy | The engineer improvising | Chief Okafor (Engineering) | planned |
 | 5 | The Saltglass Accord | Mediating two clans' claims to an ice moon aboard the Halcyon | Mediation: finding the interests beneath the demands | Cmdr. Marrow (XO) | planned |
 | 6 | Ion Season | Leading slow ore freighters blind through an ion storm | A gut call on incomplete information | Ens. Adeyemi (Helm) | planned |
@@ -177,25 +177,28 @@ They test different skills (reading people vs evidence-led science). This review
 
 **Seeds vary:** the cause (fever, toxin or allergy), the Warden's temperament, whether her brother is aboard, and Sabeth's patience.
 
-### 3. The Quiet Signal
-**Premise.** A pulsar's timing has gaps, and the gaps form a pattern: someone is signalling by silence. The senders answer only in mathematics, and they treat an unanswered question, or a wrong answer, as hostility. A Directorate listening post is also trying to decode it.
+### 3. The Quiet Signal (done, v0.8.3)
+**Premise.** A pulsar's timing has gaps, and the gaps form a pattern: someone is signalling by silence. The senders answer only in mathematics, and they treat an unanswered question, or a wrong answer, as hostility. The Directorate signals ship *Cantor* (Signals Director Halia Brenn) is also trying to decode it. (Built as a signals ship rather than a fixed listening post so that she can be hailed, asked to hold, and physically blocked.)
 
 **Command challenge:**
 - **Primary:** the comms officer cracking a code.
 - **Secondary:** patience. Answering fast and wrong is worse than answering slowly.
-- **Pivotal officer:** Lt. Szabo (Comms). The captain chooses which of her partial decodes to trust and when to transmit.
+- **Pivotal officer:** Lt. Szabo (Comms). Only she can decode; Varga's pulsar timing and the main dish rigged as a receiver speed her up. Her partial decode offers two readings and a lean; the captain chooses whether to wait for certainty, act on the lean, or echo the question to buy time.
 
-**Why it's distinct:** the only pure decoding contact. No ships threaten anyone, and the whole fight is to understand.
+**Why it's distinct:** the only pure decoding contact. No ships threaten anyone, and the whole fight is to understand. Overlap check (guide §12): unlike #1 and #2 there is no ship in danger at the start and no armed standoff (the Cantor's guns stay cold); unlike #27 (now a jump accident) it keeps first contact, framed as code-breaking.
 
 **Hidden:**
-- the code's grammar (seeded: primes, geometry or chemistry);
-- what the senders actually want.
+- the code's grammar (seeded: primes, geometry or chemistry) and a decoy reading;
+- what the senders actually want (a greeting, a farewell, or a warning that the pulsar is about to glitch);
+- the Director's temperament and whether her own decode is wrong.
 
 **Endings:**
-- **Success:** contact established, a shared vocabulary, a polite mutual farewell.
-- **Failure or partial:** a misunderstanding read as a threat, the senders fall silent forever, the Directorate decodes it first.
+- **Success:** Contact Established, A Shared Vocabulary, A Polite Farewell, Warning Heeded.
+- **Failure or partial:** The Directorate Answered (partial), Warning Unshared (partial), Misread, Silence, Caught in the Glitch, Incident at Teyma, Withdrawn, Halcyon Lost; Stalemate as a thirty-minute backstop.
 
-**Seeds vary:** the code's grammar, the senders' patience, the Directorate's progress.
+**Regulations cited:** §3.3 (roe-1), §3.1 (roe-2), §6.1 (honesty-1); hidden training references on §9.1 (contact-1) and §2.5 (cmd-3). **Exercise objective (no regulation yet):** "warn every ship in danger, rival or not". A duty to warn of a hazard to navigation is proposed for Brad's approval; nothing was added to ISA-COM-001.
+
+**Seeds vary:** the code's grammar and the decoy, whether Szabo's lean is right, the senders' intent and patience, the Director's temperament, accuracy and timing, the glitch delay.
 
 ### 4. Reactor Night
 **Premise.** The Halcyon's own reactor starts a cascade failure in deep space. A coolant valve is stuck behind a radiation-soaked bulkhead. The only engineer small enough to reach it is claustrophobic. There is no enemy: the ship and the crew are the whole challenge.

@@ -989,6 +989,64 @@ for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape',
   await ctxA.close();
 }
 
+// ============================================================== v0.8.3 =====
+// Training Simulation 003: The Quiet Signal. Listed, launched by voice-style command, played to an ending, AAR filed.
+{
+  const ctxQ = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await ctxQ.addInitScript(stubs);
+  const pq = await ctxQ.newPage();
+  pq.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  pq.on('pageerror', (e) => errors.push(String(e)));
+  const allQ = async () => (await pq.innerText('[data-testid=narrative]')) + '\n' + (await pq.innerText('[data-testid=comms]'));
+  const modeQ = () => pq.getAttribute('[data-testid=mode-banner]', 'data-mode');
+  // Seed 6: the shapes grammar (answers 6 and 12), a greeting, and a scholarly Director.
+  await pq.goto(withSeed(6), { waitUntil: 'networkidle' });
+  await pq.waitForTimeout(600);
+  await skipIntro(pq);
+  await sendOn(pq, 'Computer, list simulations', 600);
+  check('sim03: "list simulations" names The Quiet Signal', /The Quiet Signal/.test(await allQ()));
+  if (!(await pq.locator('[data-testid=hub]').count())) await pq.click('[data-testid=open-hub]');
+  await pq.click('[data-testid=hub-tab-archive]');
+  await pq.waitForTimeout(150);
+  check('sim03: Mission Archive lists Training Simulation 003', /Training Simulation 003: The Quiet Signal/.test(await pq.innerText('[data-testid=hub]')) && (await pq.locator('[data-testid=archive-train-TRN-quiet]').count()) === 1);
+  await pq.click('[data-testid=hub-close]');
+  await pq.waitForTimeout(100);
+  await sendOn(pq, 'Computer, begin the Quiet Signal simulation', 1200);
+  await pq.waitForSelector('[data-testid=mode-banner][data-mode=simulation]');
+  check('sim03: launch by name starts a simulation', (await modeQ()) === 'simulation');
+  await pq.waitForTimeout(4500);
+  await skipIntro(pq);
+  let tq = await allQ();
+  check('sim03: intro plays (the Teyma pulsar, the senders, a Directorate signals ship)', /Teyma pulsar/.test(tq) && /signalling by silence/.test(tq) && /Directorate signals ship/.test(tq), tq.slice(0, 300));
+  await pq.screenshot({ path: `${SHOTS}/sim03-01-intro.png` });
+  check('sim03: two contacts on sensors', (await pq.locator('[data-testid=contact-kestrel]').count()) === 1 && (await pq.locator('[data-testid=contact-cruiser]').count()) === 1);
+  for (const c of ['Szabo, work on the code', 'scan the pulsar', 'use the main dish as a receiver', 'wait', 'wait', 'wait']) await sendOn(pq, c, 300);
+  check('sim03: Szabo completes the decode', /The grammar is shapes/.test(await allQ()));
+  await sendOn(pq, 'hail the directorate ship', 400);
+  check('sim03: comms session with Signals Director Brenn', (await pq.getAttribute('[data-testid=channel-indicator]', 'data-party')) === 'cruiser' && /Signals Director Halia Brenn/.test(await pq.innerText('[data-testid=comms]')));
+  await sendOn(pq, 'will you hold your transmission?', 400);
+  await pq.screenshot({ path: `${SHOTS}/sim03-02-comms.png` });
+  for (const c of ['Szabo, send them 6', 'Szabo, send them 12', 'wait', 'hail the senders']) await sendOn(pq, c, 400);
+  await sendOn(pq, 'Greetings. We are the ISV Halcyon, and we come in peace.', 800);
+  await pq.waitForSelector('[data-testid=outcome]');
+  const outQ = await pq.innerText('[data-testid=outcome]');
+  check('sim03: played to an ending (Contact Established)', /Contact Established/i.test(outQ), outQ.slice(0, 200));
+  tq = await allQ();
+  check('sim03: no other simulation\'s names leak in', !/Kestrel|Prefect|Ashen Covenant|Tallis|Sabeth|Thornwake|\[[a-zA-Z_]+\]|undefined/.test(tq), (tq.match(/.{0,60}(Kestrel|Prefect|Ashen Covenant|Tallis|Sabeth|Thornwake|\[[a-zA-Z_]+\]|undefined).{0,60}/) ?? [''])[0]);
+  await pq.screenshot({ path: `${SHOTS}/sim03-03-outcome.png` });
+  if (await pq.locator('[data-testid=outcome-aar]').count()) await pq.click('[data-testid=outcome-aar]');
+  await pq.waitForTimeout(300);
+  const aarQ = (await pq.locator('[data-testid=aar]').count()) ? await pq.innerText('[data-testid=aar]') : '';
+  check('sim03: AAR is available, cites regulations and has no percentages', /Contact Established/i.test(aarQ) && /ISA regulations/.test(aarQ) && !/\d\s*%/.test(aarQ), aarQ.slice(0, 200));
+  await pq.screenshot({ path: `${SHOTS}/sim03-04-aar.png`, fullPage: true });
+  if (await pq.locator('[data-testid=aar-close]').count()) await pq.click('[data-testid=aar-close]');
+  await pq.setViewportSize({ width: 390, height: 844 });
+  await pq.waitForTimeout(400);
+  const ovQ = await pq.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  check('sim03 phone: no horizontal overflow', ovQ <= 0, `overflow ${ovQ}px`);
+  await ctxQ.close();
+}
+
 // ============================================================== v0.8.0 =====
 // The Captain's Handbook: contents, articles, search, bridge commands in every timeline (state untouched),
 // report citations, spoiler safety, desktop and phone width.
