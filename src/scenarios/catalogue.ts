@@ -55,6 +55,15 @@ export const SIMULATIONS: readonly SimulationInfo[] = [
     ['the quiet signal', 'quiet signal', 'quiet', 'teyma pulsar', 'teyma', 'pulsar'],
     ['the quiet signal', 'quiet signal'],
   ),
+  entry(
+    4,
+    'TRN-reactor',
+    'reactor-night',
+    'Reactor Night',
+    'Ship’s night, no enemy, and the Halcyon’s own core is running away. The only crew member who can reach the reactor spine is frightened of the pod she is sitting in. What has failed, and who do you send? Seeded: every run can differ.',
+    ['reactor night', 'reactor', 'cascade', 'work pod'],
+    ['reactor night'],
+  ),
 ];
 
 const NUMBER_WORDS: Record<string, number> = {

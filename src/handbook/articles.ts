@@ -462,6 +462,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "purpose": "Letting a specialist finish the work before acting on it."
         },
         {
+          "simulation": 4,
+          "title": "Reactor Night",
+          "purpose": "Delegating to a specialist against a deadline."
+        },
+        {
           "simulation": 14,
           "title": "Starfall",
           "purpose": "Trusting a junior officer with a task only they can carry out.",
@@ -814,6 +819,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "purpose": "Protecting the ship while protecting others."
         },
         {
+          "simulation": 4,
+          "title": "Reactor Night",
+          "purpose": "Weighing risk to the crew when the danger is the ship itself."
+        },
+        {
           "simulation": 20,
           "title": "Gravity's Edge",
           "purpose": "Judging how much risk to the ship a goal is worth.",
@@ -967,8 +977,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
         {
           "simulation": 4,
           "title": "Reactor Night",
-          "purpose": "Sending people into danger aboard your own ship.",
-          "planned": true
+          "purpose": "Sending people into danger aboard your own ship."
         }
       ],
       "enforcement": {
@@ -2006,6 +2015,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
         "cmd-3"
       ],
       "training": [
+        {
+          "simulation": 4,
+          "title": "Reactor Night",
+          "purpose": "Heeding a medical judgement about a crew member's fitness."
+        },
         {
           "simulation": 8,
           "title": "The Lantern Drift",

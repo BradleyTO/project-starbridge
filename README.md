@@ -10,7 +10,7 @@ A browser-based, AI-assisted **starship command simulator**. You command the exp
 
 - `First Officer, give me a status report` · `Okafor, how are the engines?` (small talk, answered from the ship's state)
 - `Science, what systems are within exploration range?`
-- `Computer, open the simulation archive` · `Computer, list simulations` (or `what simulations are available`) · `Computer, begin the Kestrel Incident simulation` · `Computer, begin the Tallis Gate simulation` · `Computer, begin the Quiet Signal simulation` · `run simulation two` (typed or spoken). A simulation starts **only** on request; `begin the simulation` with no name starts #1.
+- `Computer, open the simulation archive` · `Computer, list simulations` (or `what simulations are available`) · `Computer, begin the Kestrel Incident simulation` · `Computer, begin the Tallis Gate simulation` · `Computer, begin the Quiet Signal simulation` · `Computer, begin the Reactor Night simulation` · `run simulation two` (typed or spoken). A simulation starts **only** on request; `begin the simulation` with no name starts #1.
 - Inside a simulation, `Computer, end the simulation` (or the End sim button) returns you to the bridge. A simulation that reaches an ending returns you to the bridge with a debrief card (run it again, new variation, archive).
 
 **Two products (described only; there are no payments):**
@@ -115,7 +115,7 @@ With **Voice on**, each bridge officer, the ship's computer, the narrator and th
   - the computer always keeps its calm base settings.
 - **With no usable voice,** everyone uses the browser default at different pitches and rates.
 - **Offline by default.** Cloud voices (Chrome's "Google …", Edge's "Online (Natural)") and Apple's novelty voices are not used. A checkbox in the panel allows the cloud voices.
-- **Scenarios declare voice hints for their characters** (see [docs/SCENARIO_GUIDE.md](docs/SCENARIO_GUIDE.md) §6a). #1, #2 and #3 do.
+- **Scenarios declare voice hints for their characters** (see [docs/SCENARIO_GUIDE.md](docs/SCENARIO_GUIDE.md) §6a). #1, #2, #3 and #4 do.
 
 ## Training simulations
 
@@ -124,7 +124,8 @@ With **Voice on**, each bridge officer, the ship's computer, the narrator and th
 | 1 | **The Kestrel Incident** | playable |
 | 2 | **Quarantine at Tallis Gate** | playable (v0.6.0) |
 | 3 | **The Quiet Signal** | playable (v0.8.3) |
-| 4–30 | see [docs/SCENARIO_ROADMAP.md](docs/SCENARIO_ROADMAP.md) | planned, one per day |
+| 4 | **Reactor Night** | playable (v0.8.4) |
+| 5–30 | see [docs/SCENARIO_ROADMAP.md](docs/SCENARIO_ROADMAP.md) | planned, one per day |
 
 Every simulation is listed in the Mission Archive and by `Computer, list simulations`, and can be started by name or number. How to write one is in [docs/SCENARIO_GUIDE.md](docs/SCENARIO_GUIDE.md).
 
@@ -164,6 +165,25 @@ Endings:
 - **Failure or partial:** **The Directorate Answered** (partial), **Warning Unshared** (partial: the Halcyon got clear, the Cantor did not), **Misread**, **Silence**, **Caught in the Glitch**, **Incident at Teyma**, **Withdrawn**, **Halcyon Lost**, and a thirty-minute **Stalemate** backstop.
 
 Rask will not target the unarmed courier. Every ending is reached by a scripted test (see `tests/sim03/`).
+
+### #4 — Reactor Night
+
+Ship's night aboard the Halcyon, and her own reactor is running away. There is no enemy. Something in the cooling has failed, but from inside the reactor room a stuck valve on the spine, a failed main pump and a sensor lying to the regulator all look alike. The only way to the outside of the spine is the work pod **Tern**, and its pilot, **Crewman Ines Paley**, is frightened of being sealed inside it. The ISA fleet repair tender **ISV Larkspur** (**Cmdr. Aurelio Basant**, Fleet Engineering) is hours away and can only advise.
+
+The seed decides:
+
+- **what has failed** (valve, pump or sensor) and which cause the Chief can rule out first;
+- **how hot and how fast** the cascade starts, how deep the valve is, and whether the ejection clamps are jammed;
+- **Paley's nerve** (steady, shaken or panicked), which nobody knows until someone asks her or the doctor;
+- **Basant's stance** (mentor, by the book, or keen to salvage the core) and the size of the deck-six watch.
+
+Chief Okafor (Engineering) is the key: only she can find the fault, and only when tasked ("Okafor, what's failing?", "scan our ship"). Fix it from inside ("Okafor, take the regulator off automatic", "Okafor, switch to the backup pump"), send Paley ("Paley, go to the valve"), or improvise ("Okafor, rig the cold bypass", "Okafor, starve the reaction", "use the shield emitters as radiators", "Adeyemi, fly the pod to the manifold"). Charge the jump drive before you eject the core, or you will not get home.
+
+Endings:
+- **Success:** **A Clean Save**, **Paley's Valve**, **The Cold Bypass**, **Limped Home** (eject the core and jump on a stored charge).
+- **Failure or partial:** **Saved at a Cost** (partial), **Dead in Space** (partial), **Last-Ditch Ejection** (the Chief ejects on her own authority), **Hard Jump**, **Halcyon Lost**, and a thirty-minute **Held at Bay** backstop.
+
+Rask will not fire on the pod with Paley aboard. Every ending is reached by a scripted test (see `tests/sim04/`).
 
 ## Simulation #1 — The Kestrel Incident
 
@@ -434,6 +454,7 @@ The app deploys to Vercel as a Vite static site plus serverless functions in `ap
 - [x] **v0.8.1** — Handbook Draft 3: "the ISA" throughout, player-facing enforcement notes.
 - [x] **v0.8.2** — ISA-COM-001 First Edition: the condensed code (11 articles, 71 subsections, Annex), citations shown as "§3.3 Use of Force".
 - [x] **v0.8.3** — Training Simulation 003: The Quiet Signal.
+- [x] **v0.8.4** — Training Simulation 004: Reactor Night.
 - [ ] **Handbook Stages 2 and 3** (each takes the next free version number when it ships; nightly simulations keep bumping the patch version) — Crew who cite and explain regulations; evaluations, refusals and reviews moved to the approved First Edition wording.
 - [ ] **Next** — Server-side AI narration and character responses with schema validation, timeouts, usage limits and template fallback; server-side accounts and credits.
 - [ ] **Milestone 4** — Branching outcomes, mission evaluation, full save/resume, voice controls.

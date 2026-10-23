@@ -1047,6 +1047,65 @@ for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape',
   await ctxQ.close();
 }
 
+// ============================================================== v0.8.4 =====
+// Training Simulation 004: Reactor Night. Listed, launched by voice-style command, played to an ending, AAR filed.
+{
+  const ctxR = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await ctxR.addInitScript(stubs);
+  const pr = await ctxR.newPage();
+  pr.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  pr.on('pageerror', (e) => errors.push(String(e)));
+  const allR = async () => (await pr.innerText('[data-testid=narrative]')) + '\n' + (await pr.innerText('[data-testid=comms]'));
+  const modeR = () => pr.getAttribute('[data-testid=mode-banner]', 'data-mode');
+  // Seed 2: a lying temperature sensor (the spine valve is ruled out first) and a panicked pod pilot.
+  await pr.goto(withSeed(2), { waitUntil: 'networkidle' });
+  await pr.waitForTimeout(600);
+  await skipIntro(pr);
+  await sendOn(pr, 'Computer, list simulations', 600);
+  check('sim04: "list simulations" names Reactor Night', /Reactor Night/.test(await allR()));
+  if (!(await pr.locator('[data-testid=hub]').count())) await pr.click('[data-testid=open-hub]');
+  await pr.click('[data-testid=hub-tab-archive]');
+  await pr.waitForTimeout(150);
+  check('sim04: Mission Archive lists Training Simulation 004', /Training Simulation 004: Reactor Night/.test(await pr.innerText('[data-testid=hub]')) && (await pr.locator('[data-testid=archive-train-TRN-reactor]').count()) === 1);
+  await pr.click('[data-testid=hub-close]');
+  await pr.waitForTimeout(100);
+  await sendOn(pr, 'Computer, begin the Reactor Night simulation', 1200);
+  await pr.waitForSelector('[data-testid=mode-banner][data-mode=simulation]');
+  check('sim04: launch by name starts a simulation', (await modeR()) === 'simulation');
+  await pr.waitForTimeout(4500);
+  await skipIntro(pr);
+  let tr = await allR();
+  check('sim04: intro plays (ship\'s night, the work pod Tern, the tender Larkspur)', /Ship’s night aboard the ISV Halcyon/.test(tr) && /work pod Tern/.test(tr) && /Larkspur/.test(tr), tr.slice(0, 300));
+  await pr.screenshot({ path: `${SHOTS}/sim04-01-intro.png` });
+  check('sim04: two contacts on sensors', (await pr.locator('[data-testid=contact-kestrel]').count()) === 1 && (await pr.locator('[data-testid=contact-cruiser]').count()) === 1);
+  for (const c of ["Okafor, what's failing?", 'scan our ship']) await sendOn(pr, c, 300);
+  check('sim04: the tender shows as the ISV Larkspur, not an unidentified warship', /ISV Larkspur/.test(await pr.innerText('[data-testid=contact-cruiser]')) && !/Unidentified/.test(await pr.innerText('[data-testid=contact-cruiser]')));
+  await sendOn(pr, 'hail the pod', 900);
+  check('sim04: comms session with Crewman Paley', (await pr.getAttribute('[data-testid=channel-indicator]', 'data-party')) === 'kestrel' && /Crewman Ines Paley/i.test(await pr.innerText('[data-testid=comms]')));
+  await sendOn(pr, 'how are you doing?', 400);
+  await pr.screenshot({ path: `${SHOTS}/sim04-02-comms.png` });
+  for (const c of ['close the channel', 'wait', 'wait']) await sendOn(pr, c, 300);
+  check('sim04: Chief Okafor finds the fault', /The core temperature sensor is reading low/.test(await allR()));
+  for (const c of ['Okafor, take the regulator off automatic', 'wait', 'wait']) await sendOn(pr, c, 400);
+  await pr.waitForSelector('[data-testid=outcome]');
+  const outR = await pr.innerText('[data-testid=outcome]');
+  check('sim04: played to an ending (A Clean Save)', /A Clean Save/i.test(outR), outR.slice(0, 200));
+  tr = await allR();
+  check('sim04: no other simulation\'s names leak in', !/Kestrel|Prefect|Ashen Covenant|Tallis|Sabeth|Thornwake|Cantor|Brenn|Teyma|\[[a-zA-Z_]+\]|undefined/.test(tr), (tr.match(/.{0,60}(Kestrel|Prefect|Ashen Covenant|Tallis|Sabeth|Thornwake|Cantor|Brenn|Teyma|\[[a-zA-Z_]+\]|undefined).{0,60}/) ?? [''])[0]);
+  await pr.screenshot({ path: `${SHOTS}/sim04-03-outcome.png` });
+  if (await pr.locator('[data-testid=outcome-aar]').count()) await pr.click('[data-testid=outcome-aar]');
+  await pr.waitForTimeout(300);
+  const aarR = (await pr.locator('[data-testid=aar]').count()) ? await pr.innerText('[data-testid=aar]') : '';
+  check('sim04: AAR is available, cites regulations and has no percentages', /A Clean Save/i.test(aarR) && /ISA regulations/.test(aarR) && !/\d\s*%/.test(aarR), aarR.slice(0, 200));
+  await pr.screenshot({ path: `${SHOTS}/sim04-04-aar.png`, fullPage: true });
+  if (await pr.locator('[data-testid=aar-close]').count()) await pr.click('[data-testid=aar-close]');
+  await pr.setViewportSize({ width: 390, height: 844 });
+  await pr.waitForTimeout(400);
+  const ovR = await pr.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  check('sim04 phone: no horizontal overflow', ovR <= 0, `overflow ${ovR}px`);
+  await ctxR.close();
+}
+
 // ============================================================== v0.8.0 =====
 // The Captain's Handbook: contents, articles, search, bridge commands in every timeline (state untouched),
 // report citations, spoiler safety, desktop and phone width.

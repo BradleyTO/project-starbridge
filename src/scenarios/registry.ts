@@ -3,11 +3,12 @@ import type { ScenarioModule } from '../engine/scenario';
 import { kestrelScenario } from './kestrel';
 import { tallisScenario } from './tallis';
 import { quietScenario } from './quiet';
+import { reactorScenario } from './reactor';
 import { bridgeScenario } from './bridge';
 import { SIMULATIONS } from './catalogue';
 
 /** Training simulations by scenario id (one module per catalogue entry that has been built). */
-export const TRAINING_SCENARIOS: Record<string, ScenarioModule> = { [kestrelScenario.id]: kestrelScenario, [tallisScenario.id]: tallisScenario, [quietScenario.id]: quietScenario };
+export const TRAINING_SCENARIOS: Record<string, ScenarioModule> = { [kestrelScenario.id]: kestrelScenario, [tallisScenario.id]: tallisScenario, [quietScenario.id]: quietScenario, [reactorScenario.id]: reactorScenario };
 
 export const SCENARIOS: Record<string, ScenarioModule> = { ...TRAINING_SCENARIOS, [bridgeScenario.id]: bridgeScenario };
 

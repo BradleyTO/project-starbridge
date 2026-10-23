@@ -33,7 +33,7 @@ Premises can be adjusted when a scenario is built. The core event, the primary c
 | 1 | The Kestrel Incident | A crippled freighter hides a fugitive from a Directorate cruiser in contested space | Reading people and detecting lies | Lt. Szabo (Comms) | **done** (v0.2–v0.5) |
 | 2 | Quarantine at Tallis Gate | A sick pilgrim liner is held at a colony's quarantine line | Relying on the science officer (evidence before action) | Lt. Varga (Science) | **done** (v0.6.0) |
 | 3 | The Quiet Signal | A message hidden in a pulsar's silences, answered only in mathematics | The comms officer cracking a code | Lt. Szabo (Comms) | **done** (v0.8.3) |
-| 4 | Reactor Night | The Halcyon's own reactor cascades; no enemy | The engineer improvising | Chief Okafor (Engineering) | planned |
+| 4 | Reactor Night | The Halcyon's own reactor cascades; no enemy | The engineer improvising | Chief Okafor (Engineering) | **done** (v0.8.4) |
 | 5 | The Saltglass Accord | Mediating two clans' claims to an ice moon aboard the Halcyon | Mediation: finding the interests beneath the demands | Cmdr. Marrow (XO) | planned |
 | 6 | Ion Season | Leading slow ore freighters blind through an ion storm | A gut call on incomplete information | Ens. Adeyemi (Helm) | planned |
 | 7 | Ghost Ledger | Someone copies the navigation keys during a reception aboard | Deduction and reasoning | Lt. Cmdr. Rask (Tactical/Security) | planned |
@@ -200,25 +200,29 @@ They test different skills (reading people vs evidence-led science). This review
 
 **Seeds vary:** the code's grammar and the decoy, whether Szabo's lean is right, the senders' intent and patience, the Director's temperament, accuracy and timing, the glitch delay.
 
-### 4. Reactor Night
-**Premise.** The Halcyon's own reactor starts a cascade failure in deep space. A coolant valve is stuck behind a radiation-soaked bulkhead. The only engineer small enough to reach it is claustrophobic. There is no enemy: the ship and the crew are the whole challenge.
+### 4. Reactor Night (done, v0.8.4)
+**Premise.** Ship's night in deep space, and the Halcyon's own reactor starts a cascade. Something in the cooling has failed, but from inside the reactor room a stuck valve on the spine, a failed main pump and a sensor lying to the regulator all look alike. The only craft that can reach the outside of the reactor spine is the one-person work pod *Tern*, and the only pod rating on watch, Crewman Ines Paley, is already out there in it, and frightened of being sealed inside it tonight. The ISA fleet repair tender ISV *Larkspur* (Cmdr. Aurelio Basant, Fleet Engineering) is hours away: advice, not help. (Built from the planned premise: the "claustrophobic engineer small enough to reach the valve" became a frightened pod rating already outside the hull, so the fear and the reach belong to the same person.)
 
 **Command challenge:**
 - **Primary:** the engineer improvising.
 - **Secondary:** leadership of a frightened crewmember.
-- **Pivotal officer:** Chief Okafor (Engineering). The captain must give her room to work and decide which of her improvised fixes to risk.
+- **Pivotal officer:** Chief Okafor (Engineering). Only she can find what has failed, and only when tasked; Varga's internal scan of the coolant loop halves the time. Her improvisations (a cold bypass through the shield coolant loop, starving the reaction, the shield emitters as radiators, a stored jump before ejecting) each cost something. Dr. Osei reads Paley's fitness and dose; Adeyemi can fly the empty pod by remote.
 
-**Why it's distinct:** the only simulation with no outside party at all. It is a pure engineering crisis aboard.
+**Why it's distinct:** the only simulation where the crisis is the ship itself. Nobody outside is a threat or a party to the dilemma: the tender only advises, and a salvage-minded Fleet Engineering request to keep the core is a request, not an order. Overlap check (guide §12): unlike #23 Wake of the Sundered (also *the engineer improvising*), the failing ship is the Halcyon and no other vessel must be stopped; unlike #11 Coldwater (Okafor again) the crew is not in conflict with the captain; unlike #20 Gravity's Edge there is no choice to stay in danger. The most recent primary (#3, the comms officer cracking a code) is not repeated.
 
 **Hidden:**
-- which component actually failed;
-- how long the cascade really allows.
+- which component actually failed (seeded), and which one the Chief can rule out first;
+- Crewman Paley's nerve tonight (steady, shaken or panicked), learned only by asking her or the doctor;
+- the cascade's real climb, the valve's depth on the spine, whether the ejection clamps are jammed;
+- Commander Basant's stance (mentor, by the book, or salvage-minded).
 
 **Endings:**
-- **Success:** a clean save, an improvised bypass, eject the core and limp home.
-- **Failure or partial:** losses on one deck, the ship dead in space awaiting rescue, the ship lost.
+- **Success:** A Clean Save, Paley's Valve, The Cold Bypass, Limped Home.
+- **Failure or partial:** Saved at a Cost (partial), Dead in Space (partial), Last-Ditch Ejection, Hard Jump, Halcyon Lost; Held at Bay as a thirty-minute backstop.
 
-**Seeds vary:** the fault, the valve position, the engineer's state, the time margin.
+**Regulations cited:** §4.2 (care-2), §3.9 (roe-3); hidden training references on §2.5 (cmd-3), §3.9 (roe-3), §4.2 (care-2) and §8.3 (health-2). **Exercise objectives (no regulation yet):** "if someone must go into danger, send someone fit to go, and bring them back" (hazardous duty aboard), and Fleet Engineering's request to keep the core. A hazardous-duty rule is proposed for Brad's approval; nothing was added to ISA-COM-001.
+
+**Seeds vary:** the fault and the one ruled out first, the starting heat and climb, Paley's nerve, the valve's depth, the clamps, Basant's stance, the size of the deck-six damage-control watch.
 
 ### 5. The Saltglass Accord
 **Premise.** The Halcyon hosts talks between two independent clans who both claim the ice moon Saltglass. Their stated demands cannot both be met. What each clan actually needs is something else: water rights, a burial ground, a succession that must be settled before an elder dies. Neither will say so first.

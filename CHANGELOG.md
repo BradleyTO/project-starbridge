@@ -2,6 +2,25 @@
 
 All notable changes to Project Starbridge are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.8.4] — 2026-10-23 — Training Simulation 004: Reactor Night
+
+Nightly simulation build. Fourth of 30 training simulations. No change to the engine, grading, evaluation rules, crew refusal behaviour or ISA-COM-001 wording.
+
+### Added
+- **Training Simulation 004: Reactor Night** (`src/scenarios/reactor/`). Ship's night, no enemy: the Halcyon's own reactor is cascading. The one-person work pod *Tern* is the only way to the outside of the reactor spine, and its pilot, Crewman Ines Paley, is frightened of being sealed inside it. The ISA fleet repair tender ISV *Larkspur* (Cmdr. Aurelio Basant, Fleet Engineering) is hours away and can only advise.
+  - **Primary challenge:** the engineer improvising (Chief Okafor). **Secondary:** leadership of a frightened crew member (Crewman Paley, with Dr. Osei reading her fitness).
+  - Seeded, deterministic and offline: the fault (stuck spine valve, failed main pump, or a lying temperature sensor) and the cause the Chief can rule out first, the starting heat and climb, Paley's nerve (steady, shaken or panicked), the valve's depth, whether the ejection clamps are jammed, Basant's stance (mentor, by the book, or salvage-minded), and the deck-six damage-control watch.
+  - Officer expertise matters: Okafor diagnoses only when tasked, and Varga's internal scan of the coolant loop halves the time; Osei reads Paley's state and dose; Adeyemi can fly the empty pod by remote; Okafor ejects on her own authority seconds from breach, unless the clamps are jammed or the pod blocks the interlock.
+  - Unconventional options: the cold bypass through the shield coolant loop, starving the reaction, the shield emitters as radiators, a stored jump before ejecting, the pod flown by remote, hauling or beaming Paley in.
+  - Endings — success: A Clean Save, Paley's Valve, The Cold Bypass, Limped Home. Failure or partial: Saved at a Cost (partial), Dead in Space (partial), Last-Ditch Ejection, Hard Jump, Halcyon Lost; Held at Bay as a thirty-minute backstop.
+  - Listed in the catalogue and Mission Archive; launch with "Computer, begin the Reactor Night simulation" (also "simulation four"). Voice hints for Crewman Paley and Commander Basant.
+  - Evaluation data (§6b): objectives with priorities, ending tiers, judgment markers, regulations §4.2 (care-2) and §3.9 (roe-3). Two labelled **exercise objectives**: choosing and recalling a crew member sent into unavoidable danger aboard ship (no First Edition subsection covers it; a rule is proposed for approval), and Fleet Engineering's request to keep the core (a request, not a rule).
+- Hidden handbook training references (internal data, not shown to the player): §4.2's reference to #4 is no longer marked planned; §2.5, §3.9 and §8.3 gain references to #4.
+
+### Tests
+- New `tests/sim04/`: setup and seed variation, determinism, scripted playthroughs reaching every ending through the offline interpreter, a 60-seed sweep with a fixed plan, a careful captain succeeding on 120 seeds, do-nothing on 60 seeds, a fuzz run with state invariants and name-leak checks, Rask's refusal to fire on the pod, the ejection interlock, catalogue/launch/archive/save-load, timeline isolation (canon byte-identical), and the evaluation pairs: diagnosing and steadying Paley first is graded exemplary and guessing a fix and sending her cold is graded mixed, for the same ending; a diagnosed clean save is sound and a blind wrong fix first is reckless.
+- Smoke: a sim04 block lists, launches, plays a seed to A Clean Save and opens its after-action report.
+
 ## [0.8.3] — 2026-10-22 — Training Simulation 003: The Quiet Signal
 
 Nightly simulation build. Third of 30 training simulations. No change to the engine, grading, evaluation rules, crew refusal behaviour or ISA-COM-001 wording.
