@@ -1106,6 +1106,68 @@ for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape',
   await ctxR.close();
 }
 
+// ============================================================== v0.8.5 =====
+// Training Simulation 005: The Saltglass Accord. Listed, launched by voice-style command, mediated to an accord, AAR filed.
+{
+  const ctxS = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await ctxS.addInitScript(stubs);
+  const ps = await ctxS.newPage();
+  ps.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  ps.on('pageerror', (e) => errors.push(String(e)));
+  const allS = async () => (await ps.innerText('[data-testid=narrative]')) + '\n' + (await ps.innerText('[data-testid=comms]'));
+  const modeS = () => ps.getAttribute('[data-testid=mode-banner]', 'data-mode');
+  await ps.goto(withSeed(5), { waitUntil: 'networkidle' });
+  await ps.waitForTimeout(600);
+  await skipIntro(ps);
+  await sendOn(ps, 'Computer, list simulations', 600);
+  check('sim05: "list simulations" names The Saltglass Accord', /The Saltglass Accord/.test(await allS()));
+  if (!(await ps.locator('[data-testid=hub]').count())) await ps.click('[data-testid=open-hub]');
+  await ps.click('[data-testid=hub-tab-archive]');
+  await ps.waitForTimeout(150);
+  check('sim05: Mission Archive lists Training Simulation 005', /Training Simulation 005: The Saltglass Accord/.test(await ps.innerText('[data-testid=hub]')) && (await ps.locator('[data-testid=archive-train-TRN-saltglass]').count()) === 1);
+  await ps.click('[data-testid=hub-close]');
+  await ps.waitForTimeout(100);
+  await sendOn(ps, 'Computer, begin the Saltglass Accord simulation', 1200);
+  await ps.waitForSelector('[data-testid=mode-banner][data-mode=simulation]');
+  check('sim05: launch by name starts a simulation', (await modeS()) === 'simulation');
+  await ps.waitForTimeout(4500);
+  await skipIntro(ps);
+  let tr = await allS();
+  check('sim05: intro plays (Saltglass, two clans, mediate not rule)', /Saltglass/.test(tr) && /Clan Rhune/.test(tr) && /Clan Tarvo/.test(tr) && /mediate, not to rule/.test(tr), tr.slice(0, 300));
+  await ps.screenshot({ path: `${SHOTS}/sim05-01-intro.png` });
+  check('sim05: both clan ships on sensors by name', /Long Thaw/.test(await ps.innerText('[data-testid=contact-kestrel]')) && /Cold Hearth/.test(await ps.innerText('[data-testid=contact-cruiser]')));
+  await sendOn(ps, 'Szabo, how do they sound?', 400);
+  const read = (await allS()).match(/(Speaker Rhune|Holder Tarvo) wants this to work/);
+  check('sim05: Szabo reads the room', !!read);
+  const soft = read ? read[1] : 'Holder Tarvo';
+  const hard = soft === 'Speaker Rhune' ? 'Holder Tarvo' : 'Speaker Rhune';
+  await sendOn(ps, `open a private channel to ${soft}`, 900);
+  check('sim05: a private side-room channel opens', /side room/i.test(await allS()));
+  for (const c of ['What do you really need?', 'May I raise that at the table?']) await sendOn(ps, c, 400);
+  await ps.screenshot({ path: `${SHOTS}/sim05-02-side-room.png` });
+  for (const c of ['close the channel', `Marrow, have a quiet word with ${hard}`, `open a channel to ${soft}`, 'Thank you for coming. I hear you.', 'Will you both agree to a standstill on the ice while we talk?', 'wait', 'wait', `open a channel to ${soft}`, 'Would you tell them what you told me?']) await sendOn(ps, c, 400);
+  check('sim05: both needs go on the table', /Objective COMPLETE: Find out what each clan actually needs/.test(await allS()));
+  await sendOn(ps, 'I propose you share Saltglass: both needs, written into one accord.', 600);
+  await ps.waitForSelector('[data-testid=outcome]');
+  const outS = await ps.innerText('[data-testid=outcome]');
+  check('sim05: mediated to an ending (The Saltglass Accord)', /The Saltglass Accord/i.test(outS), outS.slice(0, 200));
+  tr = await allS();
+  const LEAK5 = /Kestrel|Prefect|Ashen Covenant|Tallis|Sabeth|Thornwake|Cantor|Brenn|Teyma|Paley|Larkspur|\[[a-zA-Z_]+\]|undefined/;
+  check('sim05: no other simulation\'s names leak in', !LEAK5.test(tr), (tr.match(new RegExp(`.{0,60}(${LEAK5.source}).{0,60}`)) ?? [''])[0]);
+  await ps.screenshot({ path: `${SHOTS}/sim05-03-outcome.png` });
+  if (await ps.locator('[data-testid=outcome-aar]').count()) await ps.click('[data-testid=outcome-aar]');
+  await ps.waitForTimeout(300);
+  const aarS = (await ps.locator('[data-testid=aar]').count()) ? await ps.innerText('[data-testid=aar]') : '';
+  check('sim05: AAR is available, cites regulations and has no percentages', /The Saltglass Accord/i.test(aarS) && /ISA regulations/.test(aarS) && !/\d\s*%/.test(aarS), aarS.slice(0, 200));
+  await ps.screenshot({ path: `${SHOTS}/sim05-04-aar.png`, fullPage: true });
+  if (await ps.locator('[data-testid=aar-close]').count()) await ps.click('[data-testid=aar-close]');
+  await ps.setViewportSize({ width: 390, height: 844 });
+  await ps.waitForTimeout(400);
+  const ovS = await ps.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  check('sim05 phone: no horizontal overflow', ovS <= 0, `overflow ${ovS}px`);
+  await ctxS.close();
+}
+
 // ============================================================== v0.8.0 =====
 // The Captain's Handbook: contents, articles, search, bridge commands in every timeline (state untouched),
 // report citations, spoiler safety, desktop and phone width.

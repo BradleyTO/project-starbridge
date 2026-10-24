@@ -388,6 +388,12 @@ const RULES: Rule[] = [
     build: () => ({ kind: 'action', action: { type: 'weapons', mode: 'arm' } }),
   },
   {
+    // v0.8.5: taking delegations somewhere together (The Saltglass Accord) — the scenario decides what it achieves.
+    name: 'improviseVisit',
+    test: /\b(take|bring|fly|escort|walk)\b.*\b(the |both )?(delegates|delegations|delegation|clans)\b.*\b(down|surface|ice|moon|saltglass)\b/,
+    build: (c) => ({ kind: 'action', action: { type: 'improvise', method: 'other', description: c } }),
+  },
+  {
     // v0.6: medical improvisation (isolation wards, screened transport) — the scenario decides what it achieves.
     name: 'improviseMedical',
     test: /\b(isolation|quarantine|biohazard) (ward|bay|area|deck|zone|field)\b|\bisolat(e|ion) (them|the (sick|patients|infected|team|exposed))\b|\bfield hospital\b|\bbio-? ?filters?\b|\bdecontaminat\w*\b|\bscreen (the )?(transport|beam|transporters?)\b/,
@@ -527,7 +533,7 @@ const RULES: Rule[] = [
     test: /\bwhat (can )?(you )?report (about|on)\b|\bwhat do (we|you) (know|have) (about|on)\b|\bwhat('s| is| are) (the |that |this )?(\w+ )?(doing|up to)\b|\b(scan|sensors?|analy[sz]e|examine|investigate|study|probe|sweep|look at|check (out|on)?|inspect|identify|survey|readings?|life signs|what('s| is) (in|inside|on|aboard))\b/,
     build: (c) => {
       if (COMPARTMENT.test(c) && !/\b(our|my)\b/.test(c)) return { kind: 'action', action: { type: 'scan', target: 'compartment' } };
-      if (/\b(sweep|long[- ]range|area|surroundings|the reach|around us|for (other|more) ships|horizon)\b/.test(c)) return { kind: 'action', action: { type: 'scan', target: 'area' } };
+      if (/\b(sweep|long[- ]range|area|surroundings|the reach|around us|for (other|more) ships|horizon|the moon|saltglass|the surface)\b/.test(c)) return { kind: 'action', action: { type: 'scan', target: 'area' } };
       if (/\b(ourselves|our ship|the halcyon|our systems)\b/.test(c)) return { kind: 'action', action: { type: 'scan', target: 'halcyon' } };
       return { kind: 'action', action: { type: 'scan', target: 'kestrel' }, needs: 'contact' };
     },

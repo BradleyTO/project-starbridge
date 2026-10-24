@@ -2,6 +2,39 @@
 
 All notable changes to Project Starbridge are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.8.5] — 2026-10-24 — Training Simulation 005: The Saltglass Accord
+
+Nightly simulation build. Fifth of 30 training simulations. No change to the engine, grading, evaluation rules, crew refusal behaviour or ISA-COM-001 wording.
+
+### Added
+- **Training Simulation 005: The Saltglass Accord** (`src/scenarios/saltglass/`). The ISA has been asked to mediate, not to rule. Clan Rhune (Speaker Edda Rhune, the hauler *Long Thaw*) and Clan Tarvo (Holder Caius Tarvo, the transport *Cold Hearth*) both claim the ice moon Saltglass, and both delegations sit at one table in the Halcyon's wardroom.
+  - **Primary challenge:** mediation. **Secondary:** restraint. **Pivotal officer:** Cmdr. Marrow (XO).
+  - Seeded, deterministic and offline: what each clan really needs (water at the Brine Springs, its dead in the Barrow Ice, or a naming at the Founders' Seat before a dying elder goes), which delegate is the hardliner, whether an elder is dying and how fast, when the hardliner's landing party goes down, and each delegate's patience.
+  - The table and the side room: an open channel puts a delegate on the floor with both clans listening; a private channel is heard by one. Confidences stay private until the delegate gives leave, and repeating one without leave is a betrayal the delegate remembers.
+  - Officer expertise matters. Marrow's quiet word in the corridor gets what the table will not; she can go after a delegate who walks out and can take both delegations down to the ice. Szabo reads which delegate is the hardliner, Varga's survey shows the springs and the barrows lie apart, and Osei can treat a dying elder with the clan's leave.
+  - The delegates act on their own: the hardliner lands a claim on the ice if no standstill is agreed, a delegate pushed too hard walks out, and an elder dies on their own clock.
+  - Unconventional options: walking the ice together, leaving the clans to settle it among themselves, a timetable instead of a division, and a doctor sent across instead of terms.
+  - Endings — success: The Saltglass Accord, A Line on the Ice, A Timetable for Saltglass, Their Own Accord. Failure or partial: The Elder's Silence (partial), The Empty Table, An Imposed Peace, Blood on the Ice; Talks Adjourned as a thirty-minute backstop.
+  - Listed in the catalogue and Mission Archive; launch with "Computer, begin the Saltglass Accord simulation" (also "saltglass", "simulation five"). Voice hints for Speaker Rhune and Holder Tarvo.
+  - Evaluation data (§6b): objectives with priorities, ending tiers, judgment markers, regulations §6.1 (honesty-1) and §3.1 (roe-2). Two labelled **exercise objectives**: impartiality (mediate; do not impose a settlement or take sides) and confidentiality of what is said in mediation. No First Edition subsection covers either, and rules are proposed for approval.
+- Interpreter: "take the delegates down to the ice" (and similar) is understood as an improvised action, and "the moon", "Saltglass" and "the surface" count as an area scan.
+- Hidden handbook training references (internal data, not shown to the player): §6.1's reference to #5 is no longer marked planned; §3.1 and §9.6 gain references to #5.
+
+### Tests
+- New `tests/sim05/` (47 tests):
+  - setup and seed variation, and determinism;
+  - scripted playthroughs reaching every ending through the offline interpreter;
+  - a 60-seed sweep with a fixed plan reaching success and failure endings;
+  - a careful mediator succeeding on 120 seeds with three different accords;
+  - doing nothing on 60 seeds, which never succeeds;
+  - hidden information and NPC autonomy;
+  - Rask's refusal to fire on a clan ship;
+  - a fuzz run with state invariants and name-leak checks;
+  - catalogue, launch, archive and save/load;
+  - timeline isolation (canon byte-identical);
+  - the evaluation pair, which grades the same accord differently: keeping a confidence until leave is given is exemplary, while breaking it is mixed with the breach marked reckless.
+- Smoke: a sim05 block lists and launches the simulation, mediates to The Saltglass Accord and opens its after-action report.
+
 ## [0.8.4] — 2026-10-23 — Training Simulation 004: Reactor Night
 
 Nightly simulation build. Fourth of 30 training simulations. No change to the engine, grading, evaluation rules, crew refusal behaviour or ISA-COM-001 wording.

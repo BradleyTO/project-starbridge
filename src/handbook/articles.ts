@@ -546,6 +546,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "purpose": "Restraint under pressure in a border standoff."
         },
         {
+          "simulation": 5,
+          "title": "The Saltglass Accord",
+          "purpose": "Keeping force away from a peace table."
+        },
+        {
           "simulation": 15,
           "title": "Corsairs of the Veyl Shoals",
           "purpose": "Using force economically when it is truly needed.",
@@ -1608,8 +1613,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
         {
           "simulation": 5,
           "title": "The Saltglass Accord",
-          "purpose": "Keeping faith with both sides of a mediation.",
-          "planned": true
+          "purpose": "Keeping faith with both sides of a mediation."
         }
       ],
       "enforcement": {
@@ -2221,6 +2225,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "simulation": 1,
           "title": "The Kestrel Incident",
           "purpose": "Keeping a border dispute from becoming a war."
+        },
+        {
+          "simulation": 5,
+          "title": "The Saltglass Accord",
+          "purpose": "Answering a disputed claim with diplomacy, not force."
         },
         {
           "simulation": 9,

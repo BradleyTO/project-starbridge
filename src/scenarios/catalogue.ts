@@ -64,6 +64,15 @@ export const SIMULATIONS: readonly SimulationInfo[] = [
     ['reactor night', 'reactor', 'cascade', 'work pod'],
     ['reactor night'],
   ),
+  entry(
+    5,
+    'TRN-saltglass',
+    'saltglass-accord',
+    'The Saltglass Accord',
+    'Two clans, one small moon of salt ice, and the ISA asked to hold the table. Each delegate claims all of Saltglass; neither will say why it matters, and one of them is running out of time. Seeded: every run can differ.',
+    ['the saltglass accord', 'saltglass accord', 'saltglass', 'clans', 'mediation'],
+    ['the saltglass accord', 'saltglass accord', 'saltglass'],
+  ),
 ];
 
 const NUMBER_WORDS: Record<string, number> = {

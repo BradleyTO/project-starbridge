@@ -34,7 +34,7 @@ Premises can be adjusted when a scenario is built. The core event, the primary c
 | 2 | Quarantine at Tallis Gate | A sick pilgrim liner is held at a colony's quarantine line | Relying on the science officer (evidence before action) | Lt. Varga (Science) | **done** (v0.6.0) |
 | 3 | The Quiet Signal | A message hidden in a pulsar's silences, answered only in mathematics | The comms officer cracking a code | Lt. Szabo (Comms) | **done** (v0.8.3) |
 | 4 | Reactor Night | The Halcyon's own reactor cascades; no enemy | The engineer improvising | Chief Okafor (Engineering) | **done** (v0.8.4) |
-| 5 | The Saltglass Accord | Mediating two clans' claims to an ice moon aboard the Halcyon | Mediation: finding the interests beneath the demands | Cmdr. Marrow (XO) | planned |
+| 5 | The Saltglass Accord | Mediating two clans' claims to an ice moon aboard the Halcyon | Mediation: finding the interests beneath the demands | Cmdr. Marrow (XO) | **done** (v0.8.5) |
 | 6 | Ion Season | Leading slow ore freighters blind through an ion storm | A gut call on incomplete information | Ens. Adeyemi (Helm) | planned |
 | 7 | Ghost Ledger | Someone copies the navigation keys during a reception aboard | Deduction and reasoning | Lt. Cmdr. Rask (Tactical/Security) | planned |
 | 8 | The Lantern Drift | A derelict generation ship with 900 sleepers in failing cryo | Triage and sacrifice | Dr. Osei (Medical) | planned |
@@ -224,21 +224,44 @@ They test different skills (reading people vs evidence-led science). This review
 
 **Seeds vary:** the fault and the one ruled out first, the starting heat and climb, Paley's nerve, the valve's depth, the clamps, Basant's stance, the size of the deck-six damage-control watch.
 
-### 5. The Saltglass Accord
-**Premise.** The Halcyon hosts talks between two independent clans who both claim the ice moon Saltglass. Their stated demands cannot both be met. What each clan actually needs is something else: water rights, a burial ground, a succession that must be settled before an elder dies. Neither will say so first.
+### 5. The Saltglass Accord (done, v0.8.5)
+**Premise.** The Halcyon holds orbit over Saltglass, a small moon of salt-crusted ice, and hosts talks between two independent clans who have both claimed it for forty years. Clan Rhune (Speaker Edda Rhune, from the hauler *Long Thaw*) and Clan Tarvo (Holder Caius Tarvo, from the transport *Cold Hearth*) sit at one table in the wardroom, and each claims the whole moon. What each clan actually needs is something else: water rights at the Brine Springs, its dead in the Barrow Ice, or a naming at the Founders' Seat that must happen before a dying elder goes. Neither will say so first, and the ISA has been asked to mediate, not to rule.
 
 **Command challenge:**
 - **Primary:** mediation, finding the interests beneath the demands.
-- **Secondary:** restraint. An imposed Agency solution fails.
-- **Pivotal officer:** Cmdr. Marrow (XO), whose quiet side-conversations bring out what the delegates won't say at the table.
+- **Secondary:** restraint. An imposed ISA settlement, a threat or a show of force ends the talks.
+- **Pivotal officer:** Cmdr. Marrow (XO). Her quiet word in the corridor brings out what a delegate won't say at the table. She can go after a delegate who walks out, and she can take both delegations down to stand on the ice. Szabo reads which delegate is the hardliner, Varga's survey shows the springs and the barrows lie apart, and Osei can treat a dying elder with the clan's leave.
 
-**Why it's distinct:** the only pure negotiation. There is no spy, no saboteur and no weapon: just two honest parties talking past each other.
+**Why it's distinct:** the only pure negotiation. There is no spy, no saboteur, no hostage and no weapon at the table, just two honest parties talking past each other. The table and the side room are separate channels: what is said in private stays private until the delegate gives leave, and a confidence repeated without leave is a betrayal the delegate remembers.
+
+Overlap check (guide §12):
+- Unlike #7 Ghost Ledger, there is no hidden agent among the guests.
+- Unlike #19 Hollow Crown, nobody is held and nobody is lying.
+- Unlike #24 Honour Bound, the clans test the captain's fairness, not her nerve.
+- Unlike #25 Shards of Oriel, the claimed moon holds nothing to discover, only what the clans need from it.
+- #10 The Gardener keeps restraint as its *primary* challenge; here restraint is secondary.
+- The most recent primary (#4, the engineer improvising) is not repeated.
+
+**Hidden:**
+- what each clan actually needs (seeded from water, burial and succession);
+- which delegate is the hardliner;
+- whether an elder is dying, and how fast;
+- when the hardliner's landing party goes down unless a standstill holds;
+- each delegate's patience.
 
 **Endings:**
-- **Success:** a shared-use accord, a partition both can live with, a deferred deal with a timetable.
-- **Failure or partial:** a walk-out, an imposed settlement that breaks within a year, a feud that becomes war.
+- **Success:** The Saltglass Accord (shared use), A Line on the Ice (a partition on Varga's survey), A Timetable for Saltglass (the naming first, the rest deferred), Their Own Accord (the captain steps out and the clans settle it themselves).
+- **Failure or partial:** The Elder's Silence (partial), The Empty Table (a walk-out), An Imposed Peace, Blood on the Ice; Talks Adjourned as a thirty-minute backstop.
 
-**Seeds vary:** each clan's true interest, the elder's health, which delegate is the hardliner.
+**Regulations cited:** §6.1 (honesty-1) and §3.1 (roe-2). Hidden training references are on §6.1 (honesty-1), §3.1 (roe-2) and §9.6 (contact-3).
+
+**Exercise objectives (no regulation yet):**
+- "mediate; do not impose a settlement or take one side against the other" (impartiality);
+- "what a delegate says in private stays private until they give leave" (confidentiality in mediation).
+
+Rules for both are proposed for Brad's approval. Nothing was added to ISA-COM-001.
+
+**Seeds vary:** each clan's need, the hardliner, the elder (none, failing, frail or stable) and the hour of death, the landing turn, and each delegate's patience.
 
 ### 6. Ion Season
 **Premise.** Three slow ore freighters must cross an ion storm before their destination station is cut off for a month. Sensors are blind, the storm's calm channels shift, and one freighter captain is hiding that he is unfit to fly.
