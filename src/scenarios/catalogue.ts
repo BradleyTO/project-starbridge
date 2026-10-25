@@ -73,6 +73,15 @@ export const SIMULATIONS: readonly SimulationInfo[] = [
     ['the saltglass accord', 'saltglass accord', 'saltglass', 'clans', 'mediation'],
     ['the saltglass accord', 'saltglass accord', 'saltglass'],
   ),
+  entry(
+    6,
+    'TRN-ion',
+    'ion-season',
+    'Ion Season',
+    'The ion season is closing the Corrie Drift, and two slow ore haulers need to be through it before it does. Three bands of storm, two channels in each, and nobody aboard can see which one is calm. Seeded: every run can differ.',
+    ['ion season', 'ion storm', 'ion', 'storm', 'convoy', 'corrie drift'],
+    ['ion season'],
+  ),
 ];
 
 const NUMBER_WORDS: Record<string, number> = {

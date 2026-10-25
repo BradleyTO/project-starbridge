@@ -2,6 +2,37 @@
 
 All notable changes to Project Starbridge are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.8.6] — 2026-10-25 — Training Simulation 006: Ion Season
+
+Nightly simulation build. Sixth of 30 training simulations. No change to the engine, grading, evaluation rules, crew refusal behaviour or ISA-COM-001 wording.
+
+### Added
+- **Training Simulation 006: Ion Season** (`src/scenarios/ion/`). The ion season is closing the Corrie Drift. The Halcyon escorts two slow ore haulers, the *Saffron Mule* (Capt. Odran Brack) and *Gannet's Luck* (Capt. Rosalind Teague), through three storm bands (the Fringe, the Combs and the Maw) to Hesper Deep before the station is cut off for a month. In each band one channel is calm and the other piles ion charge on every hull that crosses it; a hull that reaches a hundred goes dark.
+  - **Primary challenge:** a judgment call on incomplete information. **Secondary:** civilian welfare and reading people. **Pivotal officer:** Ens. Adeyemi (Helm).
+  - Seeded, deterministic and offline: the calm channel in each band; whether Varga's storm model is firm or soft (and wrong) there; whether Adeyemi is confident or diffident, and which band he cannot feel at first; the season (settled, restless, or a spate with a short lull in the Maw); which master, if either, is unfit to fly the Maw; Teague's patience; and the haulers' starting charge.
+  - Officer expertise matters. A diffident Adeyemi gives the model's line unless his captain asks for his own read and backs it, and he feels a lull coming before any instrument does. Varga's model, probes, the masters' lore, Dr. Osei's ear for a tired voice and Chief Okafor's charge bleed are each partial.
+  - The masters act on their own: an unfit master deflects until there is evidence, then owns it and hands the helm to the mate; his lore can be wrong; an impatient master goes on her own line if kept waiting, unless she is talked round.
+  - Unconventional options: a tow through the Maw, flying a hauler from the Halcyon's helm with the master's consent, shields spread over the haulers, close formation in the Halcyon's wake, bleeding charge through the Halcyon's hull, taking a crew off a dark hull, and turning the convoy back.
+  - Endings — success: Clear Water, The Lull, A Steady Hand, Weathered Through. Failure or partial: The Long Way Round (partial), Crews Saved (partial), A Hauler Lost, Dead in the Storm, Left in the Storm; Held in the Season as a thirty-minute backstop.
+  - Listed in the catalogue and Mission Archive; launch with "Computer, begin the Ion Season simulation" (also "ion storm", "simulation six"). Voice hints for Captain Brack and Captain Teague.
+  - Evaluation data (§6b): objectives with priorities, ending tiers, judgment markers, regulations §4.1 (care-1) and §3.9 (roe-3). One labelled **exercise objective**: an unfit master should not fly the Maw (fitness). No First Edition subsection covers it, and a rule is proposed for approval.
+- Interpreter: in Ion Season, convoy orders ("go with your gut", "turn the convoy back", "fly the Saffron Mule from our helm") are read as improvised actions, and questions about the water or the masters go to the right officer. "Get us out of here" is checked once by the XO before the Halcyon leaves the convoy.
+- Hidden handbook training references (internal data, not shown to the player): §1.4, §3.9, §4.1 and §4.5 gain references to #6.
+
+### Tests
+- New `tests/sim06/` (50 tests):
+  - setup and seed variation, and determinism;
+  - scripted playthroughs reaching all ten endings through the offline interpreter;
+  - a 60-seed sweep with a fixed plan reaching success and failure endings;
+  - a careful captain succeeding on 120 seeds by three different roads;
+  - doing nothing on 60 seeds, which never succeeds;
+  - hidden information, officer expertise and NPC autonomy;
+  - unconventional solutions and a refusal to fire on a civilian hauler;
+  - fuzzing with state invariants and name-leak checks;
+  - catalogue, bridge launch, Mission Archive, save round-trip and canon untouched;
+  - evaluation, including a reckless/responsible pair that both reach Clear Water.
+- Smoke test: a sim06 block (list, archive, launch by name, intro, masters, the helm's read, an ending, AAR, phone width).
+
 ## [0.8.5] — 2026-10-24 — Training Simulation 005: The Saltglass Accord
 
 Nightly simulation build. Fifth of 30 training simulations. No change to the engine, grading, evaluation rules, crew refusal behaviour or ISA-COM-001 wording.

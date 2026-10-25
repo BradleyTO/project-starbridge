@@ -35,7 +35,7 @@ Premises can be adjusted when a scenario is built. The core event, the primary c
 | 3 | The Quiet Signal | A message hidden in a pulsar's silences, answered only in mathematics | The comms officer cracking a code | Lt. Szabo (Comms) | **done** (v0.8.3) |
 | 4 | Reactor Night | The Halcyon's own reactor cascades; no enemy | The engineer improvising | Chief Okafor (Engineering) | **done** (v0.8.4) |
 | 5 | The Saltglass Accord | Mediating two clans' claims to an ice moon aboard the Halcyon | Mediation: finding the interests beneath the demands | Cmdr. Marrow (XO) | **done** (v0.8.5) |
-| 6 | Ion Season | Leading slow ore freighters blind through an ion storm | A gut call on incomplete information | Ens. Adeyemi (Helm) | planned |
+| 6 | Ion Season | Leading two slow ore haulers blind through an ion storm | A gut call on incomplete information | Ens. Adeyemi (Helm) | **done** (v0.8.6) |
 | 7 | Ghost Ledger | Someone copies the navigation keys during a reception aboard | Deduction and reasoning | Lt. Cmdr. Rask (Tactical/Security) | planned |
 | 8 | The Lantern Drift | A derelict generation ship with 900 sleepers in failing cryo | Triage and sacrifice | Dr. Osei (Medical) | planned |
 | 9 | The Long Picket | Reactor parts must get through a Directorate "inspection" blockade | Bluffing | Cmdr. Marrow (XO) | planned |
@@ -263,21 +263,44 @@ Rules for both are proposed for Brad's approval. Nothing was added to ISA-COM-00
 
 **Seeds vary:** each clan's need, the hardliner, the elder (none, failing, frail or stable) and the hour of death, the landing turn, and each delegate's patience.
 
-### 6. Ion Season
-**Premise.** Three slow ore freighters must cross an ion storm before their destination station is cut off for a month. Sensors are blind, the storm's calm channels shift, and one freighter captain is hiding that he is unfit to fly.
+### 6. Ion Season (done, v0.8.6)
+**Premise.** The ion season is closing the Corrie Drift. Two slow ore haulers, the *Saffron Mule* (Capt. Odran Brack, thirty seasons on this run) and *Gannet's Luck* (Capt. Rosalind Teague, sharp and in a hurry), must cross the storm to Hesper Deep before the station is cut off for a month, and the Halcyon is their escort. The storm lies in three bands (the Fringe, the Combs and the Maw). Each band has a high channel and a low channel; one is calm and the other will pile ion charge onto every hull that crosses it. Sensors are nearly blind, and every minute spent at a band's edge charges the haulers a little more. One hauler captain may be hiding that he or she is not fit to fly.
+
+*Revised when built (2026-10-25):* two haulers instead of three, because the shared engine has two contact slots and two distinct voices keep the comms readable. The tow chain was dropped: a tow chain belongs to #22's convoy against a closing door. Here the pressure is charge building on the hulls, not a deadline or a door.
 
 **Command challenge:**
-- **Primary:** a gut call on incomplete information. Pick a channel without being able to see it.
-- **Secondary:** reading people (the captain who says he is fine).
-- **Pivotal officer:** Ens. Adeyemi (Helm), who reads the storm by feel. The captain decides whether to trust his hunches over the computer's guesses.
+- **Primary:** a gut call on incomplete information. Pick a channel without being able to see it, from sources that disagree.
+- **Secondary:** civilian welfare and reading people: noticing that a hauler master who says they are fine is not fit to fly the Maw, and doing something about it with their consent and without humiliating them; and keeping the master who will not wait with the convoy by talking to her.
+- **Pivotal officer:** Ens. Adeyemi (Helm), who reads the storm by feel. Some seeds he is confident; in others he is diffident and repeats the computer's line unless the captain asks for *his* read and backs it. He cannot read a band until he has felt it for a minute, and in a spate season he feels the Maw's lull coming before any instrument does. Lt. Varga's storm model is sometimes firm (live buoy data) and sometimes soft (last season's charts). Probes take time. Chief Okafor can bleed charge off a hauler's hull through the shields at a cost to the Halcyon, and Dr. Osei hears what a tired or sick voice is hiding.
 
 **Why it's distinct:** the only escort, and the only simulation where sensors are almost worthless. Instinct is the instrument.
 
-**Endings:**
-- **Success:** all three through, an unconventional tow chain, waiting out a gap the crew sensed.
-- **Failure or partial:** one freighter lost, the convoy turned back, the Halcyon damaged by the storm.
+Overlap check (guide §12):
+- Unlike #14 Starfall, the captain never hands Adeyemi the ship. He offers one fallible read, and the captain makes the call. #14 is about delegation; this is about deciding.
+- Unlike #16 The Glass Nebula, the science officer is honestly unreliable here and there is no physics puzzle to solve.
+- Unlike #12 Ember Tide, there is no single hour to wait for. Waiting costs charge on every hull, and only a spate season has a lull worth waiting for.
+- Unlike #20 Gravity's Edge, the risk falls on two civilian crews in the Halcyon's care, not on the Halcyon alone.
+- Unlike #22 Exodus at Cinder Vale, there is no closing door, no tow chain and no triage among many ships.
+- The most recent primaries (#5 mediation, #4 the engineer improvising, #3 code-breaking) are not repeated.
 
-**Seeds vary:** the channel layout, the storm's rhythm, which captain is unfit.
+**Hidden:**
+- which channel is calm in each band;
+- whether Varga's model is firm or soft for each band;
+- whether Adeyemi is confident or diffident, and which band he cannot read at first;
+- the season (settled, restless, or spate with a lull in the Maw);
+- which captain, if either, is unfit (Brack's ion tremor, Teague's forty hours without sleep), and Teague's patience.
+
+**Endings:**
+- **Success:** Clear Water (through on calm channels), The Lull (through the Maw in a lull Adeyemi felt coming), A Steady Hand (an unfit captain found and relieved, and both haulers through), Weathered Through (through with storm damage taken).
+- **Failure or partial:** The Long Way Round (partial: the convoy turned back together), Crews Saved (partial: a hauler left in the storm, every crew taken off alive), A Hauler Lost, Dead in the Storm (the Halcyon goes dark under the charge she took on), Left in the Storm (the escort left the convoy); Held in the Season as a thirty-minute backstop. *Halcyon Lost* was dropped when built: the storm can put the Halcyon dark but cannot destroy her, so the ending was unreachable.
+
+**Regulations cited:** §4.1 (care-1) and §3.9 (roe-3). Hidden training references on §1.4 (cmd-4), §3.9 (roe-3), §4.1 (care-1) and §4.5 (care-4).
+
+**Exercise objective (no regulation yet):** "an unfit master should not fly the Maw" (fitness). No First Edition subsection covers acting on evidence that a civilian master under escort is unfit to command in a hazard. A rule is proposed for Brad's approval: "A captain escorting civilian vessels through a hazard shall act on credible evidence that a civilian master is unfit to command in it, arranging relief or assistance with the master's consent where possible." Nothing was added to ISA-COM-001.
+
+**Naming note:** an early draft of this build named the senior master *Hollis*. Capt. Hollis Arden already exists in #1 The Kestrel Incident, so the master was named Capt. Odran Brack before release. No established name was changed. Flagged for Brad.
+
+**Seeds vary:** the channel layout, how far the model can be trusted, Adeyemi's confidence and blind band, the season and the lull, which captain is unfit, Teague's patience and the haulers' starting charge.
 
 ### 7. Ghost Ledger
 **Premise.** During a diplomatic reception aboard the Halcyon, someone copies the ship's navigation keys. The guests include a Tessarine attaché, a trader, a journalist and a returning Agency officer. Each one lies about something, but only one is the thief.

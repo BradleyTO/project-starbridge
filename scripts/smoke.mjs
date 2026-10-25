@@ -1168,6 +1168,79 @@ for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape',
   await ctxS.close();
 }
 
+// ============================================================== v0.8.6 =====
+// Training Simulation 006: Ion Season. Listed, launched by voice-style command, the convoy led through on the helm's read, AAR filed.
+{
+  const ctxI = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await ctxI.addInitScript(stubs);
+  const pi = await ctxI.newPage();
+  pi.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  pi.on('pageerror', (e) => errors.push(String(e)));
+  const allI = async () => (await pi.innerText('[data-testid=narrative]')) + '\n' + (await pi.innerText('[data-testid=comms]'));
+  const modeI = () => pi.getAttribute('[data-testid=mode-banner]', 'data-mode');
+  await pi.goto(withSeed(6), { waitUntil: 'networkidle' });
+  await pi.waitForTimeout(600);
+  await skipIntro(pi);
+  await sendOn(pi, 'Computer, list simulations', 600);
+  check('sim06: "list simulations" names Ion Season', /Ion Season/.test(await allI()));
+  if (!(await pi.locator('[data-testid=hub]').count())) await pi.click('[data-testid=open-hub]');
+  await pi.click('[data-testid=hub-tab-archive]');
+  await pi.waitForTimeout(150);
+  check('sim06: Mission Archive lists Training Simulation 006', /Training Simulation 006: Ion Season/.test(await pi.innerText('[data-testid=hub]')) && (await pi.locator('[data-testid=archive-train-TRN-ion]').count()) === 1);
+  await pi.click('[data-testid=hub-close]');
+  await pi.waitForTimeout(100);
+  await sendOn(pi, 'Computer, begin the Ion Season simulation', 1200);
+  await pi.waitForSelector('[data-testid=mode-banner][data-mode=simulation]');
+  check('sim06: launch by name starts a simulation', (await modeI()) === 'simulation');
+  await pi.waitForTimeout(4500);
+  await skipIntro(pi);
+  let tr = await allI();
+  check('sim06: intro plays (Corrie Drift, three bands, two masters)', /Corrie Drift/.test(tr) && /the Fringe, the Combs and the Maw/.test(tr) && /Captain Brack/.test(tr) && /Captain Teague/.test(tr), tr.slice(0, 300));
+  await pi.screenshot({ path: `${SHOTS}/sim06-01-intro.png` });
+  check('sim06: both haulers on sensors by name', /Saffron Mule/.test(await pi.innerText('[data-testid=contact-kestrel]')) && /Gannet's Luck/.test(await pi.innerText('[data-testid=contact-cruiser]')));
+  for (const c of ['hail Captain Brack', 'Which channel would you take?', 'hail Captain Teague', 'Which channel would you take?', 'close the channel', 'Doctor, how do the masters sound?']) await sendOn(pi, c, 400);
+  tr = await allI();
+  check('sim06: the doctor listens to the masters', /sounds tired and cross|I don't like how Captain (Brack|Teague) sounds/.test(tr));
+  const unfit = tr.match(/I don't like how Captain (Brack|Teague) sounds/);
+  if (unfit) for (const c of [`hail Captain ${unfit[1]}`, 'Captain, are you fit to fly the Maw?', 'Will you hand the helm to your mate?', 'close the channel']) await sendOn(pi, c, 400);
+  await pi.screenshot({ path: `${SHOTS}/sim06-02-masters.png` });
+  const ASK = 'Adeyemi, I trust your gut. What does your gut say?';
+  let readGut = false;
+  for (let i = 0; i < 24 && !(await pi.locator('[data-testid=outcome]').count()); i++) {
+    const before = await allI();
+    if (/One more minute, then I go on my own line/.test(before.slice(-600))) for (const c of ['hail Captain Teague', 'Stay with us, Captain. Not yet.', 'close the channel']) await sendOn(pi, c, 400);
+    await sendOn(pi, ASK, 500);
+    const t = await allI();
+    const reply = t.slice(t.lastIndexOf('What does your gut say?'));
+    const ch = reply.match(/(high|low)\. The (high|low) channel\. I can feel it/);
+    if (ch) readGut = true;
+    if (/slack now|gone slack/.test(reply)) await sendOn(pi, 'go', 700);
+    else if (ch) await sendOn(pi, `take us through the ${ch[2]} channel`, 700);
+    else if (/won't go slack again/.test(reply)) await sendOn(pi, 'go with your gut', 700);
+    else await sendOn(pi, 'wait', 500);
+    if (/gone dark/.test((await allI()).slice(-800))) await sendOn(pi, 'Take the crew off.', 600);
+  }
+  check('sim06: the helm gives his own read when backed', readGut);
+  await pi.waitForSelector('[data-testid=outcome]');
+  const outI = await pi.innerText('[data-testid=outcome]');
+  check('sim06: led to an ending (Clear Water, The Lull, A Steady Hand or Weathered Through)', /Clear Water|The Lull|A Steady Hand|Weathered Through/i.test(outI), outI.slice(0, 200));
+  tr = await allI();
+  const LEAK6 = /Kestrel|Prefect|Ashen Covenant|Tallis|Sabeth|Thornwake|Cantor|Brenn|Teyma|Paley|Larkspur|Saltglass|Rhune|Tarvo|Hollis|\[[a-zA-Z_]+\]|undefined|Intergalactic Agency/;
+  check('sim06: no other simulation\'s names leak in', !LEAK6.test(tr), (tr.match(new RegExp(`.{0,60}(${LEAK6.source}).{0,60}`)) ?? [''])[0]);
+  await pi.screenshot({ path: `${SHOTS}/sim06-03-outcome.png` });
+  if (await pi.locator('[data-testid=outcome-aar]').count()) await pi.click('[data-testid=outcome-aar]');
+  await pi.waitForTimeout(300);
+  const aarI = (await pi.locator('[data-testid=aar]').count()) ? await pi.innerText('[data-testid=aar]') : '';
+  check('sim06: AAR is available, cites regulations and has no percentages', /Ion Season/i.test(aarI) && /ISA regulations/.test(aarI) && !/\d\s*%/.test(aarI), aarI.slice(0, 200));
+  await pi.screenshot({ path: `${SHOTS}/sim06-04-aar.png`, fullPage: true });
+  if (await pi.locator('[data-testid=aar-close]').count()) await pi.click('[data-testid=aar-close]');
+  await pi.setViewportSize({ width: 390, height: 844 });
+  await pi.waitForTimeout(400);
+  const ovI = await pi.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  check('sim06 phone: no horizontal overflow', ovI <= 0, `overflow ${ovI}px`);
+  await ctxI.close();
+}
+
 // ============================================================== v0.8.0 =====
 // The Captain's Handbook: contents, articles, search, bridge commands in every timeline (state untouched),
 // report citations, spoiler safety, desktop and phone width.

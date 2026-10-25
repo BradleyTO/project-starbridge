@@ -10,7 +10,7 @@ A browser-based, AI-assisted **starship command simulator**. You command the exp
 
 - `First Officer, give me a status report` · `Okafor, how are the engines?` (small talk, answered from the ship's state)
 - `Science, what systems are within exploration range?`
-- `Computer, open the simulation archive` · `Computer, list simulations` (or `what simulations are available`) · `Computer, begin the Kestrel Incident simulation` · `Computer, begin the Tallis Gate simulation` · `Computer, begin the Quiet Signal simulation` · `Computer, begin the Reactor Night simulation` · `Computer, begin the Saltglass Accord simulation` · `run simulation two` (typed or spoken). A simulation starts **only** on request; `begin the simulation` with no name starts #1.
+- `Computer, open the simulation archive` · `Computer, list simulations` (or `what simulations are available`) · `Computer, begin the Kestrel Incident simulation` · `Computer, begin the Tallis Gate simulation` · `Computer, begin the Quiet Signal simulation` · `Computer, begin the Reactor Night simulation` · `Computer, begin the Saltglass Accord simulation` · `Computer, begin the Ion Season simulation` · `run simulation two` (typed or spoken). A simulation starts **only** on request; `begin the simulation` with no name starts #1.
 - Inside a simulation, `Computer, end the simulation` (or the End sim button) returns you to the bridge. A simulation that reaches an ending returns you to the bridge with a debrief card (run it again, new variation, archive).
 
 **Two products (described only; there are no payments):**
@@ -126,7 +126,8 @@ With **Voice on**, each bridge officer, the ship's computer, the narrator and th
 | 3 | **The Quiet Signal** | playable (v0.8.3) |
 | 4 | **Reactor Night** | playable (v0.8.4) |
 | 5 | **The Saltglass Accord** | playable (v0.8.5) |
-| 6–30 | see [docs/SCENARIO_ROADMAP.md](docs/SCENARIO_ROADMAP.md) | planned, one per day |
+| 6 | **Ion Season** | playable (v0.8.6) |
+| 7–30 | see [docs/SCENARIO_ROADMAP.md](docs/SCENARIO_ROADMAP.md) | planned, one per day |
 
 Every simulation is listed in the Mission Archive and by `Computer, list simulations`, and can be started by name or number. How to write one is in [docs/SCENARIO_GUIDE.md](docs/SCENARIO_GUIDE.md).
 
@@ -203,6 +204,25 @@ Endings:
 - **Failure or partial:** **The Elder's Silence** (partial), **The Empty Table** (a delegation walks out), **An Imposed Peace**, **Blood on the Ice**, and a thirty-minute **Talks Adjourned** backstop.
 
 Rask will not fire on an unarmed clan ship. Every ending is reached by a scripted test (see `tests/sim05/`).
+
+### #6 — Ion Season
+
+The ion season is closing the **Corrie Drift**. Two slow ore haulers, the *Saffron Mule* (**Capt. Odran Brack**, thirty seasons on this run) and *Gannet's Luck* (**Capt. Rosalind Teague**, in a hurry), must cross the storm to **Hesper Deep** before it shuts for a month, and the Halcyon is their escort. The storm lies in three bands, the **Fringe**, the **Combs** and the **Maw**, and each has a high channel and a low one. One is calm; the other piles ion charge on every hull that crosses it, and a hull that reaches a hundred goes dark. Sensors are nearly blind, and every minute at a band's edge adds a little charge.
+
+The seed decides:
+
+- **which channel is calm** in each band, and whether Lt. Varga's storm model is firm there (live buoys) or soft (last season's charts);
+- **Ens. Adeyemi's nerve:** confident, or diffident enough to repeat the model's line unless his captain asks for *his* read and backs it; and which band he cannot feel until he has sat at its edge for a minute;
+- **the season:** settled, restless, or a spate in which the Maw only goes slack for a minute;
+- **whether a master is unfit** to fly the Maw (and hiding it), and how long Captain Teague will wait before she goes on her own line.
+
+Ens. Adeyemi (Helm) is the key: "Adeyemi, what does your gut say?", "I trust your gut", "go with your gut". Varga has the model ("Varga, what does the model say?"), probes tell the truth slowly ("send a probe down the low channel"), the masters have their lore ("hail Captain Brack", "Which channel would you take?"), Dr. Osei can hear what a tired voice is hiding ("Doctor, how do the masters sound?"), and Chief Okafor can bleed charge off the haulers through the Halcyon's hull. A master can hand the helm to the mate, be flown from the Halcyon's helm, or be taken in tow; the Halcyon can spread her shields over the haulers or bring them close in her wake, and crews can be taken off a hull that has gone dark.
+
+Endings:
+- **Success:** **Clear Water** (three calm crossings), **The Lull** (through the Maw in a lull the helm felt coming), **A Steady Hand** (an unfit master relieved, flown or towed through the Maw), **Weathered Through** (everyone through, the hard way).
+- **Failure or partial:** **The Long Way Round** (partial: the convoy turned back together), **Crews Saved** (partial: a hauler left in the storm, every crew alive), **A Hauler Lost**, **Dead in the Storm**, **Left in the Storm**, and a thirty-minute **Held in the Season** backstop.
+
+Rask will not fire on a civilian hauler. Every ending is reached by a scripted test (see `tests/sim06/`).
 
 ## Simulation #1 — The Kestrel Incident
 
@@ -475,6 +495,7 @@ The app deploys to Vercel as a Vite static site plus serverless functions in `ap
 - [x] **v0.8.3** — Training Simulation 003: The Quiet Signal.
 - [x] **v0.8.4** — Training Simulation 004: Reactor Night.
 - [x] **v0.8.5** — Training Simulation 005: The Saltglass Accord.
+- [x] **v0.8.6** — Training Simulation 006: Ion Season.
 - [ ] **Handbook Stages 2 and 3** (each takes the next free version number when it ships; nightly simulations keep bumping the patch version) — Crew who cite and explain regulations; evaluations, refusals and reviews moved to the approved First Edition wording.
 - [ ] **Next** — Server-side AI narration and character responses with schema validation, timeouts, usage limits and template fallback; server-side accounts and credits.
 - [ ] **Milestone 4** — Branching outcomes, mission evaluation, full save/resume, voice controls.

@@ -178,6 +178,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "purpose": "Weighing orders against the people they affect."
         },
         {
+          "simulation": 6,
+          "title": "Ion Season",
+          "purpose": "Owning a call made on partial information."
+        },
+        {
           "simulation": 13,
           "title": "The Seventh Bell",
           "purpose": "Accounting honestly for an order and its consequences.",
@@ -829,6 +834,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "purpose": "Weighing risk to the crew when the danger is the ship itself."
         },
         {
+          "simulation": 6,
+          "title": "Ion Season",
+          "purpose": "Weighing what the ship carries for others against her own safety."
+        },
+        {
           "simulation": 20,
           "title": "Gravity's Edge",
           "purpose": "Judging how much risk to the ship a goal is worth.",
@@ -902,6 +912,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "simulation": 2,
           "title": "Quarantine at Tallis Gate",
           "purpose": "Getting help to people who need it."
+        },
+        {
+          "simulation": 6,
+          "title": "Ion Season",
+          "purpose": "Looking after civilians who are trusting you with the way."
         },
         {
           "simulation": 8,
@@ -1104,6 +1119,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "simulation": 2,
           "title": "Quarantine at Tallis Gate",
           "purpose": "Committing to people in need, within limits."
+        },
+        {
+          "simulation": 6,
+          "title": "Ion Season",
+          "purpose": "Knowing when to press on and when to turn back."
         },
         {
           "simulation": 20,

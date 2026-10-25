@@ -17,6 +17,7 @@
 import { routeComms } from './dialogue';
 import { setVocabulary, withAliases } from './vocabulary';
 import { SIMULATION_NAME_PATTERN } from '../scenarios/catalogue';
+import { ASK_FIT, ionAsk, ionOrder } from '../scenarios/ion/words';
 import type { Interpretation, ProposedActionInput, CommIntent, TradeOffer, ManeuverIntentT } from '../engine/schema';
 import { InterpretationSchema } from '../engine/schema';
 import { planConflict } from '../engine/standing';
@@ -254,6 +255,19 @@ const RULES: Rule[] = [
     name: 'help',
     test: /^(help|commands|what (orders|commands) can i give|how do i play)\b(?!\s+(is|are|was|will|has|have|'?s)\b)/,
     build: () => ({ kind: 'action', action: { type: 'query', topic: 'help' } }),
+  },
+  {
+    // v0.8.6: Ion Season — orders to the convoy ("take us through the low channel", "send a probe down
+    // the high channel", "turn the convoy back") and questions about the crossing ("what does your gut
+    // say?"). Only while that simulation runs; the scenario decides what they mean.
+    name: 'ionSeason',
+    test: /\S/,
+    build: (c, ctx) => {
+      if (ctx.setting?.scenarioId !== 'ion-season') return { kind: 'none' };
+      if (ionOrder(c)) return { kind: 'action', action: { type: 'improvise', method: 'other', description: c } };
+      if (ionAsk(c) || ASK_FIT.test(c)) return { kind: 'action', action: { type: 'bridge', op: 'chat', officer: '', text: c.slice(0, 300) } };
+      return { kind: 'none' };
+    },
   },
   {
     name: 'options',
