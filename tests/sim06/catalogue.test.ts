@@ -36,7 +36,7 @@ describe('catalogue and registry', () => {
     expect(scenarioFor('ion-season')).toBe(ION);
     expect(ION.title).toBe(x.title);
     expect(TRAINING_SCENARIOS['ion-season']).toBe(ION);
-    expect(SIMULATIONS.length).toBe(6);
+    expect(SIMULATIONS.length).toBeGreaterThanOrEqual(6);
   });
 
   it('names resolve to the right simulation, and older names are unchanged', () => {

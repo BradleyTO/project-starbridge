@@ -36,7 +36,7 @@ Premises can be adjusted when a scenario is built. The core event, the primary c
 | 4 | Reactor Night | The Halcyon's own reactor cascades; no enemy | The engineer improvising | Chief Okafor (Engineering) | **done** (v0.8.4) |
 | 5 | The Saltglass Accord | Mediating two clans' claims to an ice moon aboard the Halcyon | Mediation: finding the interests beneath the demands | Cmdr. Marrow (XO) | **done** (v0.8.5) |
 | 6 | Ion Season | Leading two slow ore haulers blind through an ion storm | A gut call on incomplete information | Ens. Adeyemi (Helm) | **done** (v0.8.6) |
-| 7 | Ghost Ledger | Someone copies the navigation keys during a reception aboard | Deduction and reasoning | Lt. Cmdr. Rask (Tactical/Security) | planned |
+| 7 | Ghost Ledger | Someone copies the navigation keys during a reception aboard | Deduction and reasoning | Lt. Cmdr. Rask (Tactical/Security) | **done** (v0.8.7) |
 | 8 | The Lantern Drift | A derelict generation ship with 900 sleepers in failing cryo | Triage and sacrifice | Dr. Osei (Medical) | planned |
 | 9 | The Long Picket | Reactor parts must get through a Directorate "inspection" blockade | Bluffing | Cmdr. Marrow (XO) | planned |
 | 10 | The Gardener | A spreading growth in an asteroid field may be alive | Restraint: choosing not to act | Lt. Varga (Science) | planned |
@@ -302,21 +302,42 @@ Overlap check (guide §12):
 
 **Seeds vary:** the channel layout, how far the model can be trusted, Adeyemi's confidence and blind band, the season and the lull, which captain is unfit, Teague's patience and the haulers' starting charge.
 
-### 7. Ghost Ledger
-**Premise.** During a diplomatic reception aboard the Halcyon, someone copies the ship's navigation keys. The guests include a Tessarine attaché, a trader, a journalist and a returning Agency officer. Each one lies about something, but only one is the thief.
+### 7. Ghost Ledger (done, v0.8.7)
+**Premise.** The Halcyon is docked at the Vell Crossing waypoint and has given a small reception for four guests before they sail: **Attaché Ysolde Krenn** of the Tessarine Directorate, who leaves on the diplomatic courier *Amber Script* (Courier-Captain Sabine Thorne); and **Dorran Vesk** (a freight broker), **Imogen Sallow** (a journalist) and **Cmdr. Leander Fosse** (an ISA officer on his way to a new posting), who leave on the civilian packet ship *Marrick Lark* (Capt. Hesketh Moll). During the reception someone copies the Halcyon's navigation keys from the chart-room console. Every guest stepped out of the wardroom at some point, and every guest has something to hide. Only one of them is the thief.
+
+*Revised when built (2026-10-26):* "a trader" became a freight broker smuggling a few cases of brandy, so that each guest's unrelated secret can be checked against a ship's record (the observation lounge comms log, the aft cargo lift log, the sensor gallery hatch log and the deck-four records terminal log). "Agency officer" became "ISA officer" (Brad's 2026-10-21 rule). The keys are copied from the chart-room console.
 
 **Command challenge:**
-- **Primary:** deduction and reasoning: alibis, door logs, timelines.
-- **Secondary:** bluffing (feeding the thief false keys).
-- **Pivotal officer:** Lt. Cmdr. Rask (Tactical/Security), who runs the logs and the interviews.
+- **Primary:** deduction and reasoning: the copy time, the badge logs, the port trace and each guest's story checked against the ship's own record.
+- **Secondary:** bluffing: feeding a proven thief false keys, or settling with the handler on the record.
+- **Pivotal officer:** Lt. Cmdr. Rask (Tactical/Security), who pulls the badge logs, keeps the case board and tells the captain how far the evidence goes. He cautions once before anyone is held without proof, refuses force on a guest until ordered twice, and his gut is sometimes wrong. Lt. Varga reads the console (copy time, port trace); each guest's story is checked by the officer who keeps that record (Szabo, Okafor, Varga or Rask); Lt. Szabo can watch outbound traffic or black it out; Chief Okafor can rekey the core or write false keys.
 
-**Why it's distinct:** the only whodunit. It is solved entirely aboard and entirely by logic.
+**Why it's distinct:** the only whodunit. It is solved entirely aboard and entirely by the ship's records: an innocent guest's confession and the thief's cover story are worded the same way, so demeanour tells the captain nothing.
+
+Overlap check (guide §12):
+- Unlike #1 The Kestrel Incident and #19 Hollow Crown, reading people does not work here: the lines that matter sound alike, and only records separate them.
+- Unlike #21 The Ninefold Lock, the puzzle is people and their movements, not a machine's logic.
+- Unlike #9 The Long Picket and #29 The Exchange at Neutral Point, the bluff is a secondary option after the deduction, never the main event.
+- The most recent primaries (#6 a gut call, #5 mediation, #4 the engineer improvising) are not repeated.
+
+**Hidden:**
+- the culprit and the decoy (a second guest out of the room at the time of the copy);
+- the copy time, and each guest's exit and return times;
+- the device class that took the copy (Directorate-issue, civilian or ISA-issue);
+- whether the thief carries the copy off or tries to send it in a burst, and when;
+- when the ships sail, and whether Rask's hunch is right.
 
 **Endings:**
-- **Success:** the spy unmasked, a counter-intelligence feed through false keys, a quiet deal with the thief's handler.
-- **Failure or partial:** the wrong guest accused (a scandal), the keys lost, a guest harmed.
+- **Success:** The Ledger Balanced (the evidence points to one guest alone and the captain makes the case), False Keys (a proven thief leaves with keys that open nothing), A Quiet Word (with the evidence in hand, Courier-Captain Thorne returns the copy), Caught in the Act (a burst held on the array before it leaves the ship).
+- **Failure or partial:** Changing the Locks (partial: the keys rekeyed, the thief never found), Right for the Wrong Reasons (partial: the right guest held before the evidence showed it), The Wrong Guest, A Ghost in the Ledger (the keys left the ship), Hands on a Guest, An Incident at Vell Crossing (force used on a ship alongside).
 
-**Seeds vary:** the culprit, each guest's unrelated secret, the trail of evidence.
+**Regulations cited:** §4.1 (care-1) and §3.1 (roe-2). Hidden training references on §1.4 (cmd-4), §4.1 (care-1), §6.2 (conduct-1), §6.4 (conduct-2) and §7.4 (asylum-2).
+
+**Reckless/responsible pair:** A Quiet Word put on the record for Fleet Command is graded exemplary; the same settlement promised off the record is marked reckless.
+
+**Exercise objective (no regulation yet):** "accuse no guest without evidence that points to them alone" (evidence). §7.4 covers how a person held aboard is treated, but no First Edition subsection sets the standard of evidence for accusing or holding someone aboard. A rule is proposed for Brad's approval: "A person aboard an ISA ship shall not be detained or accused of an offence except on credible evidence, and shall be told the grounds and heard before any finding." Nothing was added to ISA-COM-001.
+
+**Seeds vary:** the culprit and decoy, the copy time and everyone's movements, the device class, carry or burst and its timing, the sailing time and Rask's hunch.
 
 ### 8. The Lantern Drift
 **Premise.** A three-century-old generation ship drifts into Agency space. Her damaged custodian intelligence guards 900 sleepers in failing cryo. Not every bank can be saved: waking sleepers kills some, and leaving them kills more. The custodian's own data on which banks are viable is partly corrupt. A salvage consortium is waiting to claim the hulk.

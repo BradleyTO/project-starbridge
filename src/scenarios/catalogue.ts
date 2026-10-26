@@ -82,6 +82,15 @@ export const SIMULATIONS: readonly SimulationInfo[] = [
     ['ion season', 'ion storm', 'ion', 'storm', 'convoy', 'corrie drift'],
     ['ion season'],
   ),
+  entry(
+    7,
+    'TRN-ledger',
+    'ghost-ledger',
+    'Ghost Ledger',
+    'A reception aboard the Halcyon, four guests about to sail, and someone has copied the navigation keys. Every guest stepped out tonight, and every guest has something to hide. Which secret is the theft? Seeded: every run can differ.',
+    ['ghost ledger', 'ledger', 'navigation keys', 'vell crossing', 'reception'],
+    ['ghost ledger'],
+  ),
 ];
 
 const NUMBER_WORDS: Record<string, number> = {

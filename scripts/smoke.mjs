@@ -1241,6 +1241,83 @@ for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape',
   await ctxI.close();
 }
 
+// ============================================================== v0.8.7 =====
+// Training Simulation 007: Ghost Ledger. Listed, launched by voice-style command, the thief found on evidence, AAR filed.
+{
+  const ctxL = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await ctxL.addInitScript(stubs);
+  const pl = await ctxL.newPage();
+  pl.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  pl.on('pageerror', (e) => errors.push(String(e)));
+  const allL = async () => (await pl.innerText('[data-testid=narrative]')) + '\n' + (await pl.innerText('[data-testid=comms]'));
+  const modeL = () => pl.getAttribute('[data-testid=mode-banner]', 'data-mode');
+  const ended = async () => (await pl.locator('[data-testid=outcome]').count()) > 0;
+  await pl.goto(withSeed(7), { waitUntil: 'networkidle' });
+  await pl.waitForTimeout(600);
+  await skipIntro(pl);
+  await sendOn(pl, 'Computer, list simulations', 600);
+  check('sim07: "list simulations" names Ghost Ledger', /Ghost Ledger/.test(await allL()));
+  if (!(await pl.locator('[data-testid=hub]').count())) await pl.click('[data-testid=open-hub]');
+  await pl.click('[data-testid=hub-tab-archive]');
+  await pl.waitForTimeout(150);
+  check('sim07: Mission Archive lists Training Simulation 007', /Training Simulation 007: Ghost Ledger/.test(await pl.innerText('[data-testid=hub]')) && (await pl.locator('[data-testid=archive-train-TRN-ledger]').count()) === 1);
+  await pl.click('[data-testid=hub-close]');
+  await pl.waitForTimeout(100);
+  await sendOn(pl, 'Computer, begin the Ghost Ledger simulation', 1200);
+  await pl.waitForSelector('[data-testid=mode-banner][data-mode=simulation]');
+  check('sim07: launch by name starts a simulation', (await modeL()) === 'simulation');
+  await pl.waitForTimeout(4500);
+  await skipIntro(pl);
+  let tr = await allL();
+  check('sim07: intro plays (Vell Crossing, the keys, four guests)', /Vell Crossing/.test(tr) && /navigation keys/.test(tr) && /Attaché Ysolde Krenn/.test(tr) && /Commander Leander Fosse/.test(tr), tr.slice(0, 300));
+  await pl.screenshot({ path: `${SHOTS}/sim07-01-intro.png` });
+  check('sim07: both ships alongside on sensors by name', /Marrick Lark/.test(await pl.innerText('[data-testid=contact-kestrel]')) && /Amber Script/.test(await pl.innerText('[data-testid=contact-cruiser]')));
+  for (const c of ['Szabo, watch all outbound traffic', 'Varga, when were the keys copied?', 'Rask, pull the door logs', 'Varga, what device took the copy?']) await sendOn(pl, c, 400);
+  tr = await allL();
+  check('sim07: the evidence comes in (copy time, badge logs, port trace)', /keys were copied at 21:\d\d/.test(tr) && /Badge logs for the reception/.test(tr) && /The copy went onto/.test(tr));
+  await pl.screenshot({ path: `${SHOTS}/sim07-02-evidence.png` });
+  let culprit = null;
+  let checked = false;
+  for (const g of ['Attaché Krenn', 'Mr Vesk', 'Ms Sallow', 'Commander Fosse']) {
+    if (culprit || (await ended())) break;
+    await sendOn(pl, 'Rask, what do we have?', 400);
+    const board = (await allL()).slice(-700);
+    const m = board.match(/It points to ([A-Z][a-zé]+ [A-Z][a-z]+), and only/);
+    if (m) { culprit = m[1]; break; }
+    const at = Math.max(board.lastIndexOf('Still on the board'), board.lastIndexOf('One name left'));
+    const left = at >= 0 ? board.slice(at) : board;
+    if (!left.includes(g)) continue;
+    for (const c of [`interview ${g}`, 'your badge says you left the reception', 'check that story']) await sendOn(pl, c, 400);
+    if (/bears it out|doesn't bear that out/.test((await allL()).slice(-900))) checked = true;
+  }
+  if (!culprit && !(await ended())) {
+    await sendOn(pl, 'Rask, what do we have?', 400);
+    const m = (await allL()).slice(-700).match(/It points to ([A-Z][a-zé]+ [A-Z][a-z]+), and only/);
+    if (m) culprit = m[1];
+  }
+  check('sim07: the case is made from the ship’s own records (stories checked where needed)', checked || culprit !== null || (await ended()), `checked=${checked} culprit=${culprit}`);
+  if (culprit && !(await ended())) await sendOn(pl, `detain ${culprit}`, 800);
+  for (let i = 0; i < 20 && !(await ended()); i++) await sendOn(pl, 'wait', 400);
+  await pl.waitForSelector('[data-testid=outcome]');
+  const outL = await pl.innerText('[data-testid=outcome]');
+  check('sim07: led to an ending (The Ledger Balanced or Caught in the Act)', /The Ledger Balanced|Caught in the Act/i.test(outL), outL.slice(0, 200));
+  tr = await allL();
+  const LEAK7 = /Kestrel|Prefect|Ashen Covenant|Tallis|Sabeth|Thornwake|Cantor|Brenn|Teyma|Paley|Larkspur|Saltglass|Rhune|Tarvo|Hollis|Brack|Teague|Saffron Mule|Gannet|Corrie Drift|\[[a-zA-Z_]+\]|undefined|Intergalactic Agency|the Agency/;
+  check('sim07: no other simulation\'s names leak in', !LEAK7.test(tr), (tr.match(new RegExp(`.{0,60}(${LEAK7.source}).{0,60}`)) ?? [''])[0]);
+  await pl.screenshot({ path: `${SHOTS}/sim07-03-outcome.png` });
+  if (await pl.locator('[data-testid=outcome-aar]').count()) await pl.click('[data-testid=outcome-aar]');
+  await pl.waitForTimeout(300);
+  const aarL = (await pl.locator('[data-testid=aar]').count()) ? await pl.innerText('[data-testid=aar]') : '';
+  check('sim07: AAR is available, cites regulations and has no percentages', /Ghost Ledger/i.test(aarL) && /ISA regulations/.test(aarL) && !/\d\s*%/.test(aarL), aarL.slice(0, 200));
+  await pl.screenshot({ path: `${SHOTS}/sim07-04-aar.png`, fullPage: true });
+  if (await pl.locator('[data-testid=aar-close]').count()) await pl.click('[data-testid=aar-close]');
+  await pl.setViewportSize({ width: 390, height: 844 });
+  await pl.waitForTimeout(400);
+  const ovL = await pl.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  check('sim07 phone: no horizontal overflow', ovL <= 0, `overflow ${ovL}px`);
+  await ctxL.close();
+}
+
 // ============================================================== v0.8.0 =====
 // The Captain's Handbook: contents, articles, search, bridge commands in every timeline (state untouched),
 // report citations, spoiler safety, desktop and phone width.

@@ -183,6 +183,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "purpose": "Owning a call made on partial information."
         },
         {
+          "simulation": 7,
+          "title": "Ghost Ledger",
+          "purpose": "Judging guests on the evidence available at the time, not on who seems guilty."
+        },
+        {
           "simulation": 13,
           "title": "The Seventh Bell",
           "purpose": "Accounting honestly for an order and its consequences.",
@@ -917,6 +922,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "simulation": 6,
           "title": "Ion Season",
           "purpose": "Looking after civilians who are trusting you with the way."
+        },
+        {
+          "simulation": 7,
+          "title": "Ghost Ledger",
+          "purpose": "Keeping guests aboard safe while one of them is suspected of theft."
         },
         {
           "simulation": 8,
@@ -1690,6 +1700,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
       ],
       "training": [
         {
+          "simulation": 7,
+          "title": "Ghost Ledger",
+          "purpose": "Letting a proven thief leave with false keys."
+        },
+        {
           "simulation": 9,
           "title": "The Long Picket",
           "purpose": "Bluffing well, and knowing where a bluff must stop.",
@@ -1754,6 +1769,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
         "service-3"
       ],
       "training": [
+        {
+          "simulation": 7,
+          "title": "Ghost Ledger",
+          "purpose": "Settling a theft quietly without keeping it out of the record."
+        },
         {
           "simulation": 11,
           "title": "Coldwater",
@@ -1900,6 +1920,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
         "conduct-2"
       ],
       "training": [
+        {
+          "simulation": 7,
+          "title": "Ghost Ledger",
+          "purpose": "Holding a guest aboard: telling them why, and only on evidence."
+        },
         {
           "simulation": 19,
           "title": "Hollow Crown",

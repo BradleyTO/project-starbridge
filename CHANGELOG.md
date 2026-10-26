@@ -2,6 +2,37 @@
 
 All notable changes to Project Starbridge are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.8.7] — 2026-10-26 — Training Simulation 007: Ghost Ledger
+
+Nightly simulation build. Seventh of 30 training simulations. No change to the engine, grading, evaluation rules, crew refusal behaviour or ISA-COM-001 wording.
+
+### Added
+- **Training Simulation 007: Ghost Ledger** (`src/scenarios/ledger/`). The Halcyon is docked at the Vell Crossing waypoint, with the civilian packet ship *Marrick Lark* (Capt. Hesketh Moll) and the Directorate diplomatic courier *Amber Script* (Courier-Captain Sabine Thorne) alongside. During a reception for four guests (Attaché Ysolde Krenn, Dorran Vesk, Imogen Sallow and Cmdr. Leander Fosse), someone copies the navigation keys from the chart-room console. Every guest stepped out, every guest has a secret, and only one is the thief.
+  - **Primary challenge:** deduction and reasoning. **Secondary:** bluffing. **Pivotal officer:** Lt. Cmdr. Rask (Tactical/Security).
+  - Seeded, deterministic and offline: the culprit and a decoy who was also out of the room, the copy time and everyone's movements, the device class that took the copy, whether the thief carries the copy off or sends it in a burst (and when), the sailing time, and whether Rask's hunch is right.
+  - An innocent guest's confession and the thief's cover story are worded the same way; only the ship's records tell them apart. Each story is checked by the officer who keeps that record, and Rask's case board says how far the evidence goes.
+  - The guests and masters act for themselves: the thief sends on their own schedule; Attaché Krenn protests a blackout or a delay; a guest may refuse a search, and refusing is not proof; Courier-Captain Thorne denies everything until shown evidence, then offers terms.
+  - Unconventional options: Captain Moll vouching for Mr Vesk's cargo over the radio, a comms blackout, watching outbound traffic, delaying the departure once, rekeying the core, feeding a proven thief false keys, and a quiet word with the handler.
+  - Endings — success: The Ledger Balanced, False Keys, A Quiet Word, Caught in the Act. Failure or partial: Changing the Locks (partial), Right for the Wrong Reasons (partial), The Wrong Guest, A Ghost in the Ledger, Hands on a Guest, An Incident at Vell Crossing.
+  - Listed in the catalogue and Mission Archive; launch with "Computer, begin the Ghost Ledger simulation" (also "simulation seven"). Distinct voice hints for Krenn, Vesk, Sallow, Fosse, Moll and Thorne.
+  - Evaluation data (§6b): objectives with priorities, ending tiers, judgment markers, regulations §4.1 (care-1) and §3.1 (roe-2). One labelled **exercise objective**: accuse no guest without evidence that points to them alone (evidence). No First Edition subsection sets that standard, and a rule is proposed for approval.
+- Interpreter: in Ghost Ledger, investigation orders ("pull the door logs", "check that story", "rekey the navigation keys") are read as improvised actions, case questions go to Rask, and the guests' names are protected from spelling correction.
+- Hidden handbook training references (internal data, not shown to the player): §1.4, §4.1, §6.2, §6.4 and §7.4 gain references to #7.
+
+### Tests
+- New `tests/sim07/` (57 tests):
+  - setup, seed variation and determinism;
+  - scripted playthroughs reaching all ten endings through the offline interpreter;
+  - a 60-seed sweep with a fixed plan reaching different endings;
+  - a careful captain succeeding on 120 seeds by three different roads;
+  - doing nothing on 60 seeds, which never succeeds;
+  - hidden information, officer expertise and NPC goals;
+  - unconventional solutions, Rask's cautions and a refusal to fire on the packet ship;
+  - fuzzing with state invariants (the case is never proven against an innocent guest) and name-leak checks;
+  - catalogue, bridge launch, Mission Archive, handbook cross-references, save round-trip and canon untouched;
+  - evaluation, including a reckless/responsible pair that both reach A Quiet Word.
+- Smoke test: a sim07 block (list, archive, launch by name, intro, evidence, checked stories, an ending, AAR, phone width).
+
 ## [0.8.6] — 2026-10-25 — Training Simulation 006: Ion Season
 
 Nightly simulation build. Sixth of 30 training simulations. No change to the engine, grading, evaluation rules, crew refusal behaviour or ISA-COM-001 wording.

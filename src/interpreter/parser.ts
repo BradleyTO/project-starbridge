@@ -18,6 +18,7 @@ import { routeComms } from './dialogue';
 import { setVocabulary, withAliases } from './vocabulary';
 import { SIMULATION_NAME_PATTERN } from '../scenarios/catalogue';
 import { ASK_FIT, ionAsk, ionOrder } from '../scenarios/ion/words';
+import { LEDGER_NAMES, ledgerAsk, ledgerOrder } from '../scenarios/ledger/words';
 import type { Interpretation, ProposedActionInput, CommIntent, TradeOffer, ManeuverIntentT } from '../engine/schema';
 import { InterpretationSchema } from '../engine/schema';
 import { planConflict } from '../engine/standing';
@@ -266,6 +267,16 @@ const RULES: Rule[] = [
       if (ctx.setting?.scenarioId !== 'ion-season') return { kind: 'none' };
       if (ionOrder(c)) return { kind: 'action', action: { type: 'improvise', method: 'other', description: c } };
       if (ionAsk(c) || ASK_FIT.test(c)) return { kind: 'action', action: { type: 'bridge', op: 'chat', officer: '', text: c.slice(0, 300) } };
+      return { kind: 'none' };
+    },
+  },
+  {
+    name: 'ghostLedger',
+    test: /\S/,
+    build: (c, ctx) => {
+      if (ctx.setting?.scenarioId !== 'ghost-ledger') return { kind: 'none' };
+      if (ledgerOrder(c)) return { kind: 'action', action: { type: 'improvise', method: 'other', description: c } };
+      if (ledgerAsk(c)) return { kind: 'action', action: { type: 'bridge', op: 'chat', officer: '', text: c.slice(0, 300) } };
       return { kind: 'none' };
     },
   },
@@ -1392,7 +1403,7 @@ let protectedNames = new Set<string>(['arden', 'vane', 'venn', 'maras', 'ivet', 
 let spell: SpellCorrector | null = null;
 function SPELL(): SpellCorrector {
   if (!spell) {
-    const sources: (RegExp | string)[] = [KESTREL_BASE, CRUISER_BASE, PASSENGER, BORDER, PAIR, COMPARTMENT, SPEECH, ON_SCREEN, ALL_TARGETS, SPEED_SLOW, SPEED_HALF, NEGATED_HOSTILITY, PEACEFUL, ASSERTIVE, ADDRESSEES, ...SYSTEMS.map((x) => x[1]), ...RULES.map((r) => r.test), 'shields weapons transporter tractor channel freighter cruiser kestrel position between hostile hail aggressive threatening'];
+    const sources: (RegExp | string)[] = [KESTREL_BASE, CRUISER_BASE, PASSENGER, BORDER, PAIR, COMPARTMENT, SPEECH, ON_SCREEN, ALL_TARGETS, SPEED_SLOW, SPEED_HALF, NEGATED_HOSTILITY, PEACEFUL, ASSERTIVE, ADDRESSEES, ...SYSTEMS.map((x) => x[1]), ...RULES.map((r) => r.test), LEDGER_NAMES, 'shields weapons transporter tractor channel freighter cruiser kestrel position between hostile hail aggressive threatening'];
     spell = new SpellCorrector(vocabularyFrom(sources));
   }
   return spell;
