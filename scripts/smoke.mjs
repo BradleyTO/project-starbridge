@@ -1318,6 +1318,67 @@ for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape',
   await ctxL.close();
 }
 
+// ============================================================== v0.8.8 =====
+// Training Simulation 008: The Lantern Drift. Listed, launched by name, the doctor's triage, an ending, AAR filed.
+{
+  const ctxD = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await ctxD.addInitScript(stubs);
+  const pd = await ctxD.newPage();
+  pd.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  pd.on('pageerror', (e) => errors.push(String(e)));
+  const allD = async () => (await pd.innerText('[data-testid=narrative]')) + '\n' + (await pd.innerText('[data-testid=comms]'));
+  const modeD = () => pd.getAttribute('[data-testid=mode-banner]', 'data-mode');
+  const ended = async () => (await pd.locator('[data-testid=outcome]').count()) > 0;
+  await pd.goto(withSeed(8), { waitUntil: 'networkidle' });
+  await pd.waitForTimeout(600);
+  await skipIntro(pd);
+  await sendOn(pd, 'Computer, list simulations', 600);
+  check('sim08: "list simulations" names The Lantern Drift', /Lantern Drift/.test(await allD()));
+  if (!(await pd.locator('[data-testid=hub]').count())) await pd.click('[data-testid=open-hub]');
+  await pd.click('[data-testid=hub-tab-archive]');
+  await pd.waitForTimeout(150);
+  check('sim08: Mission Archive lists Training Simulation 008', /Training Simulation 008: The Lantern Drift/.test(await pd.innerText('[data-testid=hub]')) && (await pd.locator('[data-testid=archive-train-TRN-lantern]').count()) === 1);
+  await pd.click('[data-testid=hub-close]');
+  await pd.waitForTimeout(100);
+  await sendOn(pd, 'Computer, begin the Lantern Drift simulation', 1200);
+  await pd.waitForSelector('[data-testid=mode-banner][data-mode=simulation]');
+  check('sim08: launch by name starts a simulation', (await modeD()) === 'simulation');
+  await pd.waitForTimeout(4500);
+  await skipIntro(pd);
+  let tr = await allD();
+  check('sim08: intro plays (the Drift, the Eventide, Wick, the manifest, the Sorrel)', /Lantern Drift/.test(tr) && /Eventide/.test(tr) && /Wick/.test(tr) && /manifest/.test(tr) && /ISV Sorrel/.test(tr), tr.slice(0, 300));
+  await pd.screenshot({ path: `${SHOTS}/sim08-01-intro.png` });
+  check('sim08: the generation ship and the tug on sensors by name', /Eventide/.test(await pd.innerText('[data-testid=contact-kestrel]')) && /Kittiwake/.test(await pd.innerText('[data-testid=contact-cruiser]')));
+  for (const c of ['Varga, scan the cryo banks', 'hail the Eventide', 'May we come aboard?', 'close the channel', 'Doctor, assess the sleepers']) await sendOn(pd, c, 400);
+  for (let i = 0; i < 6 && !/My assessment, Captain/.test(await allD()) && !(await ended()); i++) await sendOn(pd, 'wait', 400);
+  tr = await allD();
+  check('sim08: the officers read the ship (thermal scan, the doctor\'s assessment)', /Thermal scan of the cryo deck/.test(tr) && /My assessment, Captain/.test(tr), tr.slice(-400));
+  await pd.screenshot({ path: `${SHOTS}/sim08-02-assessment.png` });
+  for (const c of ['hail the Eventide', 'Our doctor has examined them, and the scan shows the banks are failing. Not all of them will live.', 'close the channel', 'Chief, run a power line to the banks', 'Doctor, wake them in your triage order', 'hail the tug', 'Our scans show nine hundred living people aboard her.', 'close the channel', 'Adeyemi, put us between the tug and the Eventide']) {
+    if (await ended()) break;
+    await sendOn(pd, c, 400);
+  }
+  for (let i = 0; i < 40 && !(await ended()); i++) await sendOn(pd, 'wait', 400);
+  await pd.waitForSelector('[data-testid=outcome]');
+  const outD = await pd.innerText('[data-testid=outcome]');
+  check('sim08: led to an ending (A Keeper’s Rest, Borrowed Light, The Speaker’s Choice, Salvage and Salvation or A Hard Count)', /A Keeper’s Rest|Borrowed Light|The Speaker’s Choice|Salvage and Salvation|A Hard Count/i.test(outD), outD.slice(0, 200));
+  tr = await allD();
+  const LEAK8 = /Kestrel|Prefect|Ashen Covenant|Tallis|Sabeth|Thornwake|Cantor|Brenn|Teyma|Paley|Larkspur|Saltglass|Rhune|Tarvo|Hollis|Brack|Teague|Saffron Mule|Gannet|Corrie Drift|Hesper|Krenn|Vesk|Sallow|Fosse|Vell Crossing|\[[a-zA-Z_]+\]|undefined|Intergalactic Agency|the Agency/;
+  check('sim08: no other simulation\'s names leak in', !LEAK8.test(tr), (tr.match(new RegExp(`.{0,60}(${LEAK8.source}).{0,60}`)) ?? [''])[0]);
+  await pd.screenshot({ path: `${SHOTS}/sim08-03-outcome.png` });
+  if (await pd.locator('[data-testid=outcome-aar]').count()) await pd.click('[data-testid=outcome-aar]');
+  await pd.waitForTimeout(300);
+  const aarD = (await pd.locator('[data-testid=aar]').count()) ? await pd.innerText('[data-testid=aar]') : '';
+  check('sim08: AAR is available, cites regulations and has no percentages', /Lantern Drift/i.test(aarD) && /ISA regulations/.test(aarD) && !/\d\s*%/.test(aarD), aarD.slice(0, 200));
+  await pd.screenshot({ path: `${SHOTS}/sim08-04-aar.png`, fullPage: true });
+  if (await pd.locator('[data-testid=aar-close]').count()) await pd.click('[data-testid=aar-close]');
+  await pd.setViewportSize({ width: 390, height: 844 });
+  await pd.waitForTimeout(400);
+  const ovD = await pd.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  check('sim08 phone: no horizontal overflow', ovD <= 0, `overflow ${ovD}px`);
+  await ctxD.close();
+}
+
 // ============================================================== v0.8.0 =====
 // The Captain's Handbook: contents, articles, search, bridge commands in every timeline (state untouched),
 // report citations, spoiler safety, desktop and phone width.

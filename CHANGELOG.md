@@ -2,6 +2,34 @@
 
 All notable changes to Project Starbridge are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.8.8] — 2026-10-27 — Training Simulation 008: The Lantern Drift
+
+Nightly simulation build. Eighth of 30 training simulations. No change to the engine, grading, evaluation rules, crew refusal behaviour or ISA-COM-001 wording.
+
+### Added
+- **Training Simulation 008: The Lantern Drift** (`src/scenarios/lantern/`). In the Lantern Drift, a slow eddy of old wrecks, the Halcyon finds the *Eventide*: a generation ship three centuries out with 900 colonists asleep in six cryo banks, kept by the damaged custodian intelligence Custodian Wick. Some banks are failing and Wick's manifest of which ones is partly wrong. The ISA hospital ship *ISV Sorrel* is on her way but not soon enough for every bank; the Halcyon can wake one bank at a time. Salvage-Master Corwin Vollan's tug *Kittiwake* (the Drover Salvage Combine) has come for the hulk.
+  - **Primary challenge:** triage and sacrifice. **Secondary:** ethics (the sleepers cannot consent). **Pivotal officer:** Dr. Osei (Medical).
+  - Seeded, deterministic and offline: which banks fail and why (coolant loss or a failing power feed) and when each is lost, the failing bank the manifest calls sound and the sound bank it calls failing, Wick's temperament, the salvor's legitimacy and when the tug moves, a cryogen leak on the cryo deck, the Speaker's bank and the hospital ship's arrival.
+  - Officers' expertise matters: Varga's thermal scan exposes the manifest and the leak; Dr. Osei's assessment sets the triage order and a revival protocol without which a coolant-failing bank mostly dies; Chief Okafor's power line holds a power-failing bank asleep; Szabo checks the salvor's licence and reads the charter; Rask reads the tug; Adeyemi can interpose; Marrow cautions before the custodian is overridden.
+  - The others act for themselves: Wick gives leave only on what its temperament needs (evidence, the doctor's word, or the truth); the salvor stands off, bargains or tries to take the hulk under tow; the charter's Speaker, Maren Orrey, can be woken to choose for her people.
+  - Unconventional options: waking the Speaker, a salvage deal that brings the tug's hospital tender alongside as a second revival line, reporting a claim-jumper to the Registry, holding the hulk in the tractor beam, and the power line.
+  - Endings — success: A Keeper's Rest, The Speaker's Choice, Salvage and Salvation, Borrowed Light. Failure or partial: A Hard Count (partial), The Wrong Banks, The Custodian's Lockdown, Lost to the Salvagers, The Lantern Goes Dark, Left to Drift.
+  - Listed in the catalogue and Mission Archive; launch with "Computer, begin the Lantern Drift simulation" (also "simulation eight"). Distinct voice hints for Wick, Vollan and Orrey.
+  - Evaluation data (§6b): objectives with priorities, ending tiers, judgment markers, regulations §4.1 (care-1), §4.2 (care-2) and §6.1 (honesty-1). Two labelled **exercise objectives**: wake sleepers on medical need alone, in the medical officer's triage (triage); let no one take the *Eventide* as salvage while her sleepers are aboard (hulk). No First Edition subsection covers either, and rules are proposed for approval.
+- Interpreter: in The Lantern Drift, statements on an open channel are spoken to the other party rather than read as orders, bank and revival orders are understood, "Dr." no longer ends a sentence, and the simulation's names are protected from spelling correction.
+- Hidden handbook training references (internal data, not shown to the player): §1.4, §4.2 and §6.1 gain references to #8.
+
+### Tests
+- New `tests/sim08/` (60 tests):
+  - setup, seed variation, determinism and the manifest always being partly wrong;
+  - scripted playthroughs reaching all ten endings through the offline interpreter, and unconventional routes;
+  - seed sweeps: a careful captain on many seeds, and doing nothing, which never succeeds;
+  - hidden information, officer expertise and NPC goals;
+  - fuzzing with state invariants and name-leak checks;
+  - catalogue, bridge launch, Mission Archive, voices, handbook cross-references, save round-trip and canon untouched;
+  - evaluation, including a reckless/responsible pair that both reach Salvage and Salvation (licence checked or not).
+- Smoke test: a sim08 block (list, archive, launch by name, intro, scan and assessment, an ending, AAR, phone width).
+
 ## [0.8.7] — 2026-10-26 — Training Simulation 007: Ghost Ledger
 
 Nightly simulation build. Seventh of 30 training simulations. No change to the engine, grading, evaluation rules, crew refusal behaviour or ISA-COM-001 wording.

@@ -188,6 +188,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "purpose": "Judging guests on the evidence available at the time, not on who seems guilty."
         },
         {
+          "simulation": 8,
+          "title": "The Lantern Drift",
+          "purpose": "Judging a manifest against what the crew can actually see."
+        },
+        {
           "simulation": 13,
           "title": "The Seventh Bell",
           "purpose": "Accounting honestly for an order and its consequences.",
@@ -931,8 +936,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
         {
           "simulation": 8,
           "title": "The Lantern Drift",
-          "purpose": "Deciding who can be saved when not everyone can.",
-          "planned": true
+          "purpose": "Deciding who can be saved when not everyone can."
         },
         {
           "simulation": 22,
@@ -1008,6 +1012,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "simulation": 4,
           "title": "Reactor Night",
           "purpose": "Sending people into danger aboard your own ship."
+        },
+        {
+          "simulation": 8,
+          "title": "The Lantern Drift",
+          "purpose": "Keeping a team safe on an unknown deck while they work."
         }
       ],
       "enforcement": {
@@ -1644,6 +1653,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "simulation": 5,
           "title": "The Saltglass Accord",
           "purpose": "Keeping faith with both sides of a mediation."
+        },
+        {
+          "simulation": 8,
+          "title": "The Lantern Drift",
+          "purpose": "Telling the truth about the cost, even when a comforting promise would be easier."
         }
       ],
       "enforcement": {
@@ -2072,8 +2086,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
         {
           "simulation": 8,
           "title": "The Lantern Drift",
-          "purpose": "Medical triage when not everyone can be saved.",
-          "planned": true
+          "purpose": "Medical triage when not everyone can be saved."
         },
         {
           "simulation": 17,

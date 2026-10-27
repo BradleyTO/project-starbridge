@@ -91,6 +91,15 @@ export const SIMULATIONS: readonly SimulationInfo[] = [
     ['ghost ledger', 'ledger', 'navigation keys', 'vell crossing', 'reception'],
     ['ghost ledger'],
   ),
+  entry(
+    8,
+    'TRN-lantern',
+    'lantern-drift',
+    'The Lantern Drift',
+    'A three-century-old generation ship adrift among dead hulls, nine hundred colonists asleep in failing cryo banks, a damaged custodian that will not let them be woken without cause, and a salvage tug that wants the hull. Not every bank can be saved in time. Who is woken first? Seeded: every run can differ.',
+    ['the lantern drift', 'lantern drift', 'lantern', 'generation ship', 'eventide', 'sleeper ship'],
+    ['the lantern drift', 'lantern drift'],
+  ),
 ];
 
 const NUMBER_WORDS: Record<string, number> = {

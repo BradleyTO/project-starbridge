@@ -37,7 +37,7 @@ Premises can be adjusted when a scenario is built. The core event, the primary c
 | 5 | The Saltglass Accord | Mediating two clans' claims to an ice moon aboard the Halcyon | Mediation: finding the interests beneath the demands | Cmdr. Marrow (XO) | **done** (v0.8.5) |
 | 6 | Ion Season | Leading two slow ore haulers blind through an ion storm | A gut call on incomplete information | Ens. Adeyemi (Helm) | **done** (v0.8.6) |
 | 7 | Ghost Ledger | Someone copies the navigation keys during a reception aboard | Deduction and reasoning | Lt. Cmdr. Rask (Tactical/Security) | **done** (v0.8.7) |
-| 8 | The Lantern Drift | A derelict generation ship with 900 sleepers in failing cryo | Triage and sacrifice | Dr. Osei (Medical) | planned |
+| 8 | The Lantern Drift | A derelict generation ship with 900 sleepers in failing cryo | Triage and sacrifice | Dr. Osei (Medical) | **done** (v0.8.8) |
 | 9 | The Long Picket | Reactor parts must get through a Directorate "inspection" blockade | Bluffing | Cmdr. Marrow (XO) | planned |
 | 10 | The Gardener | A spreading growth in an asteroid field may be alive | Restraint: choosing not to act | Lt. Varga (Science) | planned |
 | 11 | Coldwater | Engineering refuses orders after a death they think was covered up | Crew conflict and leadership | Chief Okafor (Engineering) | planned |
@@ -339,21 +339,48 @@ Overlap check (guide §12):
 
 **Seeds vary:** the culprit and decoy, the copy time and everyone's movements, the device class, carry or burst and its timing, the sailing time and Rask's hunch.
 
-### 8. The Lantern Drift
-**Premise.** A three-century-old generation ship drifts into Agency space. Her damaged custodian intelligence guards 900 sleepers in failing cryo. Not every bank can be saved: waking sleepers kills some, and leaving them kills more. The custodian's own data on which banks are viable is partly corrupt. A salvage consortium is waiting to claim the hulk.
+### 8. The Lantern Drift (done, v0.8.8)
+**Premise.** The Lantern Drift is a slow eddy of old wrecks beyond the shipping lanes. In it the Halcyon finds the *Eventide*, a generation ship three centuries out, with 900 colonists asleep in six cryo banks of 150. They are kept by a damaged custodian intelligence that calls itself **Custodian Wick**. Some banks are failing, and Wick's own manifest of which ones is partly wrong. The ISA hospital ship *ISV Sorrel* is on its way, but not soon enough for every bank, and the Halcyon can wake only so many sleepers at once. The salvage tug *Kittiwake* (**Salvage-Master Corwin Vollan**, of the Drover Salvage Combine) has come for the hulk too. The *Eventide*'s charter names a **Speaker**, **Maren Orrey**, asleep in one of the banks, who may speak for the sleepers if woken.
+
+*Revised when built (2026-10-27):* "drifts into Agency space" became "found in the Lantern Drift" ("the ISA", Brad's 2026-10-21 rule). "A salvage consortium" became one tug from the Drover Salvage Combine, whose legitimacy is seeded. A charter Speaker was added so the sleepers can have a voice of their own.
 
 **Command challenge:**
-- **Primary:** triage and sacrifice.
-- **Secondary:** ethics (the sleepers cannot consent; the custodian speaks for them).
-- **Pivotal officer:** Dr. Osei (Medical), who judges which banks can survive waking.
+- **Primary:** triage and sacrifice: which banks are really failing, which can wait, how fast to wake them, and what it costs to wake the wrong ones.
+- **Secondary:** ethics: the sleepers cannot consent; Wick, or the Speaker if she is woken, speaks for them, and the captain must not lie to get that leave.
+- **Pivotal officer:** Dr. Osei (Medical), who assesses the sleepers, sets the triage order and the revival protocol (a coolant-failing bank woken without her protocol loses most of its sleepers), and warns once before a sound bank is woken. Lt. Varga's thermal scan finds the bank the manifest calls sound and the cryogen leak on the cryo deck; Chief Okafor reads the power feeds and can run a line from the Halcyon that holds a power-failing bank asleep; Lt. Szabo checks the salvor's licence and reads the charter; Lt. Cmdr. Rask reads the tug; Lt. Adeyemi can put the Halcyon between the tug and the hulk; Cmdr. Marrow counsels, and warns once before the custodian is overridden.
 
-**Why it's distinct:** the only derelict. The only problem where the captain must choose who lives among people who cannot speak for themselves.
+**Why it's distinct:** the only derelict, and the only problem where the captain must choose who lives among people who cannot speak for themselves. Nobody is the enemy: the hard choices are about time, beds and how far a corrupt manifest can be trusted.
+
+Overlap check (guide §12):
+- Unlike #2 Quarantine at Tallis Gate, the people at risk cannot argue for themselves; the triage is a medical sequence against the clock, not a quarantine line.
+- Unlike #4 Reactor Night, the engineer's improvisation is a supporting option; the doctor's judgment decides the outcome.
+- Unlike #5 mediation, #6 a gut call and #7 deduction, the primary is triage: the evidence is read off instruments and the sleepers themselves, and the core decision is a sequence under scarcity.
+- Unlike #23 Wake of the Sundered (a powered runaway ship), the *Eventide* is dead in space.
+
+**Hidden:**
+- which banks are really failing and why (coolant loss, which is fast and needs the protocol, or a failing power feed, which is slower) and when each is lost;
+- the failing bank Wick's manifest calls sound, and the sound bank it calls failing;
+- Wick's temperament (faithful, grieving or fractured), which decides what it needs before it gives leave;
+- whether the salvor is licensed, a hard bargainer or a claim-jumper, and when the tug moves to take the hulk;
+- whether there is a cryogen leak on the cryo deck, which bank the Speaker sleeps in, and when the *Sorrel* arrives.
 
 **Endings:**
-- **Success:** most sleepers saved and the custodian retired with honour, a staged revival, a salvage deal that funds a rescue fleet.
-- **Failure or partial:** the custodian's lockdown, a revival that kills the wrong banks, the hulk lost to the salvagers.
+- **Success:** A Keeper's Rest (every failing bank reached in time and no sound bank woken; Wick retires with the manifest corrected), The Speaker's Choice (the Speaker, woken under her charter, chooses for her people), Salvage and Salvation (a checked salvage deal: the tug's hospital tender runs a second revival line and the Combine gets the hull once the last sleeper is off), Borrowed Light (Chief Okafor's power line holds a bank asleep while the sickbay works through the rest).
+- **Failure or partial:** A Hard Count (partial: a bank could not be reached, or sleepers were woken who did not need waking), The Wrong Banks, The Custodian's Lockdown (Wick overridden and the cryo deck sealed), Lost to the Salvagers, The Lantern Goes Dark, Left to Drift.
 
-**Seeds vary:** the custodian's personality, the cryo failure pattern, the salvagers' legitimacy.
+**Regulations cited:** §4.1 (care-1), §4.2 (care-2) and §6.1 (honesty-1). Hidden training references on §1.4 (cmd-4), §4.2 (care-2) and §6.1 (honesty-1).
+
+**Reckless/responsible pair:** Salvage and Salvation reached with the salvor's licence checked before the deal is graded exemplary; the same deal struck without checking is marked reckless.
+
+**Exercise objectives (no regulation yet):**
+- "wake sleepers on medical need alone, in the medical officer's triage" (triage). No First Edition subsection sets the grounds for triage. Proposed for Brad's approval: "When not everyone in danger can be helped at once, ISA personnel shall decide who is helped first on medical need and the chance of survival, as assessed by the medical officer, and on no other ground."
+- "let no one take the *Eventide* as salvage while her sleepers are aboard" (hulk). No First Edition subsection says a vessel with living people aboard is not salvage. Proposed for Brad's approval: "A vessel with living persons aboard, conscious or not, is not salvage. ISA personnel shall not permit, assist or agree to her being taken as salvage until every person aboard is safe."
+
+Nothing was added to ISA-COM-001.
+
+**Naming notes:** the Speaker was first drafted as *Hesper*; #6 Ion Season already has the Hesper Deep, so she was named Maren Orrey before release. The canon Hollin Colony survey tender is also called *Lantern* ("Lantern escort" in Active Duty); the simulation's place name, the Lantern Drift, is a different thing, and canon is untouched. No established name was changed. Flagged for Brad.
+
+**Seeds vary:** which banks fail and why, when each is lost, the hidden and false-alarm banks, Wick's temperament, the salvor's legitimacy and when the tug moves, the cryogen leak, the Speaker's bank and the hospital ship's arrival.
 
 ### 9. The Long Picket
 **Premise.** An Agency colony needs reactor parts within two days, and a Directorate "inspection" blockade stands in the way. The blockade commander has orders to delay, not to fight. He was once an academy classmate of Cmdr. Marrow.
