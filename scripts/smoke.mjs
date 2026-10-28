@@ -1379,6 +1379,66 @@ for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape',
   await ctxD.close();
 }
 
+// ============================================================== v0.8.9 =====
+// Training Simulation 009: The Long Picket. Listed, launched by name, Marrow's read, his orders, an ending, AAR filed.
+{
+  const ctxP = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await ctxP.addInitScript(stubs);
+  const pp = await ctxP.newPage();
+  pp.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  pp.on('pageerror', (e) => errors.push(String(e)));
+  const allP = async () => (await pp.innerText('[data-testid=narrative]')) + '\n' + (await pp.innerText('[data-testid=comms]'));
+  const modeP = () => pp.getAttribute('[data-testid=mode-banner]', 'data-mode');
+  const endedP = async () => (await pp.locator('[data-testid=outcome]').count()) > 0;
+  await pp.goto(withSeed(9), { waitUntil: 'networkidle' });
+  await pp.waitForTimeout(600);
+  await skipIntro(pp);
+  await sendOn(pp, 'Computer, list simulations', 600);
+  check('sim09: "list simulations" names The Long Picket', /Long Picket/.test(await allP()));
+  if (!(await pp.locator('[data-testid=hub]').count())) await pp.click('[data-testid=open-hub]');
+  await pp.click('[data-testid=hub-tab-archive]');
+  await pp.waitForTimeout(150);
+  check('sim09: Mission Archive lists Training Simulation 009', /Training Simulation 009: The Long Picket/.test(await pp.innerText('[data-testid=hub]')) && (await pp.locator('[data-testid=archive-train-TRN-picket]').count()) === 1);
+  await pp.click('[data-testid=hub-close]');
+  await pp.waitForTimeout(100);
+  await sendOn(pp, 'Computer, begin the Long Picket simulation', 1200);
+  await pp.waitForSelector('[data-testid=mode-banner][data-mode=simulation]');
+  check('sim09: launch by name starts a simulation', (await modeP()) === 'simulation');
+  await pp.waitForTimeout(4500);
+  await skipIntro(pp);
+  let tr = await allP();
+  check('sim09: intro plays (the Narrows, Wrenmoor, the Iron Psalm, Roake)', /Sable Narrows/.test(tr) && /Wrenmoor/.test(tr) && /Iron Psalm/.test(tr) && /Lucan Roake/.test(tr), tr.slice(0, 300));
+  await pp.screenshot({ path: `${SHOTS}/sim09-01-intro.png` });
+  check('sim09: the colony and the picket on sensors by name', /Wrenmoor/.test(await pp.innerText('[data-testid=contact-kestrel]')) && /Iron Psalm/.test(await pp.innerText('[data-testid=contact-cruiser]')));
+  for (const c of ['hail the picket', 'close the channel', 'Marrow, what do you make of him?', 'Szabo, listen to the picket’s traffic', 'wait', 'wait']) await sendOn(pp, c, 400);
+  tr = await allP();
+  check('sim09: the officers read the picket (Marrow\'s read, his orders)', /My read, Captain/.test(tr) && /I have his orders/.test(tr), tr.slice(-400));
+  await pp.screenshot({ path: `${SHOTS}/sim09-02-read.png` });
+  for (const c of ['hail the picket', 'You may inspect one crate, for your log.', 'close the channel', 'wait', 'wait', 'wait', 'wait', 'hail the picket', 'We are carrying reactor assemblies for Wrenmoor.', 'You may inspect us, as a courtesy and without conceding your claim.', 'close the channel']) {
+    if (await endedP()) break;
+    await sendOn(pp, c, 400);
+  }
+  for (let i = 0; i < 40 && !(await endedP()); i++) await sendOn(pp, 'wait', 400);
+  await pp.waitForSelector('[data-testid=outcome]');
+  const outP = await pp.innerText('[data-testid=outcome]');
+  check('sim09: led to an ending', /Called and Raised|A Line in His Log|Old Acquaintance|Nothing to Hide|Through the Line|Under False Colours|The Narrows Incident|Directorate Custody|The Long Way Round|Wrenmoor Goes Dark/i.test(outP), outP.slice(0, 200));
+  tr = await allP();
+  const LEAK9 = /Kestrel|Prefect|Ashen Covenant|Tallis|Sabeth|Thornwake|Cantor|Brenn|Teyma|Paley|Larkspur|Saltglass|Rhune|Tarvo|Hollis|Brack|Teague|Saffron Mule|Gannet|Corrie Drift|Hesper|Krenn|Vesk|Sallow|Fosse|Vell Crossing|Eventide|Wick|Vollan|Kittiwake|Orrey|Sorrel|\[[a-zA-Z_]+\]|undefined|Intergalactic Agency|the Agency/;
+  check('sim09: no other simulation\'s names leak in', !LEAK9.test(tr), (tr.match(new RegExp(`.{0,60}(${LEAK9.source}).{0,60}`)) ?? [''])[0]);
+  await pp.screenshot({ path: `${SHOTS}/sim09-03-outcome.png` });
+  if (await pp.locator('[data-testid=outcome-aar]').count()) await pp.click('[data-testid=outcome-aar]');
+  await pp.waitForTimeout(300);
+  const aarP = (await pp.locator('[data-testid=aar]').count()) ? await pp.innerText('[data-testid=aar]') : '';
+  check('sim09: AAR is available, cites regulations and has no percentages', /Long Picket/i.test(aarP) && /ISA regulations/.test(aarP) && !/\d\s*%/.test(aarP), aarP.slice(0, 200));
+  await pp.screenshot({ path: `${SHOTS}/sim09-04-aar.png`, fullPage: true });
+  if (await pp.locator('[data-testid=aar-close]').count()) await pp.click('[data-testid=aar-close]');
+  await pp.setViewportSize({ width: 390, height: 844 });
+  await pp.waitForTimeout(400);
+  const ovP = await pp.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  check('sim09 phone: no horizontal overflow', ovP <= 0, `overflow ${ovP}px`);
+  await ctxP.close();
+}
+
 // ============================================================== v0.8.0 =====
 // The Captain's Handbook: contents, articles, search, bridge commands in every timeline (state untouched),
 // report citations, spoiler safety, desktop and phone width.

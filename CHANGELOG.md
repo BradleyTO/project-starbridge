@@ -2,6 +2,35 @@
 
 All notable changes to Project Starbridge are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.8.9] — 2026-10-28 — Training Simulation 009: The Long Picket
+
+Nightly simulation build. Ninth of 30 training simulations. No change to grading, evaluation rules, crew refusal behaviour in other simulations or ISA-COM-001 wording.
+
+### Added
+- **Training Simulation 009: The Long Picket** (`src/scenarios/picket/`). In the Sable Narrows, a disputed passage through a dust reef, the Halcyon carries replacement reactor assemblies for **Wrenmoor**, an ISA colony of 4,100 whose reactor is failing. The Tessarine Directorate picket frigate *Iron Psalm* sits across the passage with her guns cold. Her commander, **Commander Lucan Roake**, was a cadet with Cmdr. Marrow at the Calder Academy and has orders to stop the Halcyon, not to fight her. **Reeve Odile Marchbank** speaks for Wrenmoor, and if Roake's relief arrives first, **Commander Ysara Dahl** takes the picket by the book.
+  - **Primary challenge:** bluffing and negotiation under a clock. **Secondary:** honesty (where a bluff must stop, and keeping the word given). **Pivotal officer:** Cmdr. Marrow (First Officer).
+  - Seeded, deterministic and offline: Roake's orders (delay, pretext or probe), temperament (proud, careful or weary), what he already knows, his history with Marrow (friends, rivals or a debt), the Reeve's honesty about the deadline, the deadline itself, when his relief arrives and when his sweep of the Halcyon's wake finishes.
+  - Officers' expertise matters: Marrow's read of Roake decides which bluff lands and who should deliver it, and she can call in an old debt on a private channel; Szabo reads the picket's traffic for his real orders and can stage lawful chatter from an escort that is not there; Chief Okafor's telemetry gives Wrenmoor's real deadline; Varga finds the picket's sweep of the Halcyon's wake, which will expose an escort bluff once it finishes.
+  - The others act for themselves: Roake accepts only what his orders and pride allow, keeps a bargain and calls a bluff he can see through; Dahl wants a proper inspection and nothing else; the Reeve calls for help and, if frightened, understates her deadline.
+  - Crew refusals: Szabo will not alter the manifest or send false traffic to Fleet Command; Marrow will not claim a mercy run or tell Roake lives are at stake once the Chief has shown they are not, and warns once before the Halcyon runs the line.
+  - Endings — success: Called and Raised, A Line in His Log, Old Acquaintance, Nothing to Hide. Failure or partial: Through the Line (partial), Under False Colours, The Narrows Incident, Directorate Custody, The Long Way Round, Wrenmoor Goes Dark.
+  - Listed in the catalogue and Mission Archive; launch with "Computer, begin the Long Picket simulation" (also "simulation nine"). Distinct voice hints for Roake, Dahl and Marchbank.
+  - Evaluation data (§6b): objectives with priorities, ending tiers, judgment markers, regulations §6.1 (honesty-1) and §3.1 (roe-2). One labelled **exercise objective**: cross the picket line only with the picket's leave (line). No First Edition subsection covers running another power's picket in disputed space, and a rule is proposed for approval.
+- Interpreter: in The Long Picket, statements on an open channel are spoken to the picket or the colony rather than read as orders, picket orders are understood, and the simulation's names are protected from spelling correction. Scenario rules can now see which department a clause was addressed to (`InterpreterContext.addressee`), so "Marrow, tell him…" is delivered by Marrow; no other simulation uses it.
+- Hidden handbook training references (internal data, not shown to the player): §6.1 gains a reference to #9, and the planned #9 references on §6.2/§6.3 and §9.6 are now live.
+
+### Tests
+- New `tests/sim09/` (58 tests):
+  - setup, seed variation, determinism and the guarantee that a tight seed is always winnable;
+  - scripted playthroughs reaching all ten endings through the offline interpreter, and unconventional routes (staged traffic, the old debt, the hold-for-relief bargain);
+  - seed sweeps: a careful captain on 60 seeds always succeeds by more than one road, and doing nothing never succeeds;
+  - hidden information, officer expertise, NPC goals and crew refusals;
+  - fuzzing with state invariants and name-leak checks;
+  - catalogue, bridge launch, Mission Archive, voices, handbook cross-references, save round-trip and canon untouched;
+  - evaluation, including a reckless/responsible pair that both reach Called and Raised (Marrow's read first, or blind with weapons locked).
+- `tests/sim08/catalogue.test.ts`: the simulation count is now at least 8.
+- Smoke test: a sim09 block (list, archive, launch by name, intro, Marrow's read and the picket's orders, an ending, AAR, phone width).
+
 ## [0.8.8] — 2026-10-27 — Training Simulation 008: The Lantern Drift
 
 Nightly simulation build. Eighth of 30 training simulations. No change to the engine, grading, evaluation rules, crew refusal behaviour or ISA-COM-001 wording.

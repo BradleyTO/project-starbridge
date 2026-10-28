@@ -44,6 +44,11 @@ export interface InterpreterContext {
   /** v0.6: the contact-A system an engineering team fixes, and words naming it (absent: the Kestrel's reactor). */
   contactRepair?: string | null;
   contactRepairWords?: string[];
+  /**
+   * v0.8.9: the bridge department the clause being matched was addressed to ("Marrow, …" → 'xo'),
+   * set by the parser for scenario rules only; the name itself is stripped from the clause.
+   */
+  addressee?: 'helm' | 'tactical' | 'ops' | 'science' | 'comms' | 'xo' | null;
 }
 
 export interface Interpreter {

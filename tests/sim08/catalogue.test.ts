@@ -37,7 +37,7 @@ describe('catalogue and registry', () => {
     expect(scenarioFor('lantern-drift')).toBe(LANTERN);
     expect(LANTERN.title).toBe(x.title);
     expect(TRAINING_SCENARIOS['lantern-drift']).toBe(LANTERN);
-    expect(SIMULATIONS.length).toBe(8);
+    expect(SIMULATIONS.length).toBeGreaterThanOrEqual(8);
   });
 
   it('names resolve to the right simulation, and older names are unchanged', () => {

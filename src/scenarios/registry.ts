@@ -8,11 +8,12 @@ import { saltglassScenario } from './saltglass';
 import { ionScenario } from './ion';
 import { ledgerScenario } from './ledger';
 import { lanternScenario } from './lantern';
+import { picketScenario } from './picket';
 import { bridgeScenario } from './bridge';
 import { SIMULATIONS } from './catalogue';
 
 /** Training simulations by scenario id (one module per catalogue entry that has been built). */
-export const TRAINING_SCENARIOS: Record<string, ScenarioModule> = { [kestrelScenario.id]: kestrelScenario, [tallisScenario.id]: tallisScenario, [quietScenario.id]: quietScenario, [reactorScenario.id]: reactorScenario, [saltglassScenario.id]: saltglassScenario, [ionScenario.id]: ionScenario, [ledgerScenario.id]: ledgerScenario, [lanternScenario.id]: lanternScenario };
+export const TRAINING_SCENARIOS: Record<string, ScenarioModule> = { [kestrelScenario.id]: kestrelScenario, [tallisScenario.id]: tallisScenario, [quietScenario.id]: quietScenario, [reactorScenario.id]: reactorScenario, [saltglassScenario.id]: saltglassScenario, [ionScenario.id]: ionScenario, [ledgerScenario.id]: ledgerScenario, [lanternScenario.id]: lanternScenario, [picketScenario.id]: picketScenario };
 
 export const SCENARIOS: Record<string, ScenarioModule> = { ...TRAINING_SCENARIOS, [bridgeScenario.id]: bridgeScenario };
 

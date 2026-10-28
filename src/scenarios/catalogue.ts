@@ -100,6 +100,15 @@ export const SIMULATIONS: readonly SimulationInfo[] = [
     ['the lantern drift', 'lantern drift', 'lantern', 'generation ship', 'eventide', 'sleeper ship'],
     ['the lantern drift', 'lantern drift'],
   ),
+  entry(
+    9,
+    'TRN-picket',
+    'long-picket',
+    'The Long Picket',
+    'A colony’s reactor is failing, the Halcyon has the parts in her hold, and a lone Directorate picket frigate sits across the only safe road through disputed space. Her commander was a cadet with Cmdr. Marrow, a long time ago. His orders are to stop you, not to fight you. Get through without a shot, without conceding the claim, and without a lie the Code forbids. Seeded: every run can differ.',
+    ['the long picket', 'long picket', 'picket', 'sable narrows', 'wrenmoor', 'blockade'],
+    ['the long picket', 'long picket'],
+  ),
 ];
 
 const NUMBER_WORDS: Record<string, number> = {

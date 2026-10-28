@@ -382,21 +382,47 @@ Nothing was added to ISA-COM-001.
 
 **Seeds vary:** which banks fail and why, when each is lost, the hidden and false-alarm banks, Wick's temperament, the salvor's legitimacy and when the tug moves, the cryogen leak, the Speaker's bank and the hospital ship's arrival.
 
-### 9. The Long Picket
-**Premise.** An Agency colony needs reactor parts within two days, and a Directorate "inspection" blockade stands in the way. The blockade commander has orders to delay, not to fight. He was once an academy classmate of Cmdr. Marrow.
+### 9. The Long Picket (done, v0.8.9)
+**Premise.** The Sable Narrows is the one safe road through a dust reef whose ownership the charts still argue over. On the far side lies **Wrenmoor**, an ISA colony of 4,100 whose reactor is failing; the Halcyon carries the replacement assemblies in her own hold. Squarely across the passage sits the Tessarine Directorate picket frigate *Iron Psalm*, guns cold, under **Commander Lucan Roake**, who was a cadet with Cmdr. Marrow at the Calder Academy. He has orders to stop the Halcyon, not to fight her. **Reeve Odile Marchbank** speaks for Wrenmoor; if Roake's relief comes on station first, **Commander Ysara Dahl** takes the picket, and she goes by the book.
+
+*Revised when built (2026-10-28):* "an Agency colony" became "an ISA colony" (Brad's 2026-10-21 rule). "Within two days" became a reactor that must be shut down within the exercise's clock, so the timing pressure is played rather than narrated. "Run the blockade" moved from success to partial: §3.1 requires a peaceful resolution while one remains and §9.6 forbids enforcing a disputed claim by force, so running the line delivers the cargo but is graded as a partial result. Bluffs about the cargo became bluffs about the Halcyon's own strength, company and intentions only: §6.2 allows those, and §6.3 forbids a ruse that feigns a humanitarian purpose, falsifies records or deceives Fleet Command. A lie about the cargo being medical relief is therefore a failure ending (Under False Colours), not a success.
 
 **Command challenge:**
-- **Primary:** bluffing: about the cargo, about escorts, about deadlines.
-- **Secondary:** timing.
-- **Pivotal officer:** Cmdr. Marrow (XO), whose history with the blockade commander makes the bluff believable or blows it.
+- **Primary:** bluffing and negotiation under a clock: getting the cargo through another power's picket with words alone, by a lawful ruse this commander will believe or a face-saving bargain he can put in his log, before the colony's reactor has to be shut down.
+- **Secondary:** honesty: knowing where a bluff must stop (no feigned mercy run, no false records, no lie about lives) and keeping the word given to the picket.
+- **Pivotal officer:** Cmdr. Marrow (First Officer), who knew Roake at the Academy. Her read of him (proud, careful or weary; friend, rival or owed a debt) decides which bluff will land and who should deliver it. A rival scorns anything Marrow says; an old debt can open the line on a private channel. She refuses to tell him a mercy-run story, or that people will die once the Chief has shown they will not, and warns once before the Halcyon runs the line. Lt. Szabo reads the picket's own traffic for his real orders (delay, pretext or probe), stages lawful ship-to-ship chatter for an escort that is not there, and refuses to alter the manifest or deceive Fleet Command. Chief Okafor reads Wrenmoor's reactor telemetry for the real deadline (a frightened Reeve gives it five minutes short, and nobody dies of a shutdown). Lt. Varga scans the picket and finds the long-range sweep of the Halcyon's wake that will expose an escort bluff. Lt. Cmdr. Rask keeps the guns cold.
 
-**Why it's distinct:** the only simulation won mainly by convincing a rival of something untrue. Nobody's life is in immediate danger.
+**Why it's distinct:** the only simulation won mainly by persuading a rival commander of something, within lawful limits, against a clock. Nobody is in immediate danger of death: the cost of failure is a cold week for a colony and a diplomatic incident.
+
+Overlap check (guide §12):
+- Unlike #5 The Saltglass Accord, the captain is a party to the dispute, not a mediator between two others.
+- Unlike #7 Ghost Ledger, where bluffing was secondary to finding the thief, here the bluff or bargain is the main task and there is nothing to deduce about guilt.
+- Unlike #1 The Kestrel Incident and #3 The Quiet Signal, the Directorate ship is not threatening anyone and no one needs rescuing; the dispute is about a claim, not a life.
+- Unlike #8 The Lantern Drift, the colony is never in danger of dying, and no triage is involved.
+
+**Hidden:**
+- Roake's orders: delay the Halcyon until his relief arrives, stop the cargo on any pretext he can find, or probe whether the ISA stops when told;
+- his temperament (proud, careful or weary) and his history with Marrow (friends, rivals or a debt he owes her);
+- what he already knows: nothing, the true cargo, or that no escort follows the Halcyon;
+- when his relief (Commander Dahl) arrives and when his sweep of the Halcyon's wake completes;
+- Wrenmoor's real deadline, and whether the Reeve understates it.
 
 **Endings:**
-- **Success:** run the blockade, a bluffed pass, a face-saving deal.
-- **Failure or partial:** cargo impounded, a broken blockade that becomes a diplomatic incident, the colony goes dark.
+- **Success:** Called and Raised (a lawful bluff about the Halcyon's company or resolve), A Line in His Log (a face-saving bargain: one crate for his log, an observer, or a wait until his relief, kept by both sides), Old Acquaintance (Marrow calls in an old debt), Nothing to Hide (an inspection, or plain proof of the cargo, that concedes nothing).
+- **Failure or partial:** Through the Line (partial: the cargo arrives, but the Halcyon ran the line), Under False Colours (passed by feigning a mercy run), The Narrows Incident (shots or a collision), Directorate Custody (the cargo handed over), The Long Way Round (the Halcyon turns back), Wrenmoor Goes Dark (the reactor shut down before the Halcyon got through).
 
-**Seeds vary:** the commander's orders and temperament, the true manifest, what the blockade actually knows.
+**Regulations cited:** §6.1 (honesty-1) and §3.1 (roe-2). Hidden training references on §6.1 (honesty-1), §6.2/§6.3 (conduct-1) and §9.6 (contact-3).
+
+**Reckless/responsible pair:** Called and Raised reached by the same escort bluff, once after Marrow's read of Roake (graded exemplary) and once made blind with the Halcyon's weapons locked on the picket (marked reckless, citing §3.1).
+
+**Exercise objectives (no regulation yet):**
+- "cross the picket line only with the picket's leave" (line). No First Edition subsection says how an ISA ship should treat another power's picket in disputed space. Proposed for Brad's approval: "An ISA ship stopped by another power's picket in disputed space shall seek passage by negotiation and shall not run the line while a peaceful way through remains, except to render humanitarian aid under the Border Accords."
+
+Nothing was added to ISA-COM-001.
+
+**Naming notes:** no established name was changed, and no name is reused from an earlier simulation. The rival is the Tessarine Directorate, as established.
+
+**Seeds vary:** Roake's orders, temperament, knowledge and history with Marrow, the Reeve's honesty about the deadline, the deadline itself (16–22 minutes), when the relief arrives (8–24) and when the sweep finishes (5–8).
 
 ### 10. The Gardener
 **Premise.** A self-replicating growth is spreading across an asteroid mining field. Science suspects it is alive and possibly aware. The miners want it burned before it reaches their claims. It is reaching toward the Halcyon.

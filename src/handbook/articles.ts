@@ -1658,6 +1658,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "simulation": 8,
           "title": "The Lantern Drift",
           "purpose": "Telling the truth about the cost, even when a comforting promise would be easier."
+        },
+        {
+          "simulation": 9,
+          "title": "The Long Picket",
+          "purpose": "Keeping the word given to a blockading commander."
         }
       ],
       "enforcement": {
@@ -1721,8 +1726,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
         {
           "simulation": 9,
           "title": "The Long Picket",
-          "purpose": "Bluffing well, and knowing where a bluff must stop.",
-          "planned": true
+          "purpose": "Bluffing well, and knowing where a bluff must stop."
         },
         {
           "simulation": 29,
@@ -2292,8 +2296,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
         {
           "simulation": 9,
           "title": "The Long Picket",
-          "purpose": "Getting through without giving up the law.",
-          "planned": true
+          "purpose": "Getting through without giving up the law."
         }
       ],
       "enforcement": {
