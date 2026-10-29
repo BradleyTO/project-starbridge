@@ -109,6 +109,15 @@ export const SIMULATIONS: readonly SimulationInfo[] = [
     ['the long picket', 'long picket', 'picket', 'sable narrows', 'wrenmoor', 'blockade'],
     ['the long picket', 'long picket'],
   ),
+  entry(
+    10,
+    'TRN-gardener',
+    'gardener',
+    'The Gardener',
+    'Something pale and branching is growing across a rock in a small mining field, a little further every hour, toward the claims. The miners have their cutting charges set and want it burned. Nobody knows yet whether it is even alive. Seeded: every run can differ.',
+    ['the gardener', 'gardener', 'cobble field', 'the cobble field', 'spindle', 'mining field'],
+    ['the gardener', 'gardener'],
+  ),
 ];
 
 const NUMBER_WORDS: Record<string, number> = {

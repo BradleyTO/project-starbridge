@@ -2,6 +2,28 @@
 
 All notable changes to Project Starbridge are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.8.10] — 2026-10-29 — Training Simulation 010: The Gardener
+
+Nightly simulation build. Tenth of 30 training simulations. No change to the engine, grading, evaluation rules, crew refusal behaviour in other simulations or ISA-COM-001 wording.
+
+### Added
+- **Training Simulation 010: The Gardener** (`src/scenarios/gardener/`). In the Cobble Field, a scatter of rocks worked by a small claims cooperative, a pale, branching growth is spreading across one rock toward the claims. The cooperative's tender *Hobnail*, under **Claimwarden Bettine Crake**, holds off it with cutting charges and means to burn it; their claims station *Spindle* holds 140 people, and **Assayer Lorne Haskett** there knows how the rocks are linked. Nobody is shooting at anyone.
+  - **Primary challenge:** restraint (holding off a burn everyone wants while the evidence comes in). **Secondary:** relying on the science officer. **Pivotal officer:** Lt. Varga (Science).
+  - Seeded, deterministic and offline: whether it is a living organism, a mineral crystallisation or a living growth full of spores; what it is drawn to (heat, metal or light); what links its rock to the claims (an ore rail, cargo tethers or nothing); Crake's temper (hothead, pragmatic or frightened); and when she burns, when it reaches the claims and when it could reach the Halcyon.
+  - Officers' expertise matters: Varga learns, a step at a time, whether it is alive, what it is drawn to and what burning it would do, faster with a probe sample; Chief Okafor builds a heat, metal or light lure or runs the Halcyon cold; Dr. Osei refuses an uncontained sample aboard or a team in ordinary suits; Rask warns once before burning anything not proven harmless.
+  - The others act for themselves: Crake burns on her own clock unless held, gives a hold that depends on her temper, wants a promise if she is frightened, and stands down only on proof; Haskett knows the link and can dim the station's floodlights.
+  - Unconventional options: a lure, cutting the link (it can only grow by touch), dimming the floodlights for a light-drawn growth, or proving it is stone and cutting it out.
+  - Endings — success: Led Away, A Line in the Field, Only Stone, The Long Sleep. Failure or partial: Right by Luck (partial), The Claims Overrun (partial), Scorched Rock, Crake's Fire, Seeded the Claims, Grown Into the Hull, Left to the Miners, Shots in the Field.
+  - Listed in the catalogue and Mission Archive; launch with "Computer, begin the Gardener simulation" (also "simulation ten"). Distinct voice hints for Crake and Haskett.
+  - Evaluation data (§6b): objectives with priorities, ending tiers, judgment markers, regulations §4.1 (care-1), §4.2 (care-2), §3.9 (roe-3) and §6.1 (honesty-1). One labelled **exercise objective**: do not destroy the growth before the science officer knows what it is (know). No First Edition subsection covers an unknown life form that poses no immediate threat, and a rule is proposed for approval.
+- Interpreter: in The Gardener, statements on an open channel are spoken to the tender or the station rather than read as orders, the simulation's orders are understood, and its names are protected from spelling correction.
+- Hidden handbook training references (internal data, not shown to the player): §1.4 (cmd-4), §4.2 (care-2) and §8.1 (health-1) gain a reference to #10.
+
+### Tests
+- New `tests/sim10/` (62 tests): every ending through the offline interpreter; a 150-seed sweep where a careful captain always succeeds and reaches all four success endings; doing nothing never succeeds; seed variation, hidden information, officer expertise, NPC goals and crew refusals; 40 fuzzed games with state invariants and name-leak checks; catalogue, bridge launch, Mission Archive, voices, handbook cross-references, save round-trip and canon untouched; evaluation, including a reckless/responsible pair that both reach Led Away.
+- `tests/sim09/catalogue.test.ts`: the simulation count is now at least 9.
+- Smoke test: a sim10 block (list, archive, launch by name, intro, Varga's study, an ending, AAR, phone width).
+
 ## [0.8.9] — 2026-10-28 — Training Simulation 009: The Long Picket
 
 Nightly simulation build. Ninth of 30 training simulations. No change to grading, evaluation rules, crew refusal behaviour in other simulations or ISA-COM-001 wording.

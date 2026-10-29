@@ -21,6 +21,7 @@ import { ASK_FIT, ionAsk, ionOrder } from '../scenarios/ion/words';
 import { LEDGER_NAMES, ledgerAsk, ledgerOrder } from '../scenarios/ledger/words';
 import { ADDRESSED as LANTERN_ADDRESSED, SPEECHY as LANTERN_SPEECHY, LANTERN_NAMES, lanternAsk, lanternOrder } from '../scenarios/lantern/words';
 import { ADDRESSED as PICKET_ADDRESSED, SPEECHY as PICKET_SPEECHY, PICKET_NAMES, forMarrow as picketForMarrow, picketAsk, picketOrder } from '../scenarios/picket/words';
+import { ADDRESSED as GARDENER_ADDRESSED, SPEECHY as GARDENER_SPEECHY, GARDENER_NAMES, gardenerAsk, gardenerOrder } from '../scenarios/gardener/words';
 import type { Interpretation, ProposedActionInput, CommIntent, TradeOffer, ManeuverIntentT } from '../engine/schema';
 import { InterpretationSchema } from '../engine/schema';
 import { planConflict } from '../engine/standing';
@@ -319,6 +320,24 @@ const RULES: Rule[] = [
       const d = ctx.addressee === 'xo' && !/^\s*marrow\b/.test(c) ? `marrow, ${c}` : c;
       if (picketOrder(d)) return { kind: 'action', action: { type: 'improvise', method: 'other', description: d } };
       if (picketAsk(c)) return { kind: 'action', action: { type: 'bridge', op: 'chat', officer: '', text: c.slice(0, 300) } };
+      return { kind: 'none' };
+    },
+  },
+  {
+    // v0.8.10: The Gardener — orders about the growth ("Varga, study the growth", "send a probe for
+    // a sample", "Chief, lay a heat lure", "tell the Claimwarden to hold her charges", "dim the
+    // station's floodlights") and questions about it. Only while that simulation runs; the scenario
+    // decides what they mean.
+    name: 'gardener',
+    test: /\S/,
+    build: (c, ctx) => {
+      if (ctx.setting?.scenarioId !== 'gardener') return { kind: 'none' };
+      // On an open channel, plain speech is for the Claimwarden or the Assayer.
+      if (ctx.channel?.state === 'open' && ctx.channel.party !== 'passenger' && !ctx.addressee && !GARDENER_ADDRESSED.test(c) && GARDENER_SPEECHY.test(c)) {
+        return { kind: 'action', action: { type: 'speak', to: ctx.channel.party, text: c.slice(0, 400), intents: ['unknown'], relayed: false } };
+      }
+      if (gardenerOrder(c)) return { kind: 'action', action: { type: 'improvise', method: 'other', description: c.slice(0, 400) } };
+      if (gardenerAsk(c)) return { kind: 'action', action: { type: 'bridge', op: 'chat', officer: '', text: c.slice(0, 300) } };
       return { kind: 'none' };
     },
   },
@@ -1445,7 +1464,7 @@ let protectedNames = new Set<string>(['arden', 'vane', 'venn', 'maras', 'ivet', 
 let spell: SpellCorrector | null = null;
 function SPELL(): SpellCorrector {
   if (!spell) {
-    const sources: (RegExp | string)[] = [KESTREL_BASE, CRUISER_BASE, PASSENGER, BORDER, PAIR, COMPARTMENT, SPEECH, ON_SCREEN, ALL_TARGETS, SPEED_SLOW, SPEED_HALF, NEGATED_HOSTILITY, PEACEFUL, ASSERTIVE, ADDRESSEES, ...SYSTEMS.map((x) => x[1]), ...RULES.map((r) => r.test), LEDGER_NAMES, LANTERN_NAMES, PICKET_NAMES, 'shields weapons transporter tractor channel freighter cruiser kestrel position between hostile hail aggressive threatening'];
+    const sources: (RegExp | string)[] = [KESTREL_BASE, CRUISER_BASE, PASSENGER, BORDER, PAIR, COMPARTMENT, SPEECH, ON_SCREEN, ALL_TARGETS, SPEED_SLOW, SPEED_HALF, NEGATED_HOSTILITY, PEACEFUL, ASSERTIVE, ADDRESSEES, ...SYSTEMS.map((x) => x[1]), ...RULES.map((r) => r.test), LEDGER_NAMES, LANTERN_NAMES, PICKET_NAMES, GARDENER_NAMES, 'shields weapons transporter tractor channel freighter cruiser kestrel position between hostile hail aggressive threatening'];
     spell = new SpellCorrector(vocabularyFrom(sources));
   }
   return spell;

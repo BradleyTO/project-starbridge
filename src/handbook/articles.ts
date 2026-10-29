@@ -193,6 +193,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "purpose": "Judging a manifest against what the crew can actually see."
         },
         {
+          "simulation": 10,
+          "title": "The Gardener",
+          "purpose": "Holding a decision until the specialist who knows the danger has spoken."
+        },
+        {
           "simulation": 13,
           "title": "The Seventh Bell",
           "purpose": "Accounting honestly for an order and its consequences.",
@@ -1017,6 +1022,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "simulation": 8,
           "title": "The Lantern Drift",
           "purpose": "Keeping a team safe on an unknown deck while they work."
+        },
+        {
+          "simulation": 10,
+          "title": "The Gardener",
+          "purpose": "Keeping a boarding team and a sample sealed off from something nobody understands yet."
         }
       ],
       "enforcement": {
@@ -2025,6 +2035,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "simulation": 2,
           "title": "Quarantine at Tallis Gate",
           "purpose": "Evidence before action: working with the science officer on an unknown illness."
+        },
+        {
+          "simulation": 10,
+          "title": "The Gardener",
+          "purpose": "Listening to the medical officer before bringing the unknown aboard."
         }
       ],
       "enforcement": {

@@ -1439,6 +1439,66 @@ for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape',
   await ctxP.close();
 }
 
+// ============================================================== v0.8.10 ====
+// Training Simulation 010: The Gardener. Listed, launched by name, Varga's study, the Claimwarden held, an ending, AAR filed.
+{
+  const ctxG = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await ctxG.addInitScript(stubs);
+  const pg = await ctxG.newPage();
+  pg.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  pg.on('pageerror', (e) => errors.push(String(e)));
+  const allG = async () => (await pg.innerText('[data-testid=narrative]')) + '\n' + (await pg.innerText('[data-testid=comms]'));
+  const modeG = () => pg.getAttribute('[data-testid=mode-banner]', 'data-mode');
+  const endedG = async () => (await pg.locator('[data-testid=outcome]').count()) > 0;
+  await pg.goto(withSeed(10), { waitUntil: 'networkidle' });
+  await pg.waitForTimeout(600);
+  await skipIntro(pg);
+  await sendOn(pg, 'Computer, list simulations', 600);
+  check('sim10: "list simulations" names The Gardener', /The Gardener/.test(await allG()));
+  if (!(await pg.locator('[data-testid=hub]').count())) await pg.click('[data-testid=open-hub]');
+  await pg.click('[data-testid=hub-tab-archive]');
+  await pg.waitForTimeout(150);
+  check('sim10: Mission Archive lists Training Simulation 010', /Training Simulation 010: The Gardener/.test(await pg.innerText('[data-testid=hub]')) && (await pg.locator('[data-testid=archive-train-TRN-gardener]').count()) === 1);
+  await pg.click('[data-testid=hub-close]');
+  await pg.waitForTimeout(100);
+  await sendOn(pg, 'Computer, begin the Gardener simulation', 1200);
+  await pg.waitForSelector('[data-testid=mode-banner][data-mode=simulation]');
+  check('sim10: launch by name starts a simulation', (await modeG()) === 'simulation');
+  await pg.waitForTimeout(4500);
+  await skipIntro(pg);
+  let tr = await allG();
+  check('sim10: intro plays (the Cobble Field, the Hobnail, Spindle)', /Cobble Field/.test(tr) && /Hobnail/.test(tr) && /Spindle/.test(tr), tr.slice(0, 300));
+  await pg.screenshot({ path: `${SHOTS}/sim10-01-intro.png` });
+  check('sim10: the station and the tender on sensors by name', /Spindle/.test(await pg.innerText('[data-testid=contact-kestrel]')) && /Hobnail/.test(await pg.innerText('[data-testid=contact-cruiser]')));
+  for (const c of ['Varga, study the growth', 'send a probe to take a sample', 'hail the tender', 'I promise we will protect your claims. Hold your charges.', 'close the channel', 'wait', 'wait']) await sendOn(pg, c, 400);
+  tr = await allG();
+  check('sim10: Varga studies it and reports what it is', /It is alive|it is not alive/.test(tr), tr.slice(-400));
+  await pg.screenshot({ path: `${SHOTS}/sim10-02-study.png` });
+  for (const c of ['hail the station', 'How does it reach your claims?', 'close the channel', 'wait', 'wait', 'wait']) {
+    if (await endedG()) break;
+    await sendOn(pg, c, 400);
+  }
+  for (let i = 0; i < 40 && !(await endedG()); i++) await sendOn(pg, 'wait', 400);
+  await pg.waitForSelector('[data-testid=outcome]');
+  const outG = await pg.innerText('[data-testid=outcome]');
+  check('sim10: led to an ending', /Led Away|A Line in the Field|Only Stone|The Long Sleep|Right by Luck|The Claims Overrun|Scorched Rock|Crake's Fire|Seeded the Claims|Grown Into the Hull|Left to the Miners|Shots in the Field/i.test(outG), outG.slice(0, 200));
+  tr = await allG();
+  const LEAK10 = /Kestrel|Prefect|Ashen Covenant|Tallis|Sabeth|Thornwake|Cantor|Brenn|Teyma|Paley|Larkspur|Saltglass|Rhune|Tarvo|Hollis|Brack|Teague|Saffron Mule|Gannet|Corrie Drift|Hesper|Krenn|Vesk|Sallow|Fosse|Vell Crossing|Eventide|Wick|Vollan|Kittiwake|Orrey|Sorrel|Roake|Dahl|Marchbank|Wrenmoor|Iron Psalm|Sable Narrows|\[[a-zA-Z_]+\]|undefined|Intergalactic Agency|the Agency/;
+  check('sim10: no other simulation\'s names leak in', !LEAK10.test(tr), (tr.match(new RegExp(`.{0,60}(${LEAK10.source}).{0,60}`)) ?? [''])[0]);
+  await pg.screenshot({ path: `${SHOTS}/sim10-03-outcome.png` });
+  if (await pg.locator('[data-testid=outcome-aar]').count()) await pg.click('[data-testid=outcome-aar]');
+  await pg.waitForTimeout(300);
+  const aarG = (await pg.locator('[data-testid=aar]').count()) ? await pg.innerText('[data-testid=aar]') : '';
+  check('sim10: AAR is available, cites regulations and has no percentages', /Gardener/i.test(aarG) && /ISA regulations/.test(aarG) && !/\d\s*%/.test(aarG), aarG.slice(0, 200));
+  await pg.screenshot({ path: `${SHOTS}/sim10-04-aar.png`, fullPage: true });
+  if (await pg.locator('[data-testid=aar-close]').count()) await pg.click('[data-testid=aar-close]');
+  await pg.setViewportSize({ width: 390, height: 844 });
+  await pg.waitForTimeout(400);
+  const ovG = await pg.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  check('sim10 phone: no horizontal overflow', ovG <= 0, `overflow ${ovG}px`);
+  await ctxG.close();
+}
+
 // ============================================================== v0.8.0 =====
 // The Captain's Handbook: contents, articles, search, bridge commands in every timeline (state untouched),
 // report citations, spoiler safety, desktop and phone width.

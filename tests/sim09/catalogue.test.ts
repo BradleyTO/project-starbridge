@@ -38,7 +38,7 @@ describe('catalogue and registry', () => {
     expect(scenarioFor('long-picket')).toBe(P);
     expect(P.title).toBe(x.title);
     expect(TRAINING_SCENARIOS['long-picket']).toBe(P);
-    expect(SIMULATIONS.length).toBe(9);
+    expect(SIMULATIONS.length).toBeGreaterThanOrEqual(9);
   });
 
   it('names resolve to the right simulation, and older names are unchanged', () => {

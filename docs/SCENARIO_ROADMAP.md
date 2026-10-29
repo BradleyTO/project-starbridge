@@ -38,8 +38,8 @@ Premises can be adjusted when a scenario is built. The core event, the primary c
 | 6 | Ion Season | Leading two slow ore haulers blind through an ion storm | A gut call on incomplete information | Ens. Adeyemi (Helm) | **done** (v0.8.6) |
 | 7 | Ghost Ledger | Someone copies the navigation keys during a reception aboard | Deduction and reasoning | Lt. Cmdr. Rask (Tactical/Security) | **done** (v0.8.7) |
 | 8 | The Lantern Drift | A derelict generation ship with 900 sleepers in failing cryo | Triage and sacrifice | Dr. Osei (Medical) | **done** (v0.8.8) |
-| 9 | The Long Picket | Reactor parts must get through a Directorate "inspection" blockade | Bluffing | Cmdr. Marrow (XO) | planned |
-| 10 | The Gardener | A spreading growth in an asteroid field may be alive | Restraint: choosing not to act | Lt. Varga (Science) | planned |
+| 9 | The Long Picket | Reactor parts must get through a Directorate "inspection" blockade | Bluffing | Cmdr. Marrow (XO) | **done** (v0.8.9) |
+| 10 | The Gardener | A spreading growth in an asteroid field may be alive | Restraint: choosing not to act | Lt. Varga (Science) | **done** (v0.8.10) |
 | 11 | Coldwater | Engineering refuses orders after a death they think was covered up | Crew conflict and leadership | Chief Okafor (Engineering) | planned |
 | 12 | Ember Tide | A stellar flare will sweep a mining outpost at an uncertain hour | Timing and patience | Lt. Varga (Science) | planned |
 | 13 | The Seventh Bell | An inquiry into an Agency cutter firing on a Directorate courier | Accountability: telling an inconvenient truth | Lt. Cmdr. Rask (Tactical) | planned |
@@ -424,21 +424,42 @@ Nothing was added to ISA-COM-001.
 
 **Seeds vary:** Roake's orders, temperament, knowledge and history with Marrow, the Reeve's honesty about the deadline, the deadline itself (16–22 minutes), when the relief arrives (8–24) and when the sweep finishes (5–8).
 
-### 10. The Gardener
-**Premise.** A self-replicating growth is spreading across an asteroid mining field. Science suspects it is alive and possibly aware. The miners want it burned before it reaches their claims. It is reaching toward the Halcyon.
+### 10. The Gardener (done, v0.8.10)
+**Premise.** The Cobble Field is a scatter of a few hundred rocks worked by a small claims cooperative. Three days ago a pale, branching growth began spreading across one of them, toward the claims. The cooperative's tender *Hobnail*, under **Claimwarden Bettine Crake**, is holding off the rock with cutting charges and means to burn it. Their claims station *Spindle* holds 140 people; **Assayer Lorne Haskett** there knows how the rocks are linked. Nobody is shooting at anyone. Lt. Varga can find out what the growth is, but only a step at a time.
+
+*Revised when built (2026-10-29):* "possibly aware" and the "contact" ending were dropped, because #3 The Quiet Signal owns first contact; the growth cannot be communicated with. It is not a disease and there is no quarantine line, so it does not repeat #2 Quarantine at Tallis Gate. "It is reaching toward the Halcyon" became a seeded hazard: if the growth is drawn to heat, metal or light and the Halcyon lingers close, it can reach her hull. "Relocation" became leading it away with a lure the Chief builds, which works only once Varga knows what it is drawn to. The Claimwarden was going to be called Ashby, which clashed with the captain's default name, so she is Bettine Crake.
 
 **Command challenge:**
-- **Primary:** restraint. Choose *not* to act while the evidence comes in.
-- **Secondary:** relying on the science officer.
-- **Pivotal officer:** Lt. Varga (Science), who needs time and protection to learn what it is.
+- **Primary:** restraint: holding off a burn that everyone around you wants, while the evidence comes in, and then acting on it.
+- **Secondary:** relying on the science officer, and keeping the miners' trust long enough for her to finish.
+- **Pivotal officer:** Lt. Varga (Science). She learns, in order, whether it is alive, what it is drawn to, and what burning it would do (and that it can only grow by touch). A probe sample speeds her up. Dr. Osei refuses an uncontained sample aboard or a team in ordinary suits, and allows a sealed sample or barrier protection. Lt. Cmdr. Rask warns once before burning anything not proven harmless. Chief Okafor builds a heat, metal or light lure, or runs the Halcyon cold. Assayer Haskett knows whether an ore rail, cargo tethers or nothing links the rock to the claims.
 
-**Why it's distinct:** the only simulation where the best opening move is often to do nothing. The "threat" may be a life form.
+**Why it's distinct:** the only simulation where the best opening move is to hold still, and where the "threat" may be a life form that cannot speak for itself.
+
+Overlap check (guide §12):
+- Unlike #2 Quarantine at Tallis Gate, nobody is sick and nothing is quarantined; the question is what a thing is, not who is infected.
+- Unlike #3 The Quiet Signal, there is no message and no contact; the growth cannot answer.
+- Unlike #8 The Lantern Drift, nobody is dying and there is no triage.
+- Unlike #12 Ember Tide (timing), the clock here is a person's patience, which the captain can extend with honest words and a kept promise.
+
+**Hidden:** whether it is a living organism, a mineral crystallisation, or a living growth full of spores; what it is drawn to (heat, metal or light); what links its rock to the claims (an ore rail, cargo tethers or nothing); Crake's temper (hothead, pragmatic or frightened); when she burns (8–12), when it reaches the claims (18–24), and when it could reach the Halcyon (10–15).
 
 **Endings:**
-- **Success:** contact, a negotiated boundary, a relocation.
-- **Failure or partial:** destruction (with a moral cost), an infested Halcyon, the miners burn it themselves.
+- **Success:** Led Away (a lure, on evidence, draws it off the claims), A Line in the Field (the link to the claims is cut, so it can never cross), Only Stone (proven not alive, then cut out or burned), The Long Sleep (a light-drawn growth goes dormant when the station dims its floodlights).
+- **Failure or partial:** Right by Luck (partial: a growth that turned out to be stone, burned or cut out before anyone had proven it), The Claims Overrun (partial: nothing done in time; nobody hurt, but the claims are lost), Scorched Rock (a living growth burned by the Halcyon), Crake's Fire (the Claimwarden burns it with leave or against the bridge), Seeded the Claims (a sporing growth burned, scattering spores across the field), Grown Into the Hull (it reaches the Halcyon), Left to the Miners (the Halcyon leaves), Shots in the Field (the Halcyon fires on the tender).
 
-**Seeds vary:** whether it is alive, aware or neither; how fast it spreads; how desperate the miners are.
+**Regulations cited:** §4.1 (care-1), §4.2 (care-2), §3.9 (roe-3) and §6.1 (honesty-1). Hidden training references on §1.4 (cmd-4), §4.2 (care-2) and §8.1 (health-1).
+
+**Reckless/responsible pair:** Led Away reached by the same metal lure, once after Varga's study with a probe sample (graded exemplary) and once laid on a guess after a burn order and an uncontained sample brought aboard (graded mixed or reckless, citing §4.2).
+
+**Exercise objectives (no regulation yet):**
+- "do not destroy the growth before the science officer knows what it is" (know). No First Edition subsection covers an unknown life form that poses no immediate threat. Proposed for Brad's approval: "ISA personnel shall not destroy or harm an unknown life form, or a growth that may be alive, while it poses no immediate threat to life and before reasonable efforts have been made to establish what it is."
+
+Nothing was added to ISA-COM-001.
+
+**Naming notes:** no established name was changed, and no name is reused from an earlier simulation. "Ashby" was not used because it clashes with the captain's default name.
+
+**Seeds vary:** nature, what it is drawn to, the link, Crake's temper, and the three clocks above.
 
 ### 11. Coldwater
 **Premise.** An engineer dies in an accident, and half of the Halcyon's engineering section refuses orders. They believe the death was covered up, and they are partly right: a supervisor falsified a maintenance log.
