@@ -40,7 +40,7 @@ Premises can be adjusted when a scenario is built. The core event, the primary c
 | 8 | The Lantern Drift | A derelict generation ship with 900 sleepers in failing cryo | Triage and sacrifice | Dr. Osei (Medical) | **done** (v0.8.8) |
 | 9 | The Long Picket | Reactor parts must get through a Directorate "inspection" blockade | Bluffing | Cmdr. Marrow (XO) | **done** (v0.8.9) |
 | 10 | The Gardener | A spreading growth in an asteroid field may be alive | Restraint: choosing not to act | Lt. Varga (Science) | **done** (v0.8.10) |
-| 11 | Coldwater | Engineering refuses orders after a death they think was covered up | Crew conflict and leadership | Chief Okafor (Engineering) | planned |
+| 11 | Coldwater | Engineering refuses orders after a death they think was covered up | Crew conflict and leadership | Chief Okafor (Engineering) | **done** (v0.8.11) |
 | 12 | Ember Tide | A stellar flare will sweep a mining outpost at an uncertain hour | Timing and patience | Lt. Varga (Science) | planned |
 | 13 | The Seventh Bell | An inquiry into an Agency cutter firing on a Directorate courier | Accountability: telling an inconvenient truth | Lt. Cmdr. Rask (Tactical) | planned |
 | 14 | Starfall | A habitat sinking into a gas giant; only the green helmsman can fly the rescue | Trusting a junior officer | Ens. Adeyemi (Helm) | planned |
@@ -461,21 +461,37 @@ Nothing was added to ISA-COM-001.
 
 **Seeds vary:** nature, what it is drawn to, the link, Crake's temper, and the three clocks above.
 
-### 11. Coldwater
-**Premise.** An engineer dies in an accident, and half of the Halcyon's engineering section refuses orders. They believe the death was covered up, and they are partly right: a supervisor falsified a maintenance log.
+### 11. Coldwater (done, v0.8.11)
+**Premise.** The Halcyon is beaming power down to Coldwater Station, an ISA research station of 38 people on a frozen moon whose own reactor has failed. A coolant valve in the Halcyon's plant splits and kills Engineer's Mate Callum Strand. The plant scrams, the station goes onto batteries, and B watch, led by Petty Officer Mara Tennant, refuses to go back into engineering. They believe Strand reported the valve days ago and someone made the report go away. They are right: Lt. Garrick Penhale or Petty Officer Sian Corley falsified the maintenance record. The ISA Safety Inspectorate's courier, the ISV Plumb Line, is a few hours out with Inspector-Commander Noor Hadley aboard.
 
 **Command challenge:**
-- **Primary:** crew conflict and leadership.
+- **Primary:** crew conflict and leadership (the previous simulation's was restraint).
 - **Secondary:** accountability (the cover-up is real).
-- **Pivotal officer:** Chief Okafor (Engineering), torn between her people and the chain of command.
+- **Pivotal officer:** Chief Okafor (Engineering), torn between her people and the chain of command. She can pull the plant's own sensor record, have the sister valve inspected and restart with the half of engineering still working, and she may have countersigned the falsified entry in good faith.
 
 **Why it's distinct:** the only mutiny. The adversary is the captain's own crew, and they have a point.
 
-**Endings:**
-- **Success:** an investigation that restores trust, a transparent inquiry, a negotiated return to duty.
-- **Failure or partial:** the mutiny put down by force, a split crew, the ship crippled.
+Overlap check (guide §12):
+- Unlike #4 Reactor Night, the plant is not the emergency; the people who run it are, and nobody can be ordered back into it until it is proved safe.
+- Unlike #7 Ghost Ledger, the deduction is short (the plant's record tells the truth); the hard part is what the captain does with it, and in front of whom.
+- Unlike #13 The Seventh Bell, the inquiry is into the captain's own ship, and the captain controls whether it is honest.
 
-**Seeds vary:** who falsified what, who is lying, the ringleader's temperament.
+**Hidden:** who falsified it (Penhale or Corley); how (a sign-off on an inspection that never happened, or a deleted report); whether the sister valve has the same flaw; Tennant's temper (grieving, principled or hothead); which way Okafor leans; whether Okafor countersigned; when the station's batteries run out (20–26); and when a hothead watch seals the engine room (6–9).
+
+**Endings:**
+- **Success:** The Whole Truth (the record read, the officer heard and relieved, the watch told), An Open Inquiry (an honest referral to the Inspectorate), Terms on the Record (the watch returns on terms the captain keeps), The Captain's Watch (the captain stands the restart watch in a plant proved safe).
+- **Failure or partial:** A Divided Ship (partial: restarted without B watch), Still Standing Down (partial: time ran out with nothing settled), Put Down by Force, Coldwater Twice (the sister valve fails and kills again), The Log Stands (the matter closed on the falsified log), The Wrong Name (the wrong person named to the watch), Coldwater Goes Dark (the station's batteries run out), Left in the Dark (the Halcyon leaves orbit), Shots Fired.
+
+**Regulations cited:** §4.1 (care-1), §4.2 (care-2), §3.9 (roe-3) and §6.1 (honesty-1). Hidden training references on §4.2 (care-2), §5.8 (orders-1), §6.4 (conduct-2) and §10.1 (service-3).
+
+**Reckless/responsible pair:** The Whole Truth reached once by pulling the record, inspecting the sister valve and hearing the officer before relieving him (graded exemplary), and once after threatening the watch with charges, relieving an officer on a rumour and pressing for an uninspected restart (graded mixed or reckless, citing §4.2).
+
+**Exercise objectives (no regulation yet):**
+- "find out what really happened and tell the watch" (truth). No First Edition subsection requires a death aboard to be investigated and its findings told to the crew. Proposed for Brad's approval: "A death or serious injury aboard an ISA vessel shall be investigated and reported to Fleet Command, and the crew shall be told what the investigation finds."
+
+**Naming notes:** no established name was changed. "ISA Safety Inspectorate" is a new body name, flagged for Brad. "Quill" was not used because Ion Season uses it.
+
+Nothing was added to ISA-COM-001.
 
 ### 12. Ember Tide
 **Premise.** A variable star will throw a flare across Ketter's Rest, a mining outpost with 400 people and too few shuttles. The flare's hour is uncertain. Every scan narrows the window, but every hour spent waiting is an hour not spent evacuating.

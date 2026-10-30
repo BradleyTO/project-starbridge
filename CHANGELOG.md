@@ -2,6 +2,29 @@
 
 All notable changes to Project Starbridge are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.8.11] — 2026-10-30 — Training Simulation 011: Coldwater
+
+Nightly simulation build. Eleventh of 30 training simulations. No change to grading, evaluation rules, crew refusal behaviour in other simulations or ISA-COM-001 wording.
+
+### Added
+- **Training Simulation 011: Coldwater** (`src/scenarios/coldwater/`). The Halcyon is beaming power down to Coldwater Station, 38 people on a frozen moon, when a coolant valve in her plant splits and kills Engineer's Mate Callum Strand. The plant scrams, the station goes onto batteries, and B watch under **Petty Officer Mara Tennant** refuses to go back into engineering: they believe Strand reported the valve and someone buried it. They are right. **Director Annick Toller** on the station watches her batteries; **Inspector-Commander Noor Hadley** of the ISA Safety Inspectorate is a few hours out aboard the courier ISV *Plumb Line*.
+  - **Primary challenge:** crew conflict and leadership. **Secondary:** accountability. **Pivotal officer:** Chief Okafor (Engineering).
+  - Seeded, deterministic and offline: who falsified the record (Lt. Garrick Penhale or Petty Officer Sian Corley) and how; whether the sister valve has the same flaw; Tennant's temper (grieving, principled or hothead); which way Okafor leans; whether Okafor countersigned in good faith; and when the station's batteries run out and a hothead watch seals the engine room.
+  - Officers' expertise matters: Okafor pulls the plant's own sensor record, has the sister valve inspected, and restarts with the half of engineering still working (or pushes back once if she leans toward her people); Dr. Osei says what killed Strand; Rask warns once before using force on crew who threaten nobody; Adeyemi can bring the station's people up by shuttle.
+  - The others act for themselves: Tennant's watch returns only for the truth, an open inquiry, terms the captain keeps, or the captain standing the watch in a plant proved safe, and a hothead watch locks the plant if ignored; Toller calls and warns as her batteries fall; Hadley asks for an honest account before she opens a review and will not keep a death quiet.
+  - Endings — success: The Whole Truth, An Open Inquiry, Terms on the Record, The Captain's Watch. Failure or partial: A Divided Ship (partial), Still Standing Down (partial), Put Down by Force, Coldwater Twice, The Log Stands, The Wrong Name, Coldwater Goes Dark, Left in the Dark, Shots Fired.
+  - Listed in the catalogue and Mission Archive; launch with "Computer, begin the Coldwater simulation" (also "simulation eleven"). Distinct voice hints for Tennant, Penhale, Corley, Toller and Hadley.
+  - Evaluation data (§6b): objectives with priorities, ending tiers, judgment markers, regulations §4.1 (care-1), §4.2 (care-2), §3.9 (roe-3) and §6.1 (honesty-1). One labelled **exercise objective**: find out what really happened and tell the watch (truth). No First Edition subsection requires a death aboard to be investigated and its findings told to the crew, and a rule is proposed for approval.
+- Interpreter: in Coldwater, statements on an open channel or to the watch are spoken rather than read as orders, the simulation's orders are understood, and its names are protected from spelling correction. "Simulation eleven" and "eleventh" now resolve by number.
+- Hidden handbook training references (internal data, not shown to the player): §4.2 (care-2), §5.8 (orders-1), §6.4 (conduct-2) and §10.1 (service-3) gain or confirm a reference to #11.
+
+### Fixed
+- A line such as "I want the full record looked at" (a ship's or plant's record) is no longer read as a question about the captain's Training Record.
+
+### Tests
+- New `tests/sim11/` (52 tests): every reachable ending through scripted playthroughs (Shots Fired is a guard: Rask refuses to fire on the station or the courier, and a test checks the refusal); a 60-seed sweep where a careful captain succeeds; seed variation, hidden information, NPC goals and crew refusals; 40 fuzzed games with state invariants and name-leak checks; catalogue, bridge launch, Mission Archive, voices, handbook cross-references, save round-trip and canon untouched; evaluation, including a reckless/responsible pair that both reach The Whole Truth.
+- Smoke test: a sim11 block (list, archive, launch by name, intro, the record, an ending, AAR, phone width).
+
 ## [0.8.10] — 2026-10-29 — Training Simulation 010: The Gardener
 
 Nightly simulation build. Tenth of 30 training simulations. No change to the engine, grading, evaluation rules, crew refusal behaviour in other simulations or ISA-COM-001 wording.

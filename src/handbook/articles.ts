@@ -1027,6 +1027,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "simulation": 10,
           "title": "The Gardener",
           "purpose": "Keeping a boarding team and a sample sealed off from something nobody understands yet."
+        },
+        {
+          "simulation": 11,
+          "title": "Coldwater",
+          "purpose": "Proving a plant safe before anyone goes back into it."
         }
       ],
       "enforcement": {
@@ -1592,8 +1597,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
         {
           "simulation": 11,
           "title": "Coldwater",
-          "purpose": "Leading a crew whose trust has been shaken.",
-          "planned": true
+          "purpose": "Leading a crew whose trust has been shaken."
         }
       ],
       "enforcement": {
@@ -1805,8 +1809,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
         {
           "simulation": 11,
           "title": "Coldwater",
-          "purpose": "Leading when the truth is uncomfortable.",
-          "planned": true
+          "purpose": "Leading when the truth is uncomfortable."
         },
         {
           "simulation": 13,
@@ -2378,7 +2381,13 @@ export const ARTICLES: readonly HandbookArticle[] = [
         "reg-7.4",
         "conduct-2"
       ],
-      "training": [],
+      "training": [
+        {
+          "simulation": 11,
+          "title": "Coldwater",
+          "purpose": "Hearing the people involved before anyone is blamed."
+        }
+      ],
       "enforcement": {
         "status": "partial",
         "note": "Reviews apply a written rule to the evidence fixed when they open, and the reason given for a refusal is the only explanation considered. The good-faith guidance standard, appeals, temporary measures and independent review are not yet available."

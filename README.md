@@ -10,7 +10,7 @@ A browser-based, AI-assisted **starship command simulator**. You command the exp
 
 - `First Officer, give me a status report` · `Okafor, how are the engines?` (small talk, answered from the ship's state)
 - `Science, what systems are within exploration range?`
-- `Computer, open the simulation archive` · `Computer, list simulations` (or `what simulations are available`) · `Computer, begin the Kestrel Incident simulation` · `Computer, begin the Tallis Gate simulation` · `Computer, begin the Quiet Signal simulation` · `Computer, begin the Reactor Night simulation` · `Computer, begin the Saltglass Accord simulation` · `Computer, begin the Ion Season simulation` · `Computer, begin the Ghost Ledger simulation` · `Computer, begin the Lantern Drift simulation` · `Computer, begin the Long Picket simulation` · `Computer, begin the Gardener simulation` · `run simulation two` (typed or spoken). A simulation starts **only** on request; `begin the simulation` with no name starts #1.
+- `Computer, open the simulation archive` · `Computer, list simulations` (or `what simulations are available`) · `Computer, begin the Kestrel Incident simulation` · `Computer, begin the Tallis Gate simulation` · `Computer, begin the Quiet Signal simulation` · `Computer, begin the Reactor Night simulation` · `Computer, begin the Saltglass Accord simulation` · `Computer, begin the Ion Season simulation` · `Computer, begin the Ghost Ledger simulation` · `Computer, begin the Lantern Drift simulation` · `Computer, begin the Long Picket simulation` · `Computer, begin the Gardener simulation` · `Computer, begin the Coldwater simulation` · `run simulation two` (typed or spoken). A simulation starts **only** on request; `begin the simulation` with no name starts #1.
 - Inside a simulation, `Computer, end the simulation` (or the End sim button) returns you to the bridge. A simulation that reaches an ending returns you to the bridge with a debrief card (run it again, new variation, archive).
 
 **Two products (described only; there are no payments):**
@@ -131,7 +131,8 @@ With **Voice on**, each bridge officer, the ship's computer, the narrator and th
 | 8 | **The Lantern Drift** | playable (v0.8.8) |
 | 9 | **The Long Picket** | playable (v0.8.9) |
 | 10 | **The Gardener** | playable (v0.8.10) |
-| 11–30 | see [docs/SCENARIO_ROADMAP.md](docs/SCENARIO_ROADMAP.md) | planned, one per day |
+| 11 | **Coldwater** | playable (v0.8.11) |
+| 12–30 | see [docs/SCENARIO_ROADMAP.md](docs/SCENARIO_ROADMAP.md) | planned, one per day |
 
 Every simulation is listed in the Mission Archive and by `Computer, list simulations`, and can be started by name or number. How to write one is in [docs/SCENARIO_GUIDE.md](docs/SCENARIO_GUIDE.md).
 
@@ -504,6 +505,7 @@ The app deploys to Vercel as a Vite static site plus serverless functions in `ap
 - [x] **v0.8.8** — Training Simulation 008: The Lantern Drift.
 - [x] **v0.8.9** — Training Simulation 009: The Long Picket.
 - [x] **v0.8.10** — Training Simulation 010: The Gardener.
+- [x] **v0.8.11** — Training Simulation 011: Coldwater.
 - [ ] **Handbook Stages 2 and 3** (each takes the next free version number when it ships; nightly simulations keep bumping the patch version) — Crew who cite and explain regulations; evaluations, refusals and reviews moved to the approved First Edition wording.
 - [ ] **Next** — Server-side AI narration and character responses with schema validation, timeouts, usage limits and template fallback; server-side accounts and credits.
 - [ ] **Milestone 4** — Branching outcomes, mission evaluation, full save/resume, voice controls.

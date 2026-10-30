@@ -1499,6 +1499,66 @@ for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape',
   await ctxG.close();
 }
 
+// ============================================================== v0.8.11 ====
+// Training Simulation 011: Coldwater. Listed, launched by name, the record pulled, the watch faced, an ending, AAR filed.
+{
+  const ctxC = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await ctxC.addInitScript(stubs);
+  const pg = await ctxC.newPage();
+  pg.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  pg.on('pageerror', (e) => errors.push(String(e)));
+  const allC = async () => (await pg.innerText('[data-testid=narrative]')) + '\n' + (await pg.innerText('[data-testid=comms]'));
+  const modeC = () => pg.getAttribute('[data-testid=mode-banner]', 'data-mode');
+  const endedC = async () => (await pg.locator('[data-testid=outcome]').count()) > 0;
+  await pg.goto(withSeed(11), { waitUntil: 'networkidle' });
+  await pg.waitForTimeout(600);
+  await skipIntro(pg);
+  await sendOn(pg, 'Computer, list simulations', 600);
+  check('sim11: "list simulations" names Coldwater', /Coldwater/.test(await allC()));
+  if (!(await pg.locator('[data-testid=hub]').count())) await pg.click('[data-testid=open-hub]');
+  await pg.click('[data-testid=hub-tab-archive]');
+  await pg.waitForTimeout(150);
+  check('sim11: Mission Archive lists Training Simulation 011', /Training Simulation 011: Coldwater/.test(await pg.innerText('[data-testid=hub]')) && (await pg.locator('[data-testid=archive-train-TRN-coldwater]').count()) === 1);
+  await pg.click('[data-testid=hub-close]');
+  await pg.waitForTimeout(100);
+  await sendOn(pg, 'Computer, begin the Coldwater simulation', 1200);
+  await pg.waitForSelector('[data-testid=mode-banner][data-mode=simulation]');
+  check('sim11: launch by name starts a simulation', (await modeC()) === 'simulation');
+  await pg.waitForTimeout(4500);
+  await skipIntro(pg);
+  let tr = await allC();
+  check('sim11: intro plays (Coldwater, B watch, the Plumb Line)', /Coldwater/.test(tr) && /B watch/.test(tr) && /Plumb Line/.test(tr), tr.slice(0, 300));
+  await pg.screenshot({ path: `${SHOTS}/sim11-01-intro.png` });
+  check('sim11: the station and the courier on sensors by name', /Coldwater Station/.test(await pg.innerText('[data-testid=contact-kestrel]')) && /Plumb Line/.test(await pg.innerText('[data-testid=contact-cruiser]')));
+  for (const c of ["Chief, pull the plant's sensor record", 'Chief, inspect the sister valve', 'wait', 'wait']) await sendOn(pg, c, 400);
+  tr = await allC();
+  check('sim11: the Chief reads the record', /record/i.test(tr), tr.slice(-400));
+  await pg.screenshot({ path: `${SHOTS}/sim11-02-record.png` });
+  for (const c of ['go down to engineering', 'I am sorry about Callum Strand. He was one of ours, and he should not have died.', 'wait']) {
+    if (await endedC()) break;
+    await sendOn(pg, c, 400);
+  }
+  for (let i = 0; i < 40 && !(await endedC()); i++) await sendOn(pg, 'wait', 400);
+  await pg.waitForSelector('[data-testid=outcome]');
+  const outC = await pg.innerText('[data-testid=outcome]');
+  check('sim11: led to an ending', /The Whole Truth|An Open Inquiry|Terms on the Record|The Captain's Watch|A Divided Ship|Still Standing Down|Put Down by Force|Coldwater Twice|The Log Stands|The Wrong Name|Coldwater Goes Dark|Left in the Dark|Shots Fired/i.test(outC), outC.slice(0, 200));
+  tr = await allC();
+  const LEAK11 = /Kestrel|Prefect|Ashen Covenant|Tallis|Sabeth|Thornwake|Cantor|Brenn|Teyma|Paley|Larkspur|Saltglass|Rhune|Tarvo|Hollis|Brack|Teague|Saffron Mule|Gannet|Corrie Drift|Hesper|Krenn|Vesk|Sallow|Fosse|Vell Crossing|Eventide|Wick|Vollan|Kittiwake|Orrey|Sorrel|Roake|Dahl|Marchbank|Wrenmoor|Iron Psalm|Sable Narrows|Crake|Haskett|Cobble|Spindle|Hobnail|Claimwarden|\[[a-zA-Z_]+\]|undefined|Intergalactic Agency|the Agency/;
+  check('sim11: no other simulation\'s names leak in', !LEAK11.test(tr), (tr.match(new RegExp(`.{0,60}(${LEAK11.source}).{0,60}`)) ?? [''])[0]);
+  await pg.screenshot({ path: `${SHOTS}/sim11-03-outcome.png` });
+  if (await pg.locator('[data-testid=outcome-aar]').count()) await pg.click('[data-testid=outcome-aar]');
+  await pg.waitForTimeout(300);
+  const aarC = (await pg.locator('[data-testid=aar]').count()) ? await pg.innerText('[data-testid=aar]') : '';
+  check('sim11: AAR is available, cites regulations and has no percentages', /Coldwater/i.test(aarC) && /ISA regulations/.test(aarC) && !/\d\s*%/.test(aarC), aarC.slice(0, 200));
+  await pg.screenshot({ path: `${SHOTS}/sim11-04-aar.png`, fullPage: true });
+  if (await pg.locator('[data-testid=aar-close]').count()) await pg.click('[data-testid=aar-close]');
+  await pg.setViewportSize({ width: 390, height: 844 });
+  await pg.waitForTimeout(400);
+  const ovC = await pg.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  check('sim11 phone: no horizontal overflow', ovC <= 0, `overflow ${ovC}px`);
+  await ctxC.close();
+}
+
 // ============================================================== v0.8.0 =====
 // The Captain's Handbook: contents, articles, search, bridge commands in every timeline (state untouched),
 // report citations, spoiler safety, desktop and phone width.

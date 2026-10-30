@@ -10,11 +10,12 @@ import { ledgerScenario } from './ledger';
 import { lanternScenario } from './lantern';
 import { picketScenario } from './picket';
 import { gardenerScenario } from './gardener';
+import { coldwaterScenario } from './coldwater';
 import { bridgeScenario } from './bridge';
 import { SIMULATIONS } from './catalogue';
 
 /** Training simulations by scenario id (one module per catalogue entry that has been built). */
-export const TRAINING_SCENARIOS: Record<string, ScenarioModule> = { [kestrelScenario.id]: kestrelScenario, [tallisScenario.id]: tallisScenario, [quietScenario.id]: quietScenario, [reactorScenario.id]: reactorScenario, [saltglassScenario.id]: saltglassScenario, [ionScenario.id]: ionScenario, [ledgerScenario.id]: ledgerScenario, [lanternScenario.id]: lanternScenario, [picketScenario.id]: picketScenario, [gardenerScenario.id]: gardenerScenario };
+export const TRAINING_SCENARIOS: Record<string, ScenarioModule> = { [kestrelScenario.id]: kestrelScenario, [tallisScenario.id]: tallisScenario, [quietScenario.id]: quietScenario, [reactorScenario.id]: reactorScenario, [saltglassScenario.id]: saltglassScenario, [ionScenario.id]: ionScenario, [ledgerScenario.id]: ledgerScenario, [lanternScenario.id]: lanternScenario, [picketScenario.id]: picketScenario, [gardenerScenario.id]: gardenerScenario, [coldwaterScenario.id]: coldwaterScenario };
 
 export const SCENARIOS: Record<string, ScenarioModule> = { ...TRAINING_SCENARIOS, [bridgeScenario.id]: bridgeScenario };
 

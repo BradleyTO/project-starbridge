@@ -118,10 +118,19 @@ export const SIMULATIONS: readonly SimulationInfo[] = [
     ['the gardener', 'gardener', 'cobble field', 'the cobble field', 'spindle', 'mining field'],
     ['the gardener', 'gardener'],
   ),
+  entry(
+    11,
+    'TRN-coldwater',
+    'coldwater',
+    'Coldwater',
+    'A coolant valve in the Halcyon\'s plant has killed a young engineer, and the station below is running on batteries. Half of engineering has stopped work: they believe his report on that valve was buried. They may be right. Seeded: every run can differ.',
+    ['coldwater', 'cold water', 'coldwater station', 'the strike', 'strike'],
+    ['coldwater', 'cold water'],
+  ),
 ];
 
 const NUMBER_WORDS: Record<string, number> = {
-  one: 1, first: 1, two: 2, second: 2, three: 3, third: 3, four: 4, fourth: 4, five: 5, fifth: 5, six: 6, sixth: 6, seven: 7, seventh: 7, eight: 8, eighth: 8, nine: 9, ninth: 9, ten: 10, tenth: 10,
+  one: 1, first: 1, two: 2, second: 2, three: 3, third: 3, four: 4, fourth: 4, five: 5, fifth: 5, six: 6, sixth: 6, seven: 7, seventh: 7, eight: 8, eighth: 8, nine: 9, ninth: 9, ten: 10, tenth: 10, eleven: 11, eleventh: 11,
 };
 
 /** Words that do not name a simulation ("begin the training simulation"). */
@@ -136,7 +145,7 @@ export function simulationByName(spoken: string | undefined): SimulationInfo | n
   const t = (spoken ?? '').toLowerCase().replace(/[#"'’.,!?]/g, ' ').replace(/\s+/g, ' ').trim();
   const rest = t.replace(GENERIC, ' ').replace(/\s+/g, ' ').trim();
   if (!rest) return SIMULATIONS[0];
-  const num = /^(?:0*(\d{1,3})|(one|two|three|four|five|six|seven|eight|nine|ten|first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth))(?: one)?$/.exec(rest);
+  const num = /^(?:0*(\d{1,3})|(one|two|three|four|five|six|seven|eight|nine|ten|first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|eleven|eleventh))(?: one)?$/.exec(rest);
   if (num) return SIMULATIONS.find((x) => x.number === (num[1] ? Number(num[1]) : NUMBER_WORDS[num[2]])) ?? null;
   // Longest matching phrase wins ("kestrel incident" before "incident").
   let best: { s: SimulationInfo; len: number } | null = null;

@@ -42,6 +42,8 @@ const SIM = '(?:sims?|simulations?|exercises?|drills?|scenarios?|training(?: run
 export function careerQuestion(raw: string): CareerTopic | null {
   const t = raw.replace(/^(?:computer|number one|first officer|xo|commander|marrow|varga|science)[,:]?\s+/, '');
   if (SHIP_ORDER.test(t)) return null;
+  // v0.8.11: a ship's or plant's record ("I want the full record looked at") is not the captain's Training Record.
+  if (/\bthe (?:full|whole|complete|uncut|plant'?s?|sensor|maintenance|ship'?s?|log'?s?|engineering) record\b/.test(t) && !/\b(?:my|training|service) record\b/.test(t)) return null;
   const recommend =
     new RegExp(`\\b(?:recommend\\w*|suggest\\w*|advis\\w*|propos\\w*)\\b.*\\b(?:${SIM}|next|for me|should i|to (?:run|try|do))\\b`).test(t) ||
     new RegExp(`\\b(?:which|what) ${SIM} (?:should|would|could|do you|ought)\\b`).test(t) ||
