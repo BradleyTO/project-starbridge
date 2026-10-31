@@ -41,7 +41,7 @@ Premises can be adjusted when a scenario is built. The core event, the primary c
 | 9 | The Long Picket | Reactor parts must get through a Directorate "inspection" blockade | Bluffing | Cmdr. Marrow (XO) | **done** (v0.8.9) |
 | 10 | The Gardener | A spreading growth in an asteroid field may be alive | Restraint: choosing not to act | Lt. Varga (Science) | **done** (v0.8.10) |
 | 11 | Coldwater | Engineering refuses orders after a death they think was covered up | Crew conflict and leadership | Chief Okafor (Engineering) | **done** (v0.8.11) |
-| 12 | Ember Tide | A stellar flare will sweep a mining outpost at an uncertain hour | Timing and patience | Lt. Varga (Science) | planned |
+| 12 | Ember Tide | A stellar flare will sweep a mining outpost at an uncertain hour | Timing and patience | Lt. Varga (Science) | **done** (v0.8.12) |
 | 13 | The Seventh Bell | An inquiry into an Agency cutter firing on a Directorate courier | Accountability: telling an inconvenient truth | Lt. Cmdr. Rask (Tactical) | planned |
 | 14 | Starfall | A habitat sinking into a gas giant; only the green helmsman can fly the rescue | Trusting a junior officer | Ens. Adeyemi (Helm) | planned |
 | 15 | Corsairs of the Veyl Shoals | A corsair ambush in an asteroid shoal where sensors and torpedoes fail | Tactical cunning: terrain and deception | Lt. Cmdr. Rask (Tactical) | planned |
@@ -83,6 +83,7 @@ Premises can be adjusted when a scenario is built. The core event, the primary c
 | Tactical cunning | 1 | #15 |
 | Command under overload | 1 | #30 |
 
+- #12 Ember Tide shipped as timing and patience (secondary: relying on the science officer).
 - No primary challenge appears more than three times, and no two consecutive simulations share one or the same pivotal officer.
 - **Pivotal officers across #1–#30:** Szabo 4, Varga 5, Okafor 5, Rask 4, Adeyemi 4, Osei 4, Marrow 4 (including the capstone).
 
@@ -493,21 +494,38 @@ Overlap check (guide §12):
 
 Nothing was added to ISA-COM-001.
 
-### 12. Ember Tide
-**Premise.** A variable star will throw a flare across Ketter's Rest, a mining outpost with 400 people and too few shuttles. The flare's hour is uncertain. Every scan narrows the window, but every hour spent waiting is an hour not spent evacuating.
+### 12. Ember Tide (done, v0.8.12)
+**Premise.** The variable star Myrr is building to a great flare, the Ember Tide, that will sweep the near face of the moon Ketter. The mining outpost of Ketter's Rest has about 400 people, an ore furnace that has not gone cold in eleven years, and no ship of its own but the ore lifter Mattock (Lifter-Master Joss Ferrier). Overseer Dagny Strome has a banking crew at the furnace: pulled too soon, it cracks and the colony with it; left too long, they die. Lt. Varga can see the flare coming but not the minute, and every reading narrows the window. The Halcyon has two or three shuttles, and the moon's far side is in its own shadow.
 
 **Command challenge:**
-- **Primary:** timing and patience. Commit too early and you waste trips; too late and nobody gets out.
+- **Primary:** timing and patience (the previous simulation's was crew conflict and leadership). Start the lifts at once, but hold the banking crew at the furnace, and the Halcyon over the outpost, exactly as long as the forecast allows and no longer, and do not flinch at a false dawn.
 - **Secondary:** relying on the science officer's forecast.
-- **Pivotal officer:** Lt. Varga (Science), whose forecast tightens with each reading.
+- **Pivotal officer:** Lt. Varga (Science). Her window narrows with each reading, faster with a probe close to the star or with Chief Okafor's power boost; she can call a false dawn, catch the star's precursor and give the minute, and sound the rock over the old galleries.
 
-**Why it's distinct:** the only race against a natural clock whose time is *unknown*. When to move matters more than how. There are no holdouts and no villain.
+**Why it's distinct:** the only race against a natural clock whose time is *unknown*. When to move matters more than how. There is no villain; the Overseer and the Lifter-Master have their own goals but are not holdouts once given a reason.
+
+Overlap check (guide §12):
+- Unlike #6 Ion Season, the gut call is replaced by a forecast that gets better if the captain waits for it, and the question is how long to wait, not which way to go.
+- Unlike #8 The Lantern Drift, nobody has to be left behind: a careful captain saves everyone, and the cost of bad timing is the furnace or lives.
+- Unlike #10 The Gardener (restraint), waiting here is not the safe choice; every minute held is a minute nearer the flare.
+- Unlike #20 Gravity's Edge and #26 Silent Running, the deadline belongs to other people, and the ship's own risk comes only from staying too long over the outpost.
+
+**Hidden:** the flare's true minute (17–24) and Varga's first window; what the star does first (steady, restless with a false dawn, or telling with a precursor); whether her model is firm or noisy; how deep the old lower galleries are (deep, shallow or flooded); Strome's temper (steady, stubborn or anxious); whether Ferrier is willing or needs a reason; shuttle count (2–3); population (380–420) and banking crew (24–36); and when the furnace could be banked.
 
 **Endings:**
-- **Success:** a full evacuation, a shelter inside the mine (unconventional), staged lifts timed to the forecast.
-- **Failure or partial:** partial losses, the Halcyon caught in the flare, the outpost abandoned too early, with the ore lost and the colony bankrupt.
+- **Success:** Banked and Clear (the furnace banked and the last lift inside the forecast), On the Tell (the last lift on Varga's minute after she catches the precursor), Under the Rock (unconventional: the outpost shelters in galleries Varga has sounded while the Halcyon waits in the shadow), Cold Furnace, Every Soul (the forecast never promised the furnace its time, and the crew came off at the last safe minute; also reached by leaving early with everyone aboard and the lifter docked).
+- **Failure or partial:** Too Soon from the Furnace (partial: pulled with time in hand, including an anxious Overseer's own pull at an unanswered false dawn), A Gambler's Margin (partial: the last lift outlasted the forecast and got away with it), Caught by the Tide, The Mattock in the Open (the lifter never warned), Not Deep Enough (shelter on the old survey alone), The Halcyon in the Light, Left to the Tide, Shots at Ketter's Rest.
 
-**Seeds vary:** the flare's true timing, the shuttle count, the mine's shielding.
+**Regulations cited:** §4.1 (care-1), §4.2 (care-2), §3.9 (roe-3) and §6.1 (honesty-1). Hidden training references on §1.4 (cmd-4) and §4.5 (care-4).
+
+**Reckless/responsible pair:** Under the Rock reached once after Varga has sounded the galleries and with the forecast running (graded exemplary), and once on the outpost's old survey alone with nobody reading the star (graded mixed or reckless).
+
+**Exercise objectives (no regulation yet):**
+- "warn every vessel in the flare's path, the Mattock included" (warn). This is the duty-to-warn proposal already awaiting Brad's approval from #3 The Quiet Signal; no new rule is proposed.
+
+**Naming notes:** no established name was changed and no new named body was introduced.
+
+Nothing was added to ISA-COM-001.
 
 ### 13. The Seventh Bell
 **Premise.** It has already happened: an Agency patrol cutter fired on a Directorate courier and killed two crew. The Halcyon is sent to lead the inquiry, with a Directorate investigator aboard. The cutter's captain says it was self-defence. The recovered logs and debris tell a more complicated story, and Fleet would prefer a quiet finding.

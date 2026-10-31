@@ -2,6 +2,31 @@
 
 All notable changes to Project Starbridge are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.8.12] — 2026-10-31 — Training Simulation 012: Ember Tide
+
+Nightly simulation build. Twelfth of 30 training simulations. No change to the engine, grading, evaluation rules, crew refusal behaviour in other simulations or ISA-COM-001 wording.
+
+### Added
+- **Training Simulation 012: Ember Tide** (`src/scenarios/embertide/`). The variable star Myrr is building to a great flare (the miners call it the Ember Tide) that will sweep the near face of the moon Ketter, where the mining outpost of Ketter's Rest keeps about 400 people and an ore furnace that has not gone cold in eleven years. **Overseer Dagny Strome** has a banking crew at the furnace: pulled too soon, it cracks and the colony with it; left too long, they die. The outpost's only ship is the ore lifter *Mattock*, still flying ore under **Lifter-Master Joss Ferrier**. Lt. Varga can see the flare coming but not the minute. Nothing out here is armed; the danger is the star.
+  - **Primary challenge:** timing and patience. **Secondary:** relying on the science officer's forecast. **Pivotal officer:** Lt. Varga (Science).
+  - Seeded, deterministic and offline: the flare's true minute (17–24) and Varga's first window; whether the star is steady, restless (a false dawn) or telling (a precursor Varga can catch); whether her model is firm or noisy; how deep the old lower galleries really are (deep, shallow or flooded); Strome's temper (steady, stubborn or anxious); whether Ferrier is willing or needs a reason; the shuttle count; the population and banking crew; and when the furnace could be banked.
+  - Officers' expertise matters: Varga narrows the window a reading at a time, tighter with a probe close to the star or with Chief Okafor's power boost, calls a false dawn or catches the precursor, and can sound the rock over the galleries; Okafor can send a team down to help bank the furnace, which can make a furnace bankable that the forecast would not otherwise allow; Adeyemi takes the Halcyon into the moon's shadow, where the lifts run slower; Dr. Osei warns against an unsurveyed shelter; Rask will not fire on civilians.
+  - The others act for themselves: Strome keeps her crew at the furnace until she is given a reason (a stubborn Overseer will not move without one; an anxious one pulls her own crew at a false dawn unless told it is not the flare); Ferrier keeps flying ore, and a hard Lifter-Master asks why before he will carry people.
+  - Unconventional options: sheltering the outpost below ground in galleries Varga has sounded, or leaving early with everyone aboard and the lifter docked, giving up the furnace.
+  - Endings — success: Banked and Clear, On the Tell, Under the Rock, Cold Furnace, Every Soul. Failure or partial: Too Soon from the Furnace (partial), A Gambler's Margin (partial), Caught by the Tide, The Mattock in the Open, Not Deep Enough, The Halcyon in the Light, Left to the Tide, Shots at Ketter's Rest.
+  - Judged on what the forecast showed at the time: a furnace given up at the last minute the forecast could promise is Cold Furnace, Every Soul (success) even if the star would have allowed more; a last lift that outlasts the forecast and gets away with it is A Gambler's Margin (partial).
+  - Listed in the catalogue and Mission Archive; launch with "Computer, begin the Ember Tide simulation" (also "simulation twelve"). Distinct voice hints for Strome and Ferrier.
+  - Evaluation data (§6b): objectives with priorities, ending tiers, judgment markers, regulations §4.1 (care-1), §4.2 (care-2), §3.9 (roe-3) and §6.1 (honesty-1). One labelled **exercise objective**: warn every vessel in the flare's path, the Mattock included. This is the duty-to-warn proposal already awaiting approval from Training Simulation 003; no new rule is proposed.
+- Interpreter: in Ember Tide, statements on an open channel are spoken rather than read as orders, the simulation's orders are understood, and its names are protected from spelling correction. "Simulation twelve" and "twelfth" now resolve by number.
+- Hidden handbook training references (internal data, not shown to the player): §1.4 (cmd-4) and §4.5 (care-4) gain a reference to #12.
+
+### Fixed
+- A jump drive engaged by hand in Ember Tide ends the exercise at once and is judged on who was left behind (found by the fuzz test: the engine stops the clock after a jump, so the flare would otherwise never come).
+
+### Tests
+- New `tests/sim12/` (71 tests): every ending through scripted playthroughs (Shots at Ketter's Rest is forced, because Rask refuses to fire on civilians, and a test checks the refusal); a 150-seed sweep over three routes where a careful captain succeeds and every success ending is reached; officers mattering (the Chief's team, the probe, Ferrier's "why", a stubborn and an anxious Overseer); seed variation, hidden information, a forecast window that always holds the true minute and never widens, NPC goals and interpreter routing; 40 fuzzed games with state invariants and name-leak checks; a hand-engaged jump; catalogue, bridge launch, Mission Archive, voices, handbook cross-references, save round-trip and canon untouched; evaluation, including a reckless/responsible pair that both reach Under the Rock.
+- Smoke test: a sim12 block (list, archive, launch by name, intro, the forecast, an ending, AAR, phone width).
+
 ## [0.8.11] — 2026-10-30 — Training Simulation 011: Coldwater
 
 Nightly simulation build. Eleventh of 30 training simulations. No change to grading, evaluation rules, crew refusal behaviour in other simulations or ISA-COM-001 wording.

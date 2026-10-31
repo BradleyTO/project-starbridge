@@ -198,6 +198,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "purpose": "Holding a decision until the specialist who knows the danger has spoken."
         },
         {
+          "simulation": 12,
+          "title": "Ember Tide",
+          "purpose": "Acting on a forecast that is still narrowing, judged on what it showed at the time."
+        },
+        {
           "simulation": 13,
           "title": "The Seventh Bell",
           "purpose": "Accounting honestly for an order and its consequences.",
@@ -1158,6 +1163,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "simulation": 6,
           "title": "Ion Season",
           "purpose": "Knowing when to press on and when to turn back."
+        },
+        {
+          "simulation": 12,
+          "title": "Ember Tide",
+          "purpose": "Choosing the moment the ship must pull back to safety while people are still being lifted."
         },
         {
           "simulation": 20,

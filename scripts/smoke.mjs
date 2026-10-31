@@ -1559,6 +1559,67 @@ for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape',
   await ctxC.close();
 }
 
+// ============================================================== v0.8.12 ====
+// Training Simulation 012: Ember Tide. Listed, launched by name, the flare forecast, the lift ordered, an ending, AAR filed.
+{
+  const ctxE = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await ctxE.addInitScript(stubs);
+  const pg = await ctxE.newPage();
+  pg.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  pg.on('pageerror', (e) => errors.push(String(e)));
+  const allE = async () => (await pg.innerText('[data-testid=narrative]')) + '\n' + (await pg.innerText('[data-testid=comms]'));
+  const modeE = () => pg.getAttribute('[data-testid=mode-banner]', 'data-mode');
+  const endedE = async () => (await pg.locator('[data-testid=outcome]').count()) > 0;
+  await pg.goto(withSeed(12), { waitUntil: 'networkidle' });
+  await pg.waitForTimeout(600);
+  await skipIntro(pg);
+  await sendOn(pg, 'Computer, list simulations', 600);
+  check('sim12: "list simulations" names Ember Tide', /Ember Tide/.test(await allE()));
+  if (!(await pg.locator('[data-testid=hub]').count())) await pg.click('[data-testid=open-hub]');
+  await pg.click('[data-testid=hub-tab-archive]');
+  await pg.waitForTimeout(150);
+  check('sim12: Mission Archive lists Training Simulation 012', /Training Simulation 012: Ember Tide/.test(await pg.innerText('[data-testid=hub]')) && (await pg.locator('[data-testid=archive-train-TRN-ember-tide]').count()) === 1);
+  await pg.click('[data-testid=hub-close]');
+  await pg.waitForTimeout(100);
+  await sendOn(pg, 'Computer, begin the Ember Tide simulation', 1200);
+  await pg.waitForSelector('[data-testid=mode-banner][data-mode=simulation]');
+  check('sim12: launch by name starts a simulation', (await modeE()) === 'simulation');
+  await pg.waitForTimeout(4500);
+  await skipIntro(pg);
+  let tr = await allE();
+  check("sim12: intro plays (Ketter, Ketter's Rest, the Mattock, the Ember Tide)", /Ketter/.test(tr) && /Ketter's Rest/.test(tr) && /Mattock/.test(tr) && /Ember Tide/.test(tr), tr.slice(0, 300));
+  await pg.screenshot({ path: `${SHOTS}/sim12-01-intro.png` });
+  check('sim12: the outpost and the lifter on sensors by name', /Ketter's Rest/.test(await pg.innerText('[data-testid=contact-kestrel]')) && /Mattock/.test(await pg.innerText('[data-testid=contact-cruiser]')));
+  for (const c of ['begin the evacuation', 'Varga, forecast the flare', 'wait']) await sendOn(pg, c, 400);
+  tr = await allE();
+  check('sim12: Varga reads the star', /flare/i.test(tr) && /window|minute/i.test(tr), tr.slice(-400));
+  await pg.screenshot({ path: `${SHOTS}/sim12-02-forecast.png` });
+  for (let i = 0; i < 6 && !(await endedE()); i++) await sendOn(pg, 'wait', 400);
+  for (const c of ['Tell Strome to pull the banking crew', "Helm, take us into the moon's shadow"]) {
+    if (await endedE()) break;
+    await sendOn(pg, c, 400);
+  }
+  for (let i = 0; i < 40 && !(await endedE()); i++) await sendOn(pg, 'wait', 400);
+  await pg.waitForSelector('[data-testid=outcome]');
+  const outE = await pg.innerText('[data-testid=outcome]');
+  check('sim12: led to an ending', /Banked and Clear|On the Tell|Under the Rock|Cold Furnace, Every Soul|Too Soon from the Furnace|A Gambler's Margin|Caught by the Tide|The Mattock in the Open|Not Deep Enough|The Halcyon in the Light|Left to the Tide|Shots at Ketter's Rest/i.test(outE), outE.slice(0, 200));
+  tr = await allE();
+  const LEAK12 = /Kestrel|Prefect|Ashen Covenant|Tallis|Sabeth|Thornwake|Cantor|Brenn|Teyma|Paley|Larkspur|Saltglass|Rhune|Tarvo|Hollis|Brack|Teague|Saffron Mule|Gannet|Corrie Drift|Hesper|Krenn|Vesk|Sallow|Fosse|Vell Crossing|Eventide|Wick|Vollan|Kittiwake|Orrey|Sorrel|Roake|Dahl|Marchbank|Wrenmoor|Iron Psalm|Sable Narrows|Crake|Haskett|Gardener|Coldwater|Plumb Line|Penhale|Corley|Toller|Hadley|\[[a-zA-Z_]+\]|undefined|Intergalactic Agency|the Agency/;
+  check('sim12: no other simulation\'s names leak in', !LEAK12.test(tr), (tr.match(new RegExp(`.{0,60}(${LEAK12.source}).{0,60}`)) ?? [''])[0]);
+  await pg.screenshot({ path: `${SHOTS}/sim12-03-outcome.png` });
+  if (await pg.locator('[data-testid=outcome-aar]').count()) await pg.click('[data-testid=outcome-aar]');
+  await pg.waitForTimeout(300);
+  const aarE = (await pg.locator('[data-testid=aar]').count()) ? await pg.innerText('[data-testid=aar]') : '';
+  check('sim12: AAR is available, cites regulations and has no percentages', /Ember Tide/i.test(aarE) && /ISA regulations/.test(aarE) && !/\d\s*%/.test(aarE), aarE.slice(0, 200));
+  await pg.screenshot({ path: `${SHOTS}/sim12-04-aar.png`, fullPage: true });
+  if (await pg.locator('[data-testid=aar-close]').count()) await pg.click('[data-testid=aar-close]');
+  await pg.setViewportSize({ width: 390, height: 844 });
+  await pg.waitForTimeout(400);
+  const ovE = await pg.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  check('sim12 phone: no horizontal overflow', ovE <= 0, `overflow ${ovE}px`);
+  await ctxE.close();
+}
+
 // ============================================================== v0.8.0 =====
 // The Captain's Handbook: contents, articles, search, bridge commands in every timeline (state untouched),
 // report citations, spoiler safety, desktop and phone width.
