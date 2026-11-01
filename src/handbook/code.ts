@@ -1,5 +1,6 @@
 /**
  * ISA-COM-001, Captain's Code and Operational Regulations, First Edition (approved 2026-10-21): the text of the code.
+ * v0.8.13: ten approved additions (§2.7, §4.8–4.11, §6.5, §7.5, §9.9–9.11), text only.
  *
  * This is everything the player reads: the preamble, Articles 1–11 and the Annex. Each subsection names the
  * permanent regulation id it belongs to (`id`, and `also` for ids whose substance it also carries); ids are
@@ -105,6 +106,12 @@ export const CODE: readonly CodeArticle[] = [
         "number": "2.6",
         "text": "Every officer shall be accountable for the orders they give, and giving an order to commit a forbidden act shall constitute misconduct whether or not the act is carried out.",
         "id": "cmd-4",
+        "also": []
+      },
+      {
+        "number": "2.7",
+        "text": "A death or serious injury aboard an ISA vessel shall be investigated and reported to ISA Fleet Command, and the crew shall be told what the investigation finds.",
+        "id": "cmd-6",
         "also": []
       }
     ]
@@ -218,6 +225,30 @@ export const CODE: readonly CodeArticle[] = [
         "also": [
           "care-1"
         ]
+      },
+      {
+        "number": "4.8",
+        "text": "When an ISA vessel becomes aware of a hazard to navigation that endangers another vessel, ISA personnel shall warn that vessel as soon as reasonably possible, whether or not she is an ISA, allied or rival vessel.",
+        "id": "warn-1",
+        "also": []
+      },
+      {
+        "number": "4.9",
+        "text": "When not everyone in danger can be helped at once, ISA personnel shall decide who is helped first on medical need and the chance of survival, as assessed by the medical officer, and on no other ground.",
+        "id": "care-5",
+        "also": []
+      },
+      {
+        "number": "4.10",
+        "text": "A vessel with living persons aboard, conscious or not, is not salvage. ISA personnel shall not permit, assist or agree to her being taken as salvage until every person aboard is safe.",
+        "id": "care-6",
+        "also": []
+      },
+      {
+        "number": "4.11",
+        "text": "Where an ISA vessel escorts or assists a civilian vessel in a hazard, and there is credible evidence that her master is unfit to command, the ISA captain shall act on that evidence to protect life.",
+        "id": "care-7",
+        "also": []
       }
     ]
   },
@@ -319,6 +350,12 @@ export const CODE: readonly CodeArticle[] = [
         "text": "Logs, reports and records shall be true and complete, and no one shall alter, withhold or falsify them or mislead ISA Fleet Command or an ISA review.",
         "id": "conduct-2",
         "also": []
+      },
+      {
+        "number": "6.5",
+        "text": "What a party to a mediation or dispute says to ISA personnel in private shall not be disclosed to another party without that party’s leave.",
+        "id": "honesty-2",
+        "also": []
       }
     ]
   },
@@ -348,6 +385,12 @@ export const CODE: readonly CodeArticle[] = [
         "number": "7.4",
         "text": "A person held aboard an ISA ship shall be treated humanely, given medical care, told why they are held and held no longer than necessary, and ISA Fleet Command shall be informed promptly.",
         "id": "asylum-2",
+        "also": []
+      },
+      {
+        "number": "7.5",
+        "text": "A person aboard an ISA ship shall not be detained or accused of an offence except on credible evidence, and shall be told the grounds and heard before any finding.",
+        "id": "custody-1",
         "also": []
       }
     ]
@@ -426,6 +469,24 @@ export const CODE: readonly CodeArticle[] = [
         "number": "9.8",
         "text": "ISA personnel shall comply with the treaties the ISA has accepted, including those reproduced in the Annex.",
         "id": "contact-2",
+        "also": []
+      },
+      {
+        "number": "9.9",
+        "text": "When mediating a dispute, ISA personnel shall remain impartial, shall not take a side, and shall not impose a settlement.",
+        "id": "contact-4",
+        "also": []
+      },
+      {
+        "number": "9.10",
+        "text": "An ISA ship stopped by another power’s picket in disputed space shall seek passage by negotiation and shall not run the line while a peaceful way through remains, except to render humanitarian aid under the Border Accords.",
+        "id": "contact-5",
+        "also": []
+      },
+      {
+        "number": "9.11",
+        "text": "ISA personnel shall not destroy or harm an unknown life form, or a growth that may be alive, while it poses no immediate threat to life and before reasonable efforts have been made to establish what it is.",
+        "id": "contact-6",
         "also": []
       }
     ]

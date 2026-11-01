@@ -85,7 +85,8 @@ describe('launch from the bridge', () => {
 describe('handbook cross-references', () => {
   it('links The Long Picket to existing regulations, hidden from the player, without changing their wording', () => {
     const linked = ARTICLES.filter((r) => r.internal.training.some((t) => t.simulation === 9));
-    expect(linked.map((r) => r.id).sort()).toEqual(['conduct-1', 'contact-3', 'honesty-1']);
+    // v0.8.13: plus the approved First Edition addition(s) it exercises (contact-5).
+    expect(linked.map((r) => r.id).sort()).toEqual(['conduct-1', 'contact-3', 'contact-5', 'honesty-1']);
     for (const r of linked) {
       const t = r.internal.training.find((x) => x.simulation === 9)!;
       expect(t.title).toBe('The Long Picket');

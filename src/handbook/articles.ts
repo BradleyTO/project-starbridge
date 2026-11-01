@@ -1,5 +1,7 @@
 /**
- * ISA-COM-001 regulation records: one per permanent id (the 42 ids of the drafts plus general-1 and general-2).
+ * ISA-COM-001 regulation records: one per permanent id (the 42 ids of the drafts plus general-1 and general-2, and
+ * the ten ids of the approved First Edition additions in v0.8.13: cmd-6, warn-1, care-5 to care-7, honesty-2,
+ * custody-1 and contact-4 to contact-6).
  *
  * `text` is revision 1, the approved First Edition wording (the id's primary subsections, joined). Revision 0 of
  * the 15 pre-edition ids is the v0.7 catalogue wording, verbatim: the evaluator still cites it. Draft wording was
@@ -2916,6 +2918,534 @@ export const ARTICLES: readonly HandbookArticle[] = [
         "noteSimulations": [
           2
         ]
+      }
+    }
+  },
+  {
+    "id": "cmd-6",
+    "number": "2.7",
+    "sections": [
+      "2.7"
+    ],
+    "citation": "§2.7 Command and Accountability",
+    "title": "Investigation of death or injury",
+    "origin": "new",
+    "text": "A death or serious injury aboard an ISA vessel shall be investigated and reported to ISA Fleet Command, and the crew shall be told what the investigation finds.",
+    "revision": 1,
+    "revisions": [
+      {
+        "rev": 1,
+        "edition": "First Edition",
+        "title": "Investigation of death or injury",
+        "text": "A death or serious injury aboard an ISA vessel shall be investigated and reported to ISA Fleet Command, and the crew shall be told what the investigation finds."
+      }
+    ],
+    "legalStatus": "in-force",
+    "topics": [
+      "investigation",
+      "death aboard",
+      "serious injury",
+      "accident investigation",
+      "casualty report"
+    ],
+    "internal": {
+      "explanation": "When someone aboard is killed or badly hurt, the ship finds out why, tells Fleet Command, and tells the crew what was found. A crew that is kept in the dark stops trusting the ship.",
+      "appliesWhen": "To any death or serious injury aboard an ISA vessel, whatever the cause.",
+      "exceptions": "Findings may be shared with the crew in a form that protects medical privacy; the substance is not withheld.",
+      "examples": {
+        "proper": "After a fatal accident in engineering, the captain orders an inquiry, reports to Fleet Command, and briefs the crew on what it found.",
+        "improper": "An accident report is filed away and the crew is told only that the matter is closed."
+      },
+      "related": [
+        "cmd-1",
+        "honesty-1",
+        "care-2"
+      ],
+      "training": [
+        {
+          "simulation": 11,
+          "title": "Coldwater",
+          "purpose": "Finding out the truth after a loss and telling the crew."
+        }
+      ],
+      "enforcement": {
+        "status": "not-yet",
+        "note": "Not yet assessed; simulations that touch it treat the matching goal as an exercise objective."
+      }
+    }
+  },
+  {
+    "id": "warn-1",
+    "number": "4.8",
+    "sections": [
+      "4.8"
+    ],
+    "citation": "§4.8 Duty of Care",
+    "title": "Duty to warn",
+    "origin": "new",
+    "text": "When an ISA vessel becomes aware of a hazard to navigation that endangers another vessel, ISA personnel shall warn that vessel as soon as reasonably possible, whether or not she is an ISA, allied or rival vessel.",
+    "revision": 1,
+    "revisions": [
+      {
+        "rev": 1,
+        "edition": "First Edition",
+        "title": "Duty to warn",
+        "text": "When an ISA vessel becomes aware of a hazard to navigation that endangers another vessel, ISA personnel shall warn that vessel as soon as reasonably possible, whether or not she is an ISA, allied or rival vessel."
+      }
+    ],
+    "legalStatus": "in-force",
+    "topics": [
+      "duty to warn",
+      "hazard to navigation",
+      "navigational hazard",
+      "warn another vessel",
+      "warn a rival"
+    ],
+    "internal": {
+      "explanation": "A danger the ship knows about is shared with anyone it threatens, including a rival. Rivalry is never a reason to let another crew sail into harm.",
+      "appliesWhen": "Whenever the ship learns of a hazard that endangers another vessel.",
+      "exceptions": "A warning may be delayed only as long as giving it would itself put lives in immediate danger.",
+      "examples": {
+        "proper": "The ship detects a flare front and warns every vessel in its path, including a rival survey ship.",
+        "improper": "A captain stays silent about a hazard so that a rival vessel is delayed or damaged."
+      },
+      "related": [
+        "care-1",
+        "honesty-1"
+      ],
+      "training": [
+        {
+          "simulation": 3,
+          "title": "The Quiet Signal",
+          "purpose": "Sharing a danger with a rival who is working beside you."
+        },
+        {
+          "simulation": 12,
+          "title": "Ember Tide",
+          "purpose": "Making sure every vessel nearby knows what is coming."
+        }
+      ],
+      "enforcement": {
+        "status": "not-yet",
+        "note": "Not yet assessed; simulations that touch it treat the matching goal as an exercise objective."
+      }
+    }
+  },
+  {
+    "id": "care-5",
+    "number": "4.9",
+    "sections": [
+      "4.9"
+    ],
+    "citation": "§4.9 Duty of Care",
+    "title": "Triage",
+    "origin": "new",
+    "text": "When not everyone in danger can be helped at once, ISA personnel shall decide who is helped first on medical need and the chance of survival, as assessed by the medical officer, and on no other ground.",
+    "revision": 1,
+    "revisions": [
+      {
+        "rev": 1,
+        "edition": "First Edition",
+        "title": "Triage",
+        "text": "When not everyone in danger can be helped at once, ISA personnel shall decide who is helped first on medical need and the chance of survival, as assessed by the medical officer, and on no other ground."
+      }
+    ],
+    "legalStatus": "in-force",
+    "topics": [
+      "triage",
+      "who to save first",
+      "medical priority",
+      "rationing aid"
+    ],
+    "internal": {
+      "explanation": "When help must be rationed, the order is set by need and the chance of survival, on the medical officer's assessment. Rank, wealth, loyalty and usefulness are not grounds.",
+      "appliesWhen": "Whenever aid, rescue or treatment cannot reach everyone in danger at the same time.",
+      "exceptions": "None. The captain decides how the ship is used; the medical assessment decides the order of those helped.",
+      "examples": {
+        "proper": "With time to reach only some of those in danger, the captain follows the medical officer's ranking of need and survival.",
+        "improper": "A captain rescues a group first because its leader is influential."
+      },
+      "related": [
+        "care-1",
+        "care-2",
+        "care-4"
+      ],
+      "training": [
+        {
+          "simulation": 8,
+          "title": "The Lantern Drift",
+          "purpose": "Setting the order of rescue on need and the medical officer's advice."
+        }
+      ],
+      "enforcement": {
+        "status": "not-yet",
+        "note": "Not yet assessed; simulations that touch it treat the matching goal as an exercise objective."
+      }
+    }
+  },
+  {
+    "id": "care-6",
+    "number": "4.10",
+    "sections": [
+      "4.10"
+    ],
+    "citation": "§4.10 Duty of Care",
+    "title": "Not salvage",
+    "origin": "new",
+    "text": "A vessel with living persons aboard, conscious or not, is not salvage. ISA personnel shall not permit, assist or agree to her being taken as salvage until every person aboard is safe.",
+    "revision": 1,
+    "revisions": [
+      {
+        "rev": 1,
+        "edition": "First Edition",
+        "title": "Not salvage",
+        "text": "A vessel with living persons aboard, conscious or not, is not salvage. ISA personnel shall not permit, assist or agree to her being taken as salvage until every person aboard is safe."
+      }
+    ],
+    "legalStatus": "in-force",
+    "topics": [
+      "salvage",
+      "salvage claim",
+      "derelict with people aboard",
+      "living persons aboard"
+    ],
+    "internal": {
+      "explanation": "A ship is not a wreck while anyone aboard is alive, even if they are asleep, unconscious or in cold storage. People come before any claim on the hull.",
+      "appliesWhen": "To any vessel with living persons aboard, whatever her age or condition.",
+      "exceptions": "Once every person aboard is safe, an ordinary salvage claim may proceed under the law that governs it.",
+      "examples": {
+        "proper": "A captain refuses to let a salvage crew take a hulk until every sleeper aboard has been moved to safety.",
+        "improper": "A captain agrees to a salvage tow while people are still aboard, to avoid a dispute."
+      },
+      "related": [
+        "care-1",
+        "care-5"
+      ],
+      "training": [
+        {
+          "simulation": 8,
+          "title": "The Lantern Drift",
+          "purpose": "Putting the people aboard before any claim on the ship."
+        }
+      ],
+      "enforcement": {
+        "status": "not-yet",
+        "note": "Not yet assessed; simulations that touch it treat the matching goal as an exercise objective."
+      }
+    }
+  },
+  {
+    "id": "care-7",
+    "number": "4.11",
+    "sections": [
+      "4.11"
+    ],
+    "citation": "§4.11 Duty of Care",
+    "title": "Fitness of a civilian master",
+    "origin": "new",
+    "text": "Where an ISA vessel escorts or assists a civilian vessel in a hazard, and there is credible evidence that her master is unfit to command, the ISA captain shall act on that evidence to protect life.",
+    "revision": 1,
+    "revisions": [
+      {
+        "rev": 1,
+        "edition": "First Edition",
+        "title": "Fitness of a civilian master",
+        "text": "Where an ISA vessel escorts or assists a civilian vessel in a hazard, and there is credible evidence that her master is unfit to command, the ISA captain shall act on that evidence to protect life."
+      }
+    ],
+    "legalStatus": "in-force",
+    "topics": [
+      "unfit master",
+      "fitness to command",
+      "civilian master",
+      "escort duty"
+    ],
+    "internal": {
+      "explanation": "An escort does not look away when the evidence shows a civilian master cannot safely command in a hazard. The captain acts, by the least intrusive means that protects life.",
+      "appliesWhen": "When the ship escorts or assists a civilian vessel in a hazard.",
+      "exceptions": "Rumour or dislike is not credible evidence. Acting does not mean taking command of the civilian vessel unless nothing less will protect life.",
+      "examples": {
+        "proper": "Medical evidence shows a hauler master is impaired; the captain arranges for a fit officer to take the convoy through.",
+        "improper": "A captain ignores clear evidence that a master is unfit because the convoy is behind schedule."
+      },
+      "related": [
+        "care-1",
+        "cmd-1"
+      ],
+      "training": [
+        {
+          "simulation": 6,
+          "title": "Ion Season",
+          "purpose": "Acting on evidence about a civilian master in a hazard."
+        }
+      ],
+      "enforcement": {
+        "status": "not-yet",
+        "note": "Not yet assessed; simulations that touch it treat the matching goal as an exercise objective."
+      }
+    }
+  },
+  {
+    "id": "honesty-2",
+    "number": "6.5",
+    "sections": [
+      "6.5"
+    ],
+    "citation": "§6.5 Honesty and Integrity",
+    "title": "Mediation confidences",
+    "origin": "new",
+    "text": "What a party to a mediation or dispute says to ISA personnel in private shall not be disclosed to another party without that party’s leave.",
+    "revision": 1,
+    "revisions": [
+      {
+        "rev": 1,
+        "edition": "First Edition",
+        "title": "Mediation confidences",
+        "text": "What a party to a mediation or dispute says to ISA personnel in private shall not be disclosed to another party without that party’s leave."
+      }
+    ],
+    "legalStatus": "in-force",
+    "topics": [
+      "confidences",
+      "confidentiality",
+      "private conversation",
+      "mediation confidence",
+      "betrayal of confidence"
+    ],
+    "internal": {
+      "explanation": "A party who speaks privately to the ISA in a dispute must be able to trust that it stays private. Passing it on without leave destroys the trust mediation depends on.",
+      "appliesWhen": "To anything said in private by a party to a mediation or dispute.",
+      "exceptions": "A confidence does not bind the ISA to stay silent about an immediate threat to life, which may be acted on.",
+      "examples": {
+        "proper": "A captain asks a delegate for leave before mentioning their private concern to the other side.",
+        "improper": "A captain repeats a delegate's private admission across the table to win a point."
+      },
+      "related": [
+        "honesty-1",
+        "contact-4"
+      ],
+      "training": [
+        {
+          "simulation": 5,
+          "title": "The Saltglass Accord",
+          "purpose": "Keeping what was said in private, private."
+        }
+      ],
+      "enforcement": {
+        "status": "not-yet",
+        "note": "Not yet assessed; simulations that touch it treat the matching goal as an exercise objective."
+      }
+    }
+  },
+  {
+    "id": "custody-1",
+    "number": "7.5",
+    "sections": [
+      "7.5"
+    ],
+    "citation": "§7.5 Protection, Asylum and Custody",
+    "title": "Detention and accusation",
+    "origin": "new",
+    "text": "A person aboard an ISA ship shall not be detained or accused of an offence except on credible evidence, and shall be told the grounds and heard before any finding.",
+    "revision": 1,
+    "revisions": [
+      {
+        "rev": 1,
+        "edition": "First Edition",
+        "title": "Detention and accusation",
+        "text": "A person aboard an ISA ship shall not be detained or accused of an offence except on credible evidence, and shall be told the grounds and heard before any finding."
+      }
+    ],
+    "legalStatus": "in-force",
+    "topics": [
+      "detention",
+      "accusation",
+      "arrest",
+      "due process",
+      "right to be heard"
+    ],
+    "internal": {
+      "explanation": "Suspicion is not enough to hold or accuse anyone aboard. The evidence comes first, the person is told why, and they are heard before anything is decided.",
+      "appliesWhen": "To anyone aboard an ISA ship: crew, passengers and guests.",
+      "exceptions": "A person may be briefly restrained to stop an immediate threat to life; the grounds are then given and the person heard as soon as possible.",
+      "examples": {
+        "proper": "A captain confronts a guest with the records that implicate them and hears their answer before deciding.",
+        "improper": "A guest is confined to quarters on a hunch and never told why."
+      },
+      "related": [
+        "asylum-1",
+        "cmd-1",
+        "honesty-1"
+      ],
+      "training": [
+        {
+          "simulation": 7,
+          "title": "Ghost Ledger",
+          "purpose": "Accusing on the evidence, and hearing the accused."
+        }
+      ],
+      "enforcement": {
+        "status": "not-yet",
+        "note": "Not yet assessed; simulations that touch it treat the matching goal as an exercise objective."
+      }
+    }
+  },
+  {
+    "id": "contact-4",
+    "number": "9.9",
+    "sections": [
+      "9.9"
+    ],
+    "citation": "§9.9 Contact, Jurisdiction and Disputed Space",
+    "title": "Mediator impartiality",
+    "origin": "new",
+    "text": "When mediating a dispute, ISA personnel shall remain impartial, shall not take a side, and shall not impose a settlement.",
+    "revision": 1,
+    "revisions": [
+      {
+        "rev": 1,
+        "edition": "First Edition",
+        "title": "Mediator impartiality",
+        "text": "When mediating a dispute, ISA personnel shall remain impartial, shall not take a side, and shall not impose a settlement."
+      }
+    ],
+    "legalStatus": "in-force",
+    "topics": [
+      "mediation",
+      "mediator",
+      "impartiality",
+      "imposed settlement",
+      "neutral"
+    ],
+    "internal": {
+      "explanation": "The ISA helps parties reach their own agreement. A mediator who takes a side or dictates terms stops being a mediator.",
+      "appliesWhen": "Whenever ISA personnel mediate between parties in a dispute.",
+      "exceptions": "Remaining impartial does not mean standing by while lives are at risk; the duty of care still applies.",
+      "examples": {
+        "proper": "A captain lays out options for both sides and lets them choose.",
+        "improper": "A captain announces a settlement and threatens to leave unless both sides accept it."
+      },
+      "related": [
+        "honesty-2",
+        "roe-2",
+        "contact-2"
+      ],
+      "training": [
+        {
+          "simulation": 5,
+          "title": "The Saltglass Accord",
+          "purpose": "Helping two sides reach their own agreement."
+        }
+      ],
+      "enforcement": {
+        "status": "not-yet",
+        "note": "Not yet assessed; simulations that touch it treat the matching goal as an exercise objective."
+      }
+    }
+  },
+  {
+    "id": "contact-5",
+    "number": "9.10",
+    "sections": [
+      "9.10"
+    ],
+    "citation": "§9.10 Contact, Jurisdiction and Disputed Space",
+    "title": "Passage at a picket",
+    "origin": "new",
+    "text": "An ISA ship stopped by another power’s picket in disputed space shall seek passage by negotiation and shall not run the line while a peaceful way through remains, except to render humanitarian aid under the Border Accords.",
+    "revision": 1,
+    "revisions": [
+      {
+        "rev": 1,
+        "edition": "First Edition",
+        "title": "Passage at a picket",
+        "text": "An ISA ship stopped by another power’s picket in disputed space shall seek passage by negotiation and shall not run the line while a peaceful way through remains, except to render humanitarian aid under the Border Accords."
+      }
+    ],
+    "legalStatus": "in-force",
+    "topics": [
+      "picket",
+      "blockade",
+      "running the line",
+      "passage",
+      "disputed space passage"
+    ],
+    "internal": {
+      "explanation": "A picket in disputed space is met with negotiation. Forcing the line while a peaceful way remains turns a standoff into an incident.",
+      "appliesWhen": "When another power's picket stops an ISA ship in disputed space.",
+      "exceptions": "Humanitarian aid under the Border Accords (Annex T.2).",
+      "examples": {
+        "proper": "A captain negotiates passage with a blockading commander and keeps every promise made.",
+        "improper": "A captain runs the blockade while the other commander is still willing to talk."
+      },
+      "related": [
+        "roe-2",
+        "border-accords-4",
+        "contact-2"
+      ],
+      "training": [
+        {
+          "simulation": 9,
+          "title": "The Long Picket",
+          "purpose": "Talking a way through a picket instead of forcing it."
+        }
+      ],
+      "enforcement": {
+        "status": "not-yet",
+        "note": "Not yet assessed; simulations that touch it treat the matching goal as an exercise objective."
+      }
+    }
+  },
+  {
+    "id": "contact-6",
+    "number": "9.11",
+    "sections": [
+      "9.11"
+    ],
+    "citation": "§9.11 Contact, Jurisdiction and Disputed Space",
+    "title": "Unknown life",
+    "origin": "new",
+    "text": "ISA personnel shall not destroy or harm an unknown life form, or a growth that may be alive, while it poses no immediate threat to life and before reasonable efforts have been made to establish what it is.",
+    "revision": 1,
+    "revisions": [
+      {
+        "rev": 1,
+        "edition": "First Edition",
+        "title": "Unknown life",
+        "text": "ISA personnel shall not destroy or harm an unknown life form, or a growth that may be alive, while it poses no immediate threat to life and before reasonable efforts have been made to establish what it is."
+      }
+    ],
+    "legalStatus": "in-force",
+    "topics": [
+      "unknown life",
+      "unknown life form",
+      "possible life",
+      "alien growth",
+      "destroying life"
+    ],
+    "internal": {
+      "explanation": "Something that might be alive is treated as if it may be, until reasonable efforts show what it is. Fear or inconvenience is not a reason to destroy it.",
+      "appliesWhen": "To any unknown life form, or anything that may be alive, that poses no immediate threat to life.",
+      "exceptions": "An immediate threat to life may be met with the least harmful measure that stops it.",
+      "examples": {
+        "proper": "A captain holds a cutting crew back while the science officer establishes whether a growth is alive.",
+        "improper": "A captain orders a strange growth burned before anyone has examined it."
+      },
+      "related": [
+        "contact-1",
+        "health-1",
+        "roe-2"
+      ],
+      "training": [
+        {
+          "simulation": 10,
+          "title": "The Gardener",
+          "purpose": "Finding out what something is before deciding what to do about it."
+        }
+      ],
+      "enforcement": {
+        "status": "not-yet",
+        "note": "Not yet assessed; simulations that touch it treat the matching goal as an exercise objective."
       }
     }
   }

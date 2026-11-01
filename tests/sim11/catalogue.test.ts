@@ -86,7 +86,8 @@ describe('launch from the bridge', () => {
 describe('handbook cross-references', () => {
   it('links Coldwater to existing regulations, hidden from the player, without changing their wording', () => {
     const linked = ARTICLES.filter((r) => r.internal.training.some((t) => t.simulation === 11));
-    expect(linked.map((r) => r.id).sort()).toEqual(['care-2', 'conduct-2', 'orders-1', 'service-3']);
+    // v0.8.13: plus the approved First Edition addition(s) it exercises (cmd-6).
+    expect(linked.map((r) => r.id).sort()).toEqual(['care-2', 'cmd-6', 'conduct-2', 'orders-1', 'service-3']);
     for (const r of linked) {
       const t = r.internal.training.find((x) => x.simulation === 11)!;
       expect(t.title).toBe('Coldwater');

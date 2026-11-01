@@ -78,7 +78,8 @@ describe('launch from the bridge', () => {
 describe('handbook cross-references', () => {
   it('links The Lantern Drift to existing regulations, hidden from the player, without changing their wording', () => {
     const linked = ARTICLES.filter((r) => r.internal.training.some((t) => t.simulation === 8));
-    expect(linked.map((r) => r.id).sort()).toEqual(['care-1', 'care-2', 'cmd-4', 'health-2', 'honesty-1']);
+    // v0.8.13: plus the approved First Edition addition(s) it exercises (care-5, care-6).
+    expect(linked.map((r) => r.id).sort()).toEqual(['care-1', 'care-2', 'care-5', 'care-6', 'cmd-4', 'health-2', 'honesty-1']);
     for (const r of linked) {
       const t = r.internal.training.find((x) => x.simulation === 8)!;
       expect(t.title).toBe('The Lantern Drift');

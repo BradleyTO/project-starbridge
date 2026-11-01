@@ -197,7 +197,7 @@ They test different skills (reading people vs evidence-led science). This review
 - **Success:** Contact Established, A Shared Vocabulary, A Polite Farewell, Warning Heeded.
 - **Failure or partial:** The Directorate Answered (partial), Warning Unshared (partial), Misread, Silence, Caught in the Glitch, Incident at Teyma, Withdrawn, Halcyon Lost; Stalemate as a thirty-minute backstop.
 
-**Regulations cited:** §3.3 (roe-1), §3.1 (roe-2), §6.1 (honesty-1); hidden training references on §9.1 (contact-1) and §2.5 (cmd-3). **Exercise objective (no regulation yet):** "warn every ship in danger, rival or not". A duty to warn of a hazard to navigation is proposed for Brad's approval; nothing was added to ISA-COM-001.
+**Regulations cited:** §3.3 (roe-1), §3.1 (roe-2), §6.1 (honesty-1); hidden training references on §9.1 (contact-1) and §2.5 (cmd-3). **Exercise objective (no regulation yet):** "warn every ship in danger, rival or not". A duty to warn of a hazard to navigation is proposed for Brad's approval; nothing was added to ISA-COM-001. *Approved v0.8.13: now §4.8 Duty to warn (warn-1). The simulation keeps it as an exercise objective; grading is unchanged.*
 
 **Seeds vary:** the code's grammar and the decoy, whether Szabo's lean is right, the senders' intent and patience, the Director's temperament, accuracy and timing, the glitch delay.
 
@@ -260,7 +260,7 @@ Overlap check (guide §12):
 - "mediate; do not impose a settlement or take one side against the other" (impartiality);
 - "what a delegate says in private stays private until they give leave" (confidentiality in mediation).
 
-Rules for both are proposed for Brad's approval. Nothing was added to ISA-COM-001.
+Rules for both are proposed for Brad's approval. Nothing was added to ISA-COM-001. *Approved v0.8.13: now §9.9 Mediator impartiality (contact-4) and §6.5 Mediation confidences (honesty-2). The simulation keeps them as exercise objectives; grading is unchanged.*
 
 **Seeds vary:** each clan's need, the hardliner, the elder (none, failing, frail or stable) and the hour of death, the landing turn, and each delegate's patience.
 
@@ -297,7 +297,7 @@ Overlap check (guide §12):
 
 **Regulations cited:** §4.1 (care-1) and §3.9 (roe-3). Hidden training references on §1.4 (cmd-4), §3.9 (roe-3), §4.1 (care-1) and §4.5 (care-4).
 
-**Exercise objective (no regulation yet):** "an unfit master should not fly the Maw" (fitness). No First Edition subsection covers acting on evidence that a civilian master under escort is unfit to command in a hazard. A rule is proposed for Brad's approval: "A captain escorting civilian vessels through a hazard shall act on credible evidence that a civilian master is unfit to command in it, arranging relief or assistance with the master's consent where possible." Nothing was added to ISA-COM-001.
+**Exercise objective (no regulation yet):** "an unfit master should not fly the Maw" (fitness). No First Edition subsection covers acting on evidence that a civilian master under escort is unfit to command in a hazard. A rule is proposed for Brad's approval: "A captain escorting civilian vessels through a hazard shall act on credible evidence that a civilian master is unfit to command in it, arranging relief or assistance with the master's consent where possible." Nothing was added to ISA-COM-001. *Approved v0.8.13, in the revised wording of the approval pack: now §4.11 Fitness of a civilian master (care-7). The simulation keeps it as an exercise objective; grading is unchanged.*
 
 **Naming note:** an early draft of this build named the senior master *Hollis*. Capt. Hollis Arden already exists in #1 The Kestrel Incident, so the master was named Capt. Odran Brack before release. No established name was changed. Flagged for Brad.
 
@@ -336,7 +336,7 @@ Overlap check (guide §12):
 
 **Reckless/responsible pair:** A Quiet Word put on the record for Fleet Command is graded exemplary; the same settlement promised off the record is marked reckless.
 
-**Exercise objective (no regulation yet):** "accuse no guest without evidence that points to them alone" (evidence). §7.4 covers how a person held aboard is treated, but no First Edition subsection sets the standard of evidence for accusing or holding someone aboard. A rule is proposed for Brad's approval: "A person aboard an ISA ship shall not be detained or accused of an offence except on credible evidence, and shall be told the grounds and heard before any finding." Nothing was added to ISA-COM-001.
+**Exercise objective (no regulation yet):** "accuse no guest without evidence that points to them alone" (evidence). §7.4 covers how a person held aboard is treated, but no First Edition subsection sets the standard of evidence for accusing or holding someone aboard. A rule is proposed for Brad's approval: "A person aboard an ISA ship shall not be detained or accused of an offence except on credible evidence, and shall be told the grounds and heard before any finding." Nothing was added to ISA-COM-001. *Approved v0.8.13: now §7.5 Detention and accusation (custody-1). The simulation keeps it as an exercise objective; grading is unchanged.*
 
 **Seeds vary:** the culprit and decoy, the copy time and everyone's movements, the device class, carry or burst and its timing, the sailing time and Rask's hunch.
 
@@ -374,8 +374,8 @@ Overlap check (guide §12):
 **Reckless/responsible pair:** Salvage and Salvation reached with the salvor's licence checked before the deal is graded exemplary; the same deal struck without checking is marked reckless.
 
 **Exercise objectives (no regulation yet):**
-- "wake sleepers on medical need alone, in the medical officer's triage" (triage). No First Edition subsection sets the grounds for triage. Proposed for Brad's approval: "When not everyone in danger can be helped at once, ISA personnel shall decide who is helped first on medical need and the chance of survival, as assessed by the medical officer, and on no other ground."
-- "let no one take the *Eventide* as salvage while her sleepers are aboard" (hulk). No First Edition subsection says a vessel with living people aboard is not salvage. Proposed for Brad's approval: "A vessel with living persons aboard, conscious or not, is not salvage. ISA personnel shall not permit, assist or agree to her being taken as salvage until every person aboard is safe."
+- "wake sleepers on medical need alone, in the medical officer's triage" (triage). No First Edition subsection sets the grounds for triage. Proposed for Brad's approval: "When not everyone in danger can be helped at once, ISA personnel shall decide who is helped first on medical need and the chance of survival, as assessed by the medical officer, and on no other ground." *Approved v0.8.13: now §4.9 Triage (care-5).*
+- "let no one take the *Eventide* as salvage while her sleepers are aboard" (hulk). No First Edition subsection says a vessel with living people aboard is not salvage. Proposed for Brad's approval: "A vessel with living persons aboard, conscious or not, is not salvage. ISA personnel shall not permit, assist or agree to her being taken as salvage until every person aboard is safe." *Approved v0.8.13: now §4.10 Not salvage (care-6). Both stay exercise objectives in the simulation; grading is unchanged.*
 
 Nothing was added to ISA-COM-001.
 
@@ -417,7 +417,7 @@ Overlap check (guide §12):
 **Reckless/responsible pair:** Called and Raised reached by the same escort bluff, once after Marrow's read of Roake (graded exemplary) and once made blind with the Halcyon's weapons locked on the picket (marked reckless, citing §3.1).
 
 **Exercise objectives (no regulation yet):**
-- "cross the picket line only with the picket's leave" (line). No First Edition subsection says how an ISA ship should treat another power's picket in disputed space. Proposed for Brad's approval: "An ISA ship stopped by another power's picket in disputed space shall seek passage by negotiation and shall not run the line while a peaceful way through remains, except to render humanitarian aid under the Border Accords."
+- "cross the picket line only with the picket's leave" (line). No First Edition subsection says how an ISA ship should treat another power's picket in disputed space. Proposed for Brad's approval: "An ISA ship stopped by another power's picket in disputed space shall seek passage by negotiation and shall not run the line while a peaceful way through remains, except to render humanitarian aid under the Border Accords." *Approved v0.8.13: now §9.10 Passage at a picket (contact-5). The simulation keeps it as an exercise objective; grading is unchanged.*
 
 Nothing was added to ISA-COM-001.
 
@@ -454,7 +454,7 @@ Overlap check (guide §12):
 **Reckless/responsible pair:** Led Away reached by the same metal lure, once after Varga's study with a probe sample (graded exemplary) and once laid on a guess after a burn order and an uncontained sample brought aboard (graded mixed or reckless, citing §4.2).
 
 **Exercise objectives (no regulation yet):**
-- "do not destroy the growth before the science officer knows what it is" (know). No First Edition subsection covers an unknown life form that poses no immediate threat. Proposed for Brad's approval: "ISA personnel shall not destroy or harm an unknown life form, or a growth that may be alive, while it poses no immediate threat to life and before reasonable efforts have been made to establish what it is."
+- "do not destroy the growth before the science officer knows what it is" (know). No First Edition subsection covers an unknown life form that poses no immediate threat. Proposed for Brad's approval: "ISA personnel shall not destroy or harm an unknown life form, or a growth that may be alive, while it poses no immediate threat to life and before reasonable efforts have been made to establish what it is." *Approved v0.8.13: now §9.11 Unknown life (contact-6). The simulation keeps it as an exercise objective; grading is unchanged.*
 
 Nothing was added to ISA-COM-001.
 
@@ -488,7 +488,7 @@ Overlap check (guide §12):
 **Reckless/responsible pair:** The Whole Truth reached once by pulling the record, inspecting the sister valve and hearing the officer before relieving him (graded exemplary), and once after threatening the watch with charges, relieving an officer on a rumour and pressing for an uninspected restart (graded mixed or reckless, citing §4.2).
 
 **Exercise objectives (no regulation yet):**
-- "find out what really happened and tell the watch" (truth). No First Edition subsection requires a death aboard to be investigated and its findings told to the crew. Proposed for Brad's approval: "A death or serious injury aboard an ISA vessel shall be investigated and reported to Fleet Command, and the crew shall be told what the investigation finds."
+- "find out what really happened and tell the watch" (truth). No First Edition subsection requires a death aboard to be investigated and its findings told to the crew. Proposed for Brad's approval: "A death or serious injury aboard an ISA vessel shall be investigated and reported to Fleet Command, and the crew shall be told what the investigation finds." *Approved v0.8.13, as "reported to ISA Fleet Command": now §2.7 Investigation of death or injury (cmd-6). The simulation keeps it as an exercise objective; grading is unchanged.*
 
 **Naming notes:** no established name was changed. "ISA Safety Inspectorate" is a new body name, flagged for Brad. "Quill" was not used because Ion Season uses it.
 
@@ -521,7 +521,7 @@ Overlap check (guide §12):
 **Reckless/responsible pair:** Under the Rock reached once after Varga has sounded the galleries and with the forecast running (graded exemplary), and once on the outpost's old survey alone with nobody reading the star (graded mixed or reckless).
 
 **Exercise objectives (no regulation yet):**
-- "warn every vessel in the flare's path, the Mattock included" (warn). This is the duty-to-warn proposal already awaiting Brad's approval from #3 The Quiet Signal; no new rule is proposed.
+- "warn every vessel in the flare's path, the Mattock included" (warn). This is the duty-to-warn proposal already awaiting Brad's approval from #3 The Quiet Signal; no new rule is proposed. *Approved v0.8.13: now §4.8 (warn-1); still an exercise objective here, grading unchanged.*
 
 **Naming notes:** no established name was changed and no new named body was introduced.
 

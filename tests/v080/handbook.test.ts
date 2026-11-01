@@ -1,6 +1,7 @@
 /**
  * v0.8.0: the ISA-COM-001 regulation database, search, bridge commands, spoiler safety and save compatibility.
  * v0.8.2: the First Edition (11 articles, 71 subsections, Annex T; 44 permanent ids).
+ * v0.8.13: ten approved First Edition additions (§2.7, §4.8–4.11, §6.5, §7.5, §9.9–9.11; 81 subsections, 54 ids), text only.
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
@@ -36,23 +37,26 @@ import { K, KESTREL, TALLIS, TS } from '../v07/fixtures';
 const V07_IDS = ['reg-7.1', 'reg-7.2', 'reg-7.3', 'reg-7.4', 'reg-12', 'border-accords-4', 'roe-1', 'roe-2', 'roe-3', 'care-1', 'care-2', 'quarantine-1', 'quarantine-2', 'honesty-1', 'asylum-1'];
 /** The 27 ids added in the drafts (Draft 3), kept with the 15 pre-edition ids. */
 const DRAFT_IDS = ['cmd-1', 'cmd-2', 'cmd-3', 'cmd-4', 'cmd-5', 'roe-4', 'roe-5', 'care-3', 'care-4', 'orders-2', 'orders-1', 'conduct-1', 'conduct-2', 'asylum-2', 'health-1', 'health-2', 'contact-1', 'contact-2', 'contact-3', 'service-1', 'service-2', 'service-3', 'service-4', 'service-5', 'service-6', 'border-accords-2', 'border-accords-9'];
+/** The ten ids added by the approved First Edition additions (v0.8.13). */
+const ADDED_IDS = ['cmd-6', 'warn-1', 'care-5', 'care-6', 'care-7', 'honesty-2', 'custody-1', 'contact-4', 'contact-5', 'contact-6'];
 const scenarioOf = (n: number) => SIMULATIONS.find((x) => x.number === n)?.scenarioId;
 const srcFiles = (dir: string): string[] => readdirSync(dir).flatMap((f) => (statSync(join(dir, f)).isDirectory() ? srcFiles(join(dir, f)) : /\.tsx?$/.test(f) ? [join(dir, f)] : []));
 const SUBS = CODE.flatMap((a) => a.subsections);
 
 describe('the First Edition', () => {
-  it('is the First Edition: 11 articles, 71 subsections and an Annex of 5 treaty provisions', () => {
+  it('is the First Edition: 11 articles, 81 subsections and an Annex of 5 treaty provisions', () => {
     expect(HANDBOOK.edition).toBe('First Edition');
     expect(CODE.map((a) => a.title)).toEqual(['General Provisions', 'Command and Accountability', 'Use of Force', 'Duty of Care', 'Orders and Directives', 'Honesty and Integrity', 'Protection, Asylum and Custody', 'Health and Biological Hazards', 'Contact, Jurisdiction and Disputed Space', 'Review and Appeal', 'Records, Duty and Rank']);
-    expect(CODE.map((a) => a.subsections.length)).toEqual([8, 6, 9, 7, 10, 4, 4, 3, 8, 8, 4]);
-    expect(SUBS).toHaveLength(71);
+    expect(CODE.map((a) => a.subsections.length)).toEqual([8, 7, 9, 11, 10, 5, 5, 3, 11, 8, 4]);
+    expect(SUBS).toHaveLength(81);
     expect(ANNEX.map((x) => `${x.number} ${x.instrument}${x.provisional ? ' (Provisional)' : ''}`)).toEqual(['T.1 Border Accords, Art. 2 (Provisional)', 'T.2 Border Accords, Art. 4', 'T.3 Border Accords, Art. 9 (Provisional)', 'T.4 Colonial Quarantine Accord, §1', 'T.5 Colonial Quarantine Accord, §2']);
     for (const a of CODE) a.subsections.forEach((s, j) => expect(s.number).toBe(`${a.number}.${j + 1}`));
   });
   it('each subsection is one short rule ("shall", "shall not" or "may")', () => {
     for (const s of SUBS) {
       expect(s.text, s.number).toMatch(/^[A-Z].*\.$/);
-      expect(s.text, s.number).not.toMatch(/\. [A-Z]/);
+      // §4.10 is the one approved subsection worded as two sentences (a definition, then the rule).
+      if (s.number !== '4.10') expect(s.text, s.number).not.toMatch(/\. [A-Z]/);
       expect(s.text, s.number).toMatch(/\b(shall|may)\b/);
       expect(s.text.split(' ').length, s.number).toBeLessThanOrEqual(45);
     }
@@ -63,6 +67,27 @@ describe('the First Edition', () => {
     expect(section('5.9')!.text).toBe('A member ordered to commit an act contrary to this Code or to an applicable treaty shall refuse, state the reason and ensure that the refusal is logged.');
     expect(section('7.2')!.text).toBe('A person shall not be handed over where credible evidence indicates a serious risk of persecution, torture or grave harm, even if assurances have been offered.');
     expect(section('10.7')!.text).toBe('Where ISA Fleet Command’s own conduct is in question, ISA personnel may refer an allegation or an appeal directly to the ISA Office of Independent Review, without Fleet Command’s permission.');
+  });
+  it('the ten approved additions are in the text, each at its own new id, in force and not yet evaluated', () => {
+    const want: Record<string, [string, string]> = {
+      '2.7': ['cmd-6', 'A death or serious injury aboard an ISA vessel shall be investigated and reported to ISA Fleet Command, and the crew shall be told what the investigation finds.'],
+      '4.8': ['warn-1', 'When an ISA vessel becomes aware of a hazard to navigation that endangers another vessel, ISA personnel shall warn that vessel as soon as reasonably possible, whether or not she is an ISA, allied or rival vessel.'],
+      '4.9': ['care-5', 'When not everyone in danger can be helped at once, ISA personnel shall decide who is helped first on medical need and the chance of survival, as assessed by the medical officer, and on no other ground.'],
+      '4.10': ['care-6', 'A vessel with living persons aboard, conscious or not, is not salvage. ISA personnel shall not permit, assist or agree to her being taken as salvage until every person aboard is safe.'],
+      '4.11': ['care-7', 'Where an ISA vessel escorts or assists a civilian vessel in a hazard, and there is credible evidence that her master is unfit to command, the ISA captain shall act on that evidence to protect life.'],
+      '6.5': ['honesty-2', 'What a party to a mediation or dispute says to ISA personnel in private shall not be disclosed to another party without that party’s leave.'],
+      '7.5': ['custody-1', 'A person aboard an ISA ship shall not be detained or accused of an offence except on credible evidence, and shall be told the grounds and heard before any finding.'],
+      '9.9': ['contact-4', 'When mediating a dispute, ISA personnel shall remain impartial, shall not take a side, and shall not impose a settlement.'],
+      '9.10': ['contact-5', 'An ISA ship stopped by another power’s picket in disputed space shall seek passage by negotiation and shall not run the line while a peaceful way through remains, except to render humanitarian aid under the Border Accords.'],
+      '9.11': ['contact-6', 'ISA personnel shall not destroy or harm an unknown life form, or a growth that may be alive, while it poses no immediate threat to life and before reasonable efforts have been made to establish what it is.'],
+    };
+    for (const [n, [id, text]] of Object.entries(want)) {
+      expect(section(n), n).toMatchObject({ id, text });
+      expect(article(id)!.sections, id).toEqual([n]);
+      expect(article(id)!.legalStatus, id).toBe('in-force');
+      expect(article(id)!.internal.enforcement.status, id).toBe('not-yet');
+    }
+    expect(Object.values(want).map(([id]) => id).sort()).toEqual([...ADDED_IDS].sort());
   });
   it('says "the ISA" throughout and ships no drafting material', () => {
     const code = JSON.stringify({ CODE, ANNEX, PREAMBLE });
@@ -75,10 +100,10 @@ describe('the First Edition', () => {
 });
 
 describe('the regulation records and the mapping', () => {
-  it('keeps all 42 ids plus general-1 and general-2; none lost or reused', () => {
+  it('keeps all 42 ids plus general-1 and general-2, and the ten approved additions; none lost or reused', () => {
     const ids = ARTICLES.map((a) => a.id);
-    expect(new Set(ids).size).toBe(44);
-    expect([...ids].sort()).toEqual([...V07_IDS, ...DRAFT_IDS, 'general-1', 'general-2'].sort());
+    expect(new Set(ids).size).toBe(54);
+    expect([...ids].sort()).toEqual([...V07_IDS, ...DRAFT_IDS, 'general-1', 'general-2', ...ADDED_IDS].sort());
     const drafts = ARTICLES.flatMap((a) => (a.internal.draftNumber ? [a.internal.draftNumber] : []));
     expect(new Set(drafts).size).toBe(42);
   });
@@ -129,7 +154,7 @@ describe('the regulation records and the mapping', () => {
     expect(ARTICLES.filter((a) => a.legalStatus === 'provisional').map((a) => a.id).sort()).toEqual(['border-accords-2', 'border-accords-9']);
     expect(ARTICLES.filter((a) => a.internal.enforcement.status === 'evaluated').map((a) => a.id).sort()).toEqual(['reg-12', 'reg-7.1', 'reg-7.3', 'service-2', 'service-5']);
     expect(ARTICLES.filter((a) => a.internal.enforcement.status === 'partial')).toHaveLength(20);
-    expect(ARTICLES.filter((a) => a.internal.enforcement.status === 'not-yet')).toHaveLength(19);
+    expect(ARTICLES.filter((a) => a.internal.enforcement.status === 'not-yet')).toHaveLength(29);
     for (const a of ARTICLES) expect(a.internal.enforcement.note, a.id).not.toMatch(/v\d+\.\d|\bplanned\b|\bfix\b|evaluator|descriptor|commit gate|\bengine\b|implemented|\bcode\b/i);
   });
 });

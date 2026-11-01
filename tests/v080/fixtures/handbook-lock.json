@@ -14,6 +14,7 @@
   "2.4": "1fea64929c762cfe",
   "2.5": "68fef277b157879a",
   "2.6": "15887ea6f74bc925",
+  "2.7": "f379b6b5ded51dac",
   "3.1": "fd496bffde6e0c77",
   "3.2": "fb6f772a2ae41849",
   "3.3": "e6e89c989752d23d",
@@ -30,6 +31,10 @@
   "4.5": "bbbed98bb04bbc3e",
   "4.6": "8d179b20979be0e7",
   "4.7": "dbaf3a1df32d8796",
+  "4.8": "a8a10f9472e9759a",
+  "4.9": "0e60515becfedb3b",
+  "4.10": "5b97a97bc9791995",
+  "4.11": "eacdf30fa2f040f2",
   "5.1": "9bf54ca9a0b6b3c8",
   "5.2": "35931c3de556daac",
   "5.3": "f3a488c5f29e5c4f",
@@ -44,10 +49,12 @@
   "6.2": "500ec270882911ff",
   "6.3": "35bfa182c7228b45",
   "6.4": "76dea8e121c96a7b",
+  "6.5": "19c33c5dd5d8a4d9",
   "7.1": "74b36eeda8524ced",
   "7.2": "403dd72d7839cf75",
   "7.3": "83055c72320d0ae1",
   "7.4": "335926edfab987e0",
+  "7.5": "fce7f5d68aeb38af",
   "8.1": "458012182000b635",
   "8.2": "bc037893cc988259",
   "8.3": "6294a7eba44d09ff",
@@ -59,6 +66,9 @@
   "9.6": "534aad2836a17739",
   "9.7": "f97e9a01019bd05f",
   "9.8": "2ef98eeb335279d6",
+  "9.9": "ca889f628ad452b4",
+  "9.10": "cfe1ae4abf57b820",
+  "9.11": "38496b9757d743b4",
   "10.1": "b6774ed8483755ac",
   "10.2": "af6ea1263ea053fb",
   "10.3": "2a546748c90b927e",
@@ -519,6 +529,96 @@
    "revisions": [
     "0:80581db6691c057a",
     "1:7be11a6f5b4f273d"
+   ]
+  },
+  "cmd-6": {
+   "sections": [
+    "2.7"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:feef8d7412c6c879"
+   ]
+  },
+  "warn-1": {
+   "sections": [
+    "4.8"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:853f878dd9fff05f"
+   ]
+  },
+  "care-5": {
+   "sections": [
+    "4.9"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:db8947c4a6ce9503"
+   ]
+  },
+  "care-6": {
+   "sections": [
+    "4.10"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:9f7768253268b1e2"
+   ]
+  },
+  "care-7": {
+   "sections": [
+    "4.11"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:70952187db0ece04"
+   ]
+  },
+  "honesty-2": {
+   "sections": [
+    "6.5"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:26b0ce1f0969cf1e"
+   ]
+  },
+  "custody-1": {
+   "sections": [
+    "7.5"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:80a7c1f4c88fd4f4"
+   ]
+  },
+  "contact-4": {
+   "sections": [
+    "9.9"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:650553d88e93407f"
+   ]
+  },
+  "contact-5": {
+   "sections": [
+    "9.10"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:48ae1292a8b7c08e"
+   ]
+  },
+  "contact-6": {
+   "sections": [
+    "9.11"
+   ],
+   "revision": 1,
+   "revisions": [
+    "1:dd61bb72af562d61"
    ]
   }
  },

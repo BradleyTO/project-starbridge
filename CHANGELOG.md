@@ -2,6 +2,32 @@
 
 All notable changes to Project Starbridge are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.8.13] — 2026-10-31 — ISA-COM-001 First Edition: approved additions
+
+Handbook text only. The project owner approved the pending regulation proposals from Training Simulations 003 and 005–011, and they are added to the First Edition. No change to grading, evaluation rules, crew refusal behaviour, existing subsection wording or numbering, or the ids and revisions of existing regulations.
+
+### Added
+- Ten subsections, each under a new permanent id (in force; not yet evaluated):
+  - **§2.7** Investigation of death or injury (`cmd-6`): A death or serious injury aboard an ISA vessel shall be investigated and reported to ISA Fleet Command, and the crew shall be told what the investigation finds.
+  - **§4.8** Duty to warn (`warn-1`): When an ISA vessel becomes aware of a hazard to navigation that endangers another vessel, ISA personnel shall warn that vessel as soon as reasonably possible, whether or not she is an ISA, allied or rival vessel.
+  - **§4.9** Triage (`care-5`): When not everyone in danger can be helped at once, ISA personnel shall decide who is helped first on medical need and the chance of survival, as assessed by the medical officer, and on no other ground.
+  - **§4.10** Not salvage (`care-6`): A vessel with living persons aboard, conscious or not, is not salvage. ISA personnel shall not permit, assist or agree to her being taken as salvage until every person aboard is safe.
+  - **§4.11** Fitness of a civilian master (`care-7`): Where an ISA vessel escorts or assists a civilian vessel in a hazard, and there is credible evidence that her master is unfit to command, the ISA captain shall act on that evidence to protect life.
+  - **§6.5** Mediation confidences (`honesty-2`): What a party to a mediation or dispute says to ISA personnel in private shall not be disclosed to another party without that party’s leave.
+  - **§7.5** Detention and accusation (`custody-1`): A person aboard an ISA ship shall not be detained or accused of an offence except on credible evidence, and shall be told the grounds and heard before any finding.
+  - **§9.9** Mediator impartiality (`contact-4`): When mediating a dispute, ISA personnel shall remain impartial, shall not take a side, and shall not impose a settlement.
+  - **§9.10** Passage at a picket (`contact-5`): An ISA ship stopped by another power’s picket in disputed space shall seek passage by negotiation and shall not run the line while a peaceful way through remains, except to render humanitarian aid under the Border Accords.
+  - **§9.11** Unknown life (`contact-6`): ISA personnel shall not destroy or harm an unknown life form, or a growth that may be alive, while it poses no immediate threat to life and before reasonable efforts have been made to establish what it is.
+- The contents now read Article 2 §2.1–2.7, Article 4 §4.1–4.11, Article 6 §6.1–6.5, Article 7 §7.1–7.5 and Article 9 §9.1–9.11 (81 subsections). Search finds the new subsections by number, id and subject ("triage", "salvage", "picket", "mediation", "unknown life" …).
+- Hidden internal data for each new id (explanation, scope, exceptions, examples, related ids, spoiler-safe training references to the simulations that exercise it). Never shown to the player.
+
+### Unchanged
+- Simulations #3–#12 keep the matching goals as labelled exercise objectives and grade exactly as before; nothing is evaluated against the new subsections yet.
+
+### Tests
+- `tests/v080/handbook.test.ts`: counts updated (81 subsections, 54 ids, 29 not yet evaluated); a new test checks the exact wording, id, status and placement of all ten additions. `tests/v080/fixtures/handbook-lock.json` appends the ten new subsections and records; every earlier hash is unchanged. §4.10 is the one approved two-sentence subsection and is exempt from the one-sentence style check.
+- Smoke: Article 7 now has five subsections; search opens §2.7, §4.10, §6.5, §7.5 and §9.11; Article 4 lists eleven.
+
 ## [0.8.12] — 2026-10-31 — Training Simulation 012: Ember Tide
 
 Nightly simulation build. Twelfth of 30 training simulations. No change to the engine, grading, evaluation rules, crew refusal behaviour in other simulations or ISA-COM-001 wording.

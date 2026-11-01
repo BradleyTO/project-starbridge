@@ -77,6 +77,14 @@ export async function handbookSmoke({ browser, URL, SHOTS, check, errors, stubs 
     check(`v0.8.2: search "${q}" opens ${want.replace('|', ' at ') || want}`, (await at()) === want, await at());
   }
   check('v0.8.2: a cited subsection is highlighted', (await pg.locator('.hb-rule.hb-focus[data-section="T.2"]').count()) === 1);
+  // v0.8.13: the approved First Edition additions are in the code.
+  for (const [q, want] of [['2.7', '2|2.7'], ['§4.10', '4|4.10'], ['6.5', '6|6.5'], ['7.5', '7|7.5'], ['9.11', '9|9.11']]) {
+    await searchFor(q);
+    check(`v0.8.13: search "${q}" opens ${want.replace('|', ' at ')}`, (await at()) === want, await at());
+  }
+  await searchFor('4.10');
+  const art4 = await pg.innerText('[data-testid=handbook-article]');
+  check('v0.8.13: Article 4 lists its eleven subsections, §4.10 among them', (await shownPart()) === '4' && (await pg.locator('[data-testid=handbook-article] .hb-rule').count()) === 11 && /is not salvage/.test(art4) && /hazard to navigation/.test(art4));
   const topics = [['pathogen', ['8.1', '8.2']], ['quarantine', ['T.4', 'T.5']], ['biological containment', ['8.1', '8.2']], ['rules of engagement', ['3.1', '3.2', '3.3', '3.4', '3.5', '3.6', '3.7', '3.8', '3.9']], ['unlawful order', ['5.8', '5.9', '5.10']], ['first contact', ['9.1', '9.2']], ['asylum', ['7.1', '7.2', '7.3']], ['warning shot', ['3.6', '3.7', '3.8']]];
   for (const [q, want] of topics) {
     await searchFor(q);
@@ -165,7 +173,7 @@ export async function handbookSmoke({ browser, URL, SHOTS, check, errors, stubs 
   await pg.waitForTimeout(200);
   await send('show me article 7');
   await pg.waitForTimeout(200);
-  check('v0.8.2 phone: the handbook opens Article 7', (await shownPart()) === '7' && (await pg.locator('[data-testid=handbook-article] .hb-rule').count()) === 4);
+  check('v0.8.2 phone: the handbook opens Article 7 (five subsections since v0.8.13)', (await shownPart()) === '7' && (await pg.locator('[data-testid=handbook-article] .hb-rule').count()) === 5);
   const ov = await pg.evaluate(() => Math.max(document.documentElement.scrollWidth, document.querySelector('.hub-backdrop')?.scrollWidth ?? 0) - window.innerWidth);
   check('v0.8.2 phone: no horizontal overflow in the handbook', ov <= 0, `overflow ${ov}px`);
   const fs16 = await pg.evaluate(() => parseFloat(getComputedStyle(document.querySelector('.hb-rule-text')).fontSize));
