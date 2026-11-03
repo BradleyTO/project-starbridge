@@ -42,7 +42,7 @@ Premises can be adjusted when a scenario is built. The core event, the primary c
 | 10 | The Gardener | A spreading growth in an asteroid field may be alive | Restraint: choosing not to act | Lt. Varga (Science) | **done** (v0.8.10) |
 | 11 | Coldwater | Engineering refuses orders after a death they think was covered up | Crew conflict and leadership | Chief Okafor (Engineering) | **done** (v0.8.11) |
 | 12 | Ember Tide | A stellar flare will sweep a mining outpost at an uncertain hour | Timing and patience | Lt. Varga (Science) | **done** (v0.8.12) |
-| 13 | The Seventh Bell | An inquiry into an Agency cutter firing on a Directorate courier | Accountability: telling an inconvenient truth | Lt. Cmdr. Rask (Tactical) | planned |
+| 13 | The Seventh Bell | An inquiry into an ISA cutter firing on a Directorate courier | Accountability: telling an inconvenient truth | Lt. Cmdr. Rask (Tactical) | **done** (v0.8.14) |
 | 14 | Starfall | A habitat sinking into a gas giant; only the green helmsman can fly the rescue | Trusting a junior officer | Ens. Adeyemi (Helm) | planned |
 | 15 | Corsairs of the Veyl Shoals | A corsair ambush in an asteroid shoal where sensors and torpedoes fail | Tactical cunning: terrain and deception | Lt. Cmdr. Rask (Tactical) | planned |
 | 16 | The Glass Nebula | A shuttle lost in a nebula that bends sensors and time | Relying on the science officer | Lt. Varga (Science) | planned |
@@ -84,6 +84,7 @@ Premises can be adjusted when a scenario is built. The core event, the primary c
 | Command under overload | 1 | #30 |
 
 - #12 Ember Tide shipped as timing and patience (secondary: relying on the science officer).
+- #13 The Seventh Bell shipped as accountability (secondary: deduction from evidence).
 - No primary challenge appears more than three times, and no two consecutive simulations share one or the same pivotal officer.
 - **Pivotal officers across #1–#30:** Szabo 4, Varga 5, Okafor 5, Rask 4, Adeyemi 4, Osei 4, Marrow 4 (including the capstone).
 
@@ -527,21 +528,40 @@ Overlap check (guide §12):
 
 Nothing was added to ISA-COM-001.
 
-### 13. The Seventh Bell
-**Premise.** It has already happened: an Agency patrol cutter fired on a Directorate courier and killed two crew. The Halcyon is sent to lead the inquiry, with a Directorate investigator aboard. The cutter's captain says it was self-defence. The recovered logs and debris tell a more complicated story, and Fleet would prefer a quiet finding.
+### 13. The Seventh Bell (done, v0.8.14)
+**Premise.** Six hours ago, at the Seventh Bell, a navigation beacon on the Harrow Lane at the Directorate border, the ISA patrol cutter ISV Tamber (Lt. Cmdr. Jonah Stavely) fired on the Directorate courier Seraphine. Two of the courier's crew, Anselm Ruy and Petra Lusk, are dead and the courier is disabled. Examiner Ilsabet Vory, the Directorate's investigator, is aboard the courier, and the frigate Stern Mercy is hours away. The Halcyon, the nearest ISA ship, is ordered to hold the inquiry. Stavely says it was self-defence. The Tamber's fire-control record, the courier's damage and the Bell's own recorder tell the story, and Fleet Command (Rear Admiral Hester Calderon) may want a convenient finding. Nothing is burning and nobody needs rescuing: the task is to find out what happened and say it, whoever it hurts.
 
 **Command challenge:**
-- **Primary:** accountability, telling an inconvenient truth.
-- **Secondary:** deduction from the wreckage.
-- **Pivotal officer:** Lt. Cmdr. Rask (Tactical), who knows the cutter's captain and reads the firing logs.
+- **Primary:** accountability, telling an inconvenient truth (the previous simulation's was timing and patience).
+- **Secondary:** deduction from evidence that did not come from the cutter.
+- **Pivotal officer:** Lt. Cmdr. Rask (Tactical), who reads the Tamber's fire-control record and knows Stavely (an old friend, an old rival or a former shipmate). Whether his first read leans depends on that tie, unless the captain asks about it. Lt. Varga reads the courier's damage, Lt. Szabo pulls the Bell's record (or Chief Okafor's team recovers a damaged recorder), Dr. Osei may examine the dead with the examiner's leave, and Cmdr. Marrow advises on the directive.
 
-**Why it's distinct:** an inquiry after the fact, not a standoff. It is the only simulation where the Agency itself may be in the wrong.
+**Why it's distinct:** the only inquiry after the fact into another ISA ship. There is no standoff, no rescue and no clock but the frigate's arrival and Fleet's deadline. The ISA itself may be in the wrong, and the pressure to say so, or not, comes from above.
+
+Overlap check (guide §12):
+- Unlike #11 Coldwater, the inquiry is into another ship, not the Halcyon. The Halcyon's crew is not in revolt, nobody aboard covered anything up, and the person owed the truth is a foreign power's examiner, not the ship's own watch.
+- Unlike #7 Ghost Ledger, there is no culprit to unmask aboard. The deduction is about what a record means, and the hard part is saying it.
+- Unlike #17 Tribunal at Kesh Varo, the ISA is the one judging, and the accused is one of its own.
+- Unlike #1 The Kestrel Incident, there is no three-ship standoff. The courier is disabled and unarmed, the cutter is weapons-safe, and the frigate is a clock.
+
+**Hidden:** what really happened (a good-faith misreading of a navigation sweep as a weapons lock; a lawful shot at a real lock after two warnings; or a lawful first volley followed by an unlawful second after the courier had turned away); Rask's tie to Stavely; Stavely's temper (steady or proud); Vory's agenda (fair, hardline or saving face); what Fleet Command wants (a report, a quiet word or a formal directive to find self-defence); whether the Bell's recorder survived; when Fleet signals (turn 4–7), its deadline (8–10 turns later) and when the frigate arrives (19–24).
 
 **Endings:**
-- **Success:** de-escalation with justice, a joint finding, an honest finding that costs the Agency face but keeps the peace.
-- **Failure or partial:** a cover-up that is later exposed, a border clash, both powers on a war footing.
+- **Success:** The Bell Rings True (an honest finding, the ISA's own fault included), Cleared on the Record (a true finding that clears Stavely, tested against outside evidence), A Joint Finding (unconventional: the evidence opened to the Directorate), In His Own Words (unconventional: Stavely shown the record and telling the examiner himself), An Independent Review (a formal, reasoned refusal of the directive referred to the ISA Office of Independent Review, and the true finding sent).
+- **Failure or partial:** Right Too Soon (partial: right before the evidence was in), A Finding Refused (partial: true, but the examiner given no reason to accept it), Adjourned (partial: time ran out), So Recorded (a false self-defence finding with nothing to contradict it), The Bell Remembers (the same, exposed by the Bell's recorder), A Captain Thrown Over (Stavely blamed for doing his duty), A Finding the Record Won't Hold, Filed Over Your Head (Fleet files its own finding with no objection on the record), War Footing, Left at the Seventh Bell, Shots at the Seventh Bell.
 
-**Seeds vary:** what really happened, the investigator's agenda, how much Fleet pressures you.
+**Regulations cited:** §6.1 (honesty-1), §5.4 (reg-7.1), §5.7 (reg-7.4) and §3.1 (roe-2). Hidden training references on §1.4 (cmd-4), §3.5 (roe-4), §6.4 (conduct-2), §7.5 (custody-1) and §10.2/§10.7 (service-3).
+
+**Reckless/responsible pair:** The Bell Rings True reached once by hearing Stavely, having Rask's tie declared and testing the record against outside evidence before the finding (graded exemplary), and once after accusing Stavely unheard and conceding fault to the examiner before anything was established (graded mixed or reckless, citing §6.1).
+
+**Exercise objectives (no regulation yet):**
+- "give Examiner Vory an honest account of how the Seraphine's two crew died, including any fault of the ISA's" (account). No First Edition subsection requires the ISA to give another power an honest account when ISA action kills or injures its people. Proposed for Brad's approval: "When ISA action causes death or serious injury to persons of another power, the ISA shall investigate and give that power an honest account of its findings, including any fault of its own."
+
+**Naming notes:** no established name was changed. New names, flagged for Brad: ISV Tamber, Lt. Cmdr. Jonah Stavely, the courier Seraphine, Examiner Ilsabet Vory, the frigate Stern Mercy, Rear Admiral Hester Calderon, the Seventh Bell beacon and the Harrow Lane, and the dead, Anselm Ruy and Petra Lusk. The admiral was first drafted as "Ines" and then "Maud", both changed before release because Commander Ines Valcourt (and Elder Maud Rhune in #5) already exist. The roadmap premise was revised from "an Agency cutter" to "an ISA cutter", with the examiner aboard the courier rather than the Halcyon.
+
+**Seeds vary:** what really happened, Rask's tie, Stavely's temper, the examiner's agenda, what Fleet wants, whether the recorder survived, and every clock.
+
+Nothing was added to ISA-COM-001.
 
 ### 14. Starfall
 **Premise.** A mining habitat is sinking into a gas giant's atmosphere. Transporters scatter in the storm, so the only way to reach it is to fly the Halcyon itself into the upper cloud deck. The helmsman best suited by reflexes is Ens. Adeyemi, in his first real crisis.

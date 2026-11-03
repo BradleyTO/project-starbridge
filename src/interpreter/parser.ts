@@ -23,6 +23,7 @@ import { ADDRESSED as LANTERN_ADDRESSED, SPEECHY as LANTERN_SPEECHY, LANTERN_NAM
 import { ADDRESSED as PICKET_ADDRESSED, SPEECHY as PICKET_SPEECHY, PICKET_NAMES, forMarrow as picketForMarrow, picketAsk, picketOrder } from '../scenarios/picket/words';
 import { ADDRESSED as GARDENER_ADDRESSED, SPEECHY as GARDENER_SPEECHY, GARDENER_NAMES, gardenerAsk, gardenerOrder } from '../scenarios/gardener/words';
 import { ADDRESSED as EMBER_ADDRESSED, SPEECHY as EMBER_SPEECHY, EMBER_NAMES, emberAsk, emberOrder } from '../scenarios/embertide/words';
+import { ADDRESSED as BELL_ADDRESSED, SPEECHY as BELL_SPEECHY, BELL_NAMES, bellAsk, bellFleetReply, bellOrder } from '../scenarios/seventhbell/words';
 import { ADDRESSED as COLDWATER_ADDRESSED, SPEECHY as COLDWATER_SPEECHY, COLDWATER_NAMES, coldwaterAsk, coldwaterOrder } from '../scenarios/coldwater/words';
 import type { Interpretation, ProposedActionInput, CommIntent, TradeOffer, ManeuverIntentT } from '../engine/schema';
 import { InterpretationSchema } from '../engine/schema';
@@ -378,6 +379,25 @@ const RULES: Rule[] = [
       const d = ctx.addressee ? `${ctx.addressee}: ${c}` : c;
       if (emberOrder(c)) return { kind: 'action', action: { type: 'improvise', method: 'other', description: d.slice(0, 400) } };
       if (emberAsk(c)) return { kind: 'action', action: { type: 'bridge', op: 'chat', officer: '', text: d.slice(0, 300) } };
+      return { kind: 'none' };
+    },
+  },
+  {
+    // v0.8.14: The Seventh Bell — orders and words about the inquiry ("Rask, read the Tamber's
+    // fire-control record", "Szabo, pull the Bell's record", "Varga, scan the courier's damage",
+    // "tell Fleet I refuse, because …", "my finding is …"). Only while that simulation runs; the
+    // scenario decides what they mean. The addressed officer is passed on as a prefix.
+    name: 'seventh-bell',
+    test: /\S/,
+    build: (c, ctx) => {
+      if (ctx.setting?.scenarioId !== 'seventh-bell') return { kind: 'none' };
+      // On an open channel, plain speech is for the cutter's captain or the examiner.
+      if (ctx.channel?.state === 'open' && ctx.channel.party !== 'passenger' && !ctx.addressee && !BELL_ADDRESSED.test(c) && BELL_SPEECHY.test(c)) {
+        return { kind: 'action', action: { type: 'speak', to: ctx.channel.party, text: c.slice(0, 400), intents: ['unknown'], relayed: false } };
+      }
+      const d = ctx.addressee ? `${ctx.addressee}: ${c}` : c;
+      if (bellOrder(c, ctx.addressee)) return { kind: 'action', action: { type: 'improvise', method: 'other', description: d.slice(0, 400) } };
+      if (bellAsk(c)) return { kind: 'action', action: { type: 'bridge', op: 'chat', officer: '', text: d.slice(0, 300) } };
       return { kind: 'none' };
     },
   },
@@ -743,7 +763,9 @@ function splitMarked(text: string, ctx: InterpreterContext): { clause: string; s
       const reported = speech && REPORTED_SPEECH.test(frag) && (!mm || mm.rule.name !== 'communicate');
       let merge = false;
       if (prev !== undefined) {
-        if (reported && !(newSentence && rationale)) merge = true; // "tell them we mean no harm"
+        // v0.8.14: in The Seventh Bell a reason belongs to the refusal or finding it explains ("I refuse, because …").
+        if (!newSentence && ctx.setting?.scenarioId === 'seventh-bell' && /^(because|since|on the grounds|given that|as it would)\b/.test(frag.replace(DEPT_MARK, '').trim())) merge = true;
+        else if (reported && !(newSentence && rationale)) merge = true; // "tell them we mean no harm"
         else if (continuation && !newSentence) merge = true;
         else if (!mm && !rationale && !newSentence && VERBLESS.test(frag)) merge = true; // verbless fragment: "…to 5,000 km"
         else if (/^(on|onto) (the )?(main )?(screen|viewer)$/.test(frag)) merge = true;
@@ -1286,7 +1308,7 @@ export function interpretSync(input: string, ctx: InterpreterContext): Interpret
 
 const SIM_WORD = '(?:simulation|sim|simulator|drill|exercise|training(?: simulation| run| exercise)?|holo(?:gram|deck)?(?: program(?:me)?)?|(?:simulation|training|holo) program(?:me)?)';
 const LEAD = "^(?:(?:computer|ship|ops|xo|number one|first officer|commander|marrow)[,:]?\\s+)?(?:please\\s+)?(?:(?:can|could|would) you\\s+)?(?:let'?s\\s+)?";
-const BEGIN_SIM = new RegExp(`${LEAD}(?:begin|start|run|load|launch|initiate|commence|play|engage|activate|set up|give me|i want|i'd like|we'?ll (?:run|do))\\s+(?:up\\s+)?(?:the\\s+|a\\s+|another\\s+|new\\s+)*(?:(.{0,40}?)\\s+)?${SIM_WORD}\\b(?:\\s+(?:of|called|named|for)\\s+(.+)|\\s+(?:number\\s+|no\\.?\\s+|#\\s*)?(\\d{1,3}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\\b)?|${LEAD}(?:begin|start|run|load|launch|play)\\s+(?:the\\s+)?(${SIMULATION_NAME_PATTERN})\\b`);
+const BEGIN_SIM = new RegExp(`${LEAD}(?:begin|start|run|load|launch|initiate|commence|play|engage|activate|set up|give me|i want|i'd like|we'?ll (?:run|do))\\s+(?:up\\s+)?(?:the\\s+|a\\s+|another\\s+|new\\s+)*(?:(.{0,40}?)\\s+)?${SIM_WORD}\\b(?:\\s+(?:of|called|named|for)\\s+(.+)|\\s+(?:number\\s+|no\\.?\\s+|#\\s*)?(\\d{1,3}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen)\\b)?|${LEAD}(?:begin|start|run|load|launch|play)\\s+(?:the\\s+)?(${SIMULATION_NAME_PATTERN})\\b`);
 const END_SIM = new RegExp(`${LEAD}(?:end|stop|terminate|exit|abort|cancel|quit|close|leave|freeze)\\s+(?:the\\s+|this\\s+)?${SIM_WORD}\\b|^(?:computer[,:]?\\s+)?(?:end|exit) program(?:me)?\\b`);
 /** "List simulations", "what simulations are available?", "which training simulations do we have?" */
 const LIST_SIMS = new RegExp(`${LEAD}(?:list|name|read(?: out)?|tell me)\\s+(?:the\\s+|all\\s+|our\\s+|the available\\s+)*(?:training\\s+)?(?:simulations|sims|training (?:simulations|programs?|programmes?))\\b|\\b(?:what|which)\\s+(?:training\\s+)?(?:simulations|sims)\\b(?:.*\\b(?:available|have|are there|on file|can (?:i|we) (?:run|play|do)|do we))?|\\bhow many (?:training )?simulations\\b`);
@@ -1373,7 +1395,9 @@ function bridgeCommand(input: string, ctx?: InterpreterContext): BridgeOp | null
   // v0.7.1: ISA Fleet Command / Training Command as a comms party (never a ship), and the
   // captain's questions about their own training. Both work in every setting.
   const fleet = fleetAddress(t);
-  if (fleet) {
+  // v0.8.14: in The Seventh Bell, Fleet Command's directive is part of the exercise, so a reply to it
+  // ("tell Fleet I refuse the directive, because …") belongs to the scenario, not to exercise control.
+  if (fleet && !(ctx?.setting?.scenarioId === 'seventh-bell' && bellFleetReply(t))) {
     const topic = careerQuestion(fleet.rest);
     return { type: 'bridge', op: 'fleet', scenario: fleet.to, ...(topic ? { text: topic } : {}) };
   }
@@ -1504,7 +1528,7 @@ let protectedNames = new Set<string>(['arden', 'vane', 'venn', 'maras', 'ivet', 
 let spell: SpellCorrector | null = null;
 function SPELL(): SpellCorrector {
   if (!spell) {
-    const sources: (RegExp | string)[] = [KESTREL_BASE, CRUISER_BASE, PASSENGER, BORDER, PAIR, COMPARTMENT, SPEECH, ON_SCREEN, ALL_TARGETS, SPEED_SLOW, SPEED_HALF, NEGATED_HOSTILITY, PEACEFUL, ASSERTIVE, ADDRESSEES, ...SYSTEMS.map((x) => x[1]), ...RULES.map((r) => r.test), LEDGER_NAMES, LANTERN_NAMES, PICKET_NAMES, GARDENER_NAMES, COLDWATER_NAMES, EMBER_NAMES, 'shields weapons transporter tractor channel freighter cruiser kestrel position between hostile hail aggressive threatening'];
+    const sources: (RegExp | string)[] = [KESTREL_BASE, CRUISER_BASE, PASSENGER, BORDER, PAIR, COMPARTMENT, SPEECH, ON_SCREEN, ALL_TARGETS, SPEED_SLOW, SPEED_HALF, NEGATED_HOSTILITY, PEACEFUL, ASSERTIVE, ADDRESSEES, ...SYSTEMS.map((x) => x[1]), ...RULES.map((r) => r.test), LEDGER_NAMES, LANTERN_NAMES, PICKET_NAMES, GARDENER_NAMES, COLDWATER_NAMES, EMBER_NAMES, BELL_NAMES, 'shields weapons transporter tractor channel freighter cruiser kestrel position between hostile hail aggressive threatening'];
     spell = new SpellCorrector(vocabularyFrom(sources));
   }
   return spell;

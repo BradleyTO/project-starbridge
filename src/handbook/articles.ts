@@ -207,8 +207,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
         {
           "simulation": 13,
           "title": "The Seventh Bell",
-          "purpose": "Accounting honestly for an order and its consequences.",
-          "planned": true
+          "purpose": "Judging a past decision on what was known when it was made."
         }
       ],
       "enforcement": {
@@ -720,6 +719,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "simulation": 1,
           "title": "The Kestrel Incident",
           "purpose": "Proportion when force is used."
+        },
+        {
+          "simulation": 13,
+          "title": "The Seventh Bell",
+          "purpose": "Weighing whether force was still needed once a threat had passed."
         },
         {
           "simulation": 15,
@@ -1826,8 +1830,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
         {
           "simulation": 13,
           "title": "The Seventh Bell",
-          "purpose": "Telling an inconvenient truth to an inquiry.",
-          "planned": true
+          "purpose": "Telling an inconvenient truth to an inquiry."
         }
       ],
       "enforcement": {
@@ -2398,6 +2401,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "simulation": 11,
           "title": "Coldwater",
           "purpose": "Hearing the people involved before anyone is blamed."
+        },
+        {
+          "simulation": 13,
+          "title": "The Seventh Bell",
+          "purpose": "Answering pressure from above through proper channels, on the record."
         }
       ],
       "enforcement": {
@@ -3282,6 +3290,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "simulation": 7,
           "title": "Ghost Ledger",
           "purpose": "Accusing on the evidence, and hearing the accused."
+        },
+        {
+          "simulation": 13,
+          "title": "The Seventh Bell",
+          "purpose": "Hearing a person before any finding is made against them."
         }
       ],
       "enforcement": {

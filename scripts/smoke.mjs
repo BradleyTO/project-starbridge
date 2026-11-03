@@ -1620,6 +1620,68 @@ for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape',
   await ctxE.close();
 }
 
+// ============================================================== v0.8.14 ====
+// Training Simulation 013: The Seventh Bell. Listed, launched by name, the record read, Stavely heard, an ending, AAR filed.
+{
+  const ctxB = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await ctxB.addInitScript(stubs);
+  const pg = await ctxB.newPage();
+  pg.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  pg.on('pageerror', (e) => errors.push(String(e)));
+  const allB = async () => (await pg.innerText('[data-testid=narrative]')) + '\n' + (await pg.innerText('[data-testid=comms]'));
+  const modeB = () => pg.getAttribute('[data-testid=mode-banner]', 'data-mode');
+  const endedB = async () => (await pg.locator('[data-testid=outcome]').count()) > 0;
+  await pg.goto(withSeed(13), { waitUntil: 'networkidle' });
+  await pg.waitForTimeout(600);
+  await skipIntro(pg);
+  await sendOn(pg, 'Computer, list simulations', 600);
+  check('sim13: "list simulations" names The Seventh Bell', /The Seventh Bell/.test(await allB()));
+  if (!(await pg.locator('[data-testid=hub]').count())) await pg.click('[data-testid=open-hub]');
+  await pg.click('[data-testid=hub-tab-archive]');
+  await pg.waitForTimeout(150);
+  check('sim13: Mission Archive lists Training Simulation 013', /Training Simulation 013: The Seventh Bell/.test(await pg.innerText('[data-testid=hub]')) && (await pg.locator('[data-testid=archive-train-TRN-seventh-bell]').count()) === 1);
+  await pg.click('[data-testid=hub-close]');
+  await pg.waitForTimeout(100);
+  await sendOn(pg, 'Computer, begin the Seventh Bell simulation', 1200);
+  await pg.waitForSelector('[data-testid=mode-banner][data-mode=simulation]');
+  check('sim13: launch by name starts a simulation', (await modeB()) === 'simulation');
+  await pg.waitForTimeout(4500);
+  await skipIntro(pg);
+  let tr = await allB();
+  check('sim13: intro plays (the Seventh Bell, the Tamber, the Seraphine, Stavely, Vory)', /Seventh Bell/.test(tr) && /Tamber/.test(tr) && /Seraphine/.test(tr) && /Stavely/.test(tr) && /Vory/.test(tr), tr.slice(0, 300));
+  await pg.screenshot({ path: `${SHOTS}/sim13-01-intro.png` });
+  check('sim13: the cutter and the courier on sensors by name', /Tamber/.test(await pg.innerText('[data-testid=contact-kestrel]')) && /Seraphine/.test(await pg.innerText('[data-testid=contact-cruiser]')));
+  for (const c of ["Rask, read the Tamber's fire-control record", 'Rask, do you know Captain Stavely?', 'wait']) await sendOn(pg, c, 400);
+  tr = await allB();
+  check('sim13: Rask reads the fire-control record', /fire-control|record/i.test(tr) && /Stavely/.test(tr), tr.slice(-400));
+  for (const c of ['hail the Tamber', 'Tell me what happened, in your own words.', 'close the channel']) {
+    if (await endedB()) break;
+    await sendOn(pg, c, 500);
+  }
+  tr = await allB();
+  check('sim13: Stavely gives his account on comms', /Stavely/.test(tr) && /locked|lock|fired/i.test(tr), tr.slice(-400));
+  await pg.screenshot({ path: `${SHOTS}/sim13-02-account.png` });
+  for (let i = 0; i < 40 && !(await endedB()); i++) await sendOn(pg, 'wait', 400);
+  await pg.waitForSelector('[data-testid=outcome]');
+  const outB = await pg.innerText('[data-testid=outcome]');
+  check('sim13: led to an ending', /The Bell Rings True|Cleared on the Record|A Joint Finding|In His Own Words|An Independent Review|Right Too Soon|A Finding Refused|Adjourned|So Recorded|The Bell Remembers|A Captain Thrown Over|A Finding the Record Won't Hold|Filed Over Your Head|War Footing|Left at the Seventh Bell|Shots at the Seventh Bell/i.test(outB), outB.slice(0, 200));
+  tr = await allB();
+  const LEAK13 = /Kestrel|Prefect|Ashen Covenant|Tallis|Sabeth|Thornwake|Cantor|Brenn|Teyma|Paley|Larkspur|Saltglass|Rhune|Tarvo|Hollis|Brack|Teague|Saffron Mule|Gannet|Corrie Drift|Hesper|Krenn|Vesk|Sallow|Fosse|Vell Crossing|Eventide|Wick|Vollan|Kittiwake|Orrey|Sorrel|Roake|Dahl|Marchbank|Wrenmoor|Iron Psalm|Sable Narrows|Crake|Haskett|Gardener|Coldwater|Plumb Line|Penhale|Corley|Toller|Hadley|Myrr|Ketter|Mattock|Ember Tide|Strome|Ferrier|furnace|\[[a-zA-Z_]+\]|undefined|Intergalactic Agency|the Agency/;
+  check('sim13: no other simulation\'s names leak in', !LEAK13.test(tr), (tr.match(new RegExp(`.{0,60}(${LEAK13.source}).{0,60}`)) ?? [''])[0]);
+  await pg.screenshot({ path: `${SHOTS}/sim13-03-outcome.png` });
+  if (await pg.locator('[data-testid=outcome-aar]').count()) await pg.click('[data-testid=outcome-aar]');
+  await pg.waitForTimeout(300);
+  const aarB = (await pg.locator('[data-testid=aar]').count()) ? await pg.innerText('[data-testid=aar]') : '';
+  check('sim13: AAR is available, cites regulations and has no percentages', /Seventh Bell/i.test(aarB) && /ISA regulations/.test(aarB) && !/\d\s*%/.test(aarB), aarB.slice(0, 200));
+  await pg.screenshot({ path: `${SHOTS}/sim13-04-aar.png`, fullPage: true });
+  if (await pg.locator('[data-testid=aar-close]').count()) await pg.click('[data-testid=aar-close]');
+  await pg.setViewportSize({ width: 390, height: 844 });
+  await pg.waitForTimeout(400);
+  const ovB = await pg.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  check('sim13 phone: no horizontal overflow', ovB <= 0, `overflow ${ovB}px`);
+  await ctxB.close();
+}
+
 // ============================================================== v0.8.0 =====
 // The Captain's Handbook: contents, articles, search, bridge commands in every timeline (state untouched),
 // report citations, spoiler safety, desktop and phone width.

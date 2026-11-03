@@ -58,7 +58,7 @@ export function reduceBridge(s: WorldState, action: BridgeAction, hooks: Scenari
       reports.push(say('computer', 'bridgeArchiveOpen'));
       return { state: s, reports };
     case 'listSims':
-      return { state: s, reports: [say('computer', 'bridgeSimList', { n: SIMULATIONS.length, list: simulationList(), example: SIMULATIONS[SIMULATIONS.length - 1].name })] };
+      return { state: s, reports: [say('computer', 'bridgeSimList', { n: SIMULATIONS.length, list: simulationList(), example: SIMULATIONS[SIMULATIONS.length - 1].name.replace(/^the\s+/i, '') })] };
     case 'beginSim': {
       const sim = simulationFor(action.scenario);
       if (!sim) return { state: s, reports: [say('computer', 'bridgeNoSuchSim', { name: action.scenario ?? '' })] };
