@@ -2,6 +2,30 @@
 
 All notable changes to Project Starbridge are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.8.15] — 2026-11-03 — Training Simulation 014: Starfall
+
+Nightly simulation build. Fourteenth of 30 training simulations. No change to grading, evaluation rules, crew refusal behaviour in other simulations or ISA-COM-001 wording.
+
+### Added
+- **Training Simulation 014: Starfall** (`src/scenarios/starfall/`). The gas-mining habitat Thistledown, in the cloud deck of the gas giant Caradoc, has lost its lift engines and is sinking toward the crush line. Transporter locks scatter in the storm, so the only way to the people aboard is to fly the Halcyon down to the habitat's docking ring and climb out again, as many times as the hull will take. Ens. Kofi Adeyemi has the hands for that weather and has never flown a real crisis; Lt. Rafe Duarte, the senior pilot, flies by instruments. Factor Idris Kemble runs the habitat; Agent Sabra Quell, aboard the company yacht Dividend, wants it towed out whole.
+  - **Primary challenge:** trusting a junior officer. **Secondary:** triage, how many descents the hull can take. **Pivotal officer:** Ens. Adeyemi (Helm).
+  - Seeded, deterministic and offline: the storm (squall, gale or shear); Adeyemi's nerve (steady, eager or shaken); the sink rate and starting depth; the hull's safe strain, known only once Chief Okafor is asked; the ring's load; the true head count (the Factor's manifest may leave out scoop hands working off the books, and he may admit it or not); and whether the company's agent is pragmatic or stands on the company's property.
+  - Officers' expertise matters: on his first descent Adeyemi feels a column of rising air that Lt. Varga's model does not show, and his line eases the strain on every later descent (a shaken Adeyemi keeps it to himself unless the captain steadies him; an eager one says the hull will take one more, which is not his call). Chief Okafor warns before the limit only if asked or given a limit to call. Lt. Varga counts the life signs. Orders from the chair in mid-descent cost the hull. Lt. Duarte cannot hold a dock as deep as Adeyemi, and cannot hold a tow in a gale or a shear.
+  - The others act for themselves: the habitat keeps sinking; the Factor protects his manifest; the agent asks for the habitat whole and, under a company agent, the Factor will not cut the scoop works without a reason he can give them.
+  - Unconventional option: cutting the scoop works away (with their hands brought up first) so the habitat nearly stops sinking, then towing it out on the tractor.
+  - Endings — success: Every Soul Aboard, The Ensign's Line, Under Tow. Failure or partial: Scarred in the Clouds (partial), Left in the Clouds, The Uncounted, Dragged Down, Left to Fall, Shots at Thistledown.
+  - Listed in the catalogue and Mission Archive; launch with "Computer, begin the Starfall simulation" (also "simulation fourteen"). Distinct voice hints for Kemble and Quell.
+  - Evaluation data (§6b): objectives with priorities, ending tiers, judgment markers, regulations §4.1 (care-1), §4.2 (care-2), §3.9 (roe-3) and §6.1 (honesty-1), and a reckless/responsible pair on Scarred in the Clouds. No exercise objective and no proposed regulation.
+- Interpreter, scoped to Starfall only: the simulation's orders are understood ("Adeyemi, the helm is yours", "Lt. Duarte, take the helm", "one more descent", "break off at the Chief's limit", "cut the scoop works loose"); a "Lt. Duarte," vocative stays with its order; statements on an open channel are spoken rather than read as orders; its names are protected from spelling correction.
+- Hidden handbook training references (internal data, not shown to the player): §2.5 (cmd-3, no longer marked planned for #14) and §4.5 (care-4) gain a reference to #14.
+
+### Changed
+- `tests/sim13/catalogue.test.ts`: the example launch line in `Computer, list simulations` names the newest simulation, so the test now checks the Seventh Bell entry is listed without "the The" rather than that it is the example.
+
+### Tests
+- New `tests/sim14/` (69 tests): every ending through scripted playthroughs; a 150-seed sweep in which a careful captain always succeeds; one fixed plan (the senior pilot) and a blind plan each reaching three or more endings; doing nothing always failing; seed variation; hidden information, NPC goals, expertise and crew refusals; a 40-game fuzz with engine invariants; the reckless/responsible pair; the catalogue, launch lines, voices, handbook references, Mission Archive, save round-trip and canon untouched.
+- Smoke test: a sim14 block (list, archive, launch by name, intro, contacts, the Chief asked, the helm handed over, an ending, AAR, phone width).
+
 ## [0.8.14] — 2026-11-02 — Training Simulation 013: The Seventh Bell
 
 Nightly simulation build. Thirteenth of 30 training simulations. No change to grading, evaluation rules, crew refusal behaviour in other simulations or ISA-COM-001 wording.

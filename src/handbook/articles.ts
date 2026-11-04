@@ -495,8 +495,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
         {
           "simulation": 14,
           "title": "Starfall",
-          "purpose": "Trusting a junior officer with a task only they can carry out.",
-          "planned": true
+          "purpose": "Trusting a junior officer with a task only they can carry out."
         }
       ],
       "enforcement": {
@@ -1174,6 +1173,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "simulation": 12,
           "title": "Ember Tide",
           "purpose": "Choosing the moment the ship must pull back to safety while people are still being lifted."
+        },
+        {
+          "simulation": 14,
+          "title": "Starfall",
+          "purpose": "Weighing what the ship can still take against the people still waiting."
         },
         {
           "simulation": 20,

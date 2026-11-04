@@ -1682,6 +1682,65 @@ for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape',
   await ctxB.close();
 }
 
+// ============================================================== v0.8.15 ====
+// Training Simulation 014: Starfall. Listed, launched by name, the Chief asked, the helm handed over, an ending, AAR filed.
+{
+  const ctxS = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await ctxS.addInitScript(stubs);
+  const pg = await ctxS.newPage();
+  pg.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  pg.on('pageerror', (e) => errors.push(String(e)));
+  const allS = async () => (await pg.innerText('[data-testid=narrative]')) + '\n' + (await pg.innerText('[data-testid=comms]'));
+  const modeS = () => pg.getAttribute('[data-testid=mode-banner]', 'data-mode');
+  const endedS = async () => (await pg.locator('[data-testid=outcome]').count()) > 0;
+  await pg.goto(withSeed(14), { waitUntil: 'networkidle' });
+  await pg.waitForTimeout(600);
+  await skipIntro(pg);
+  await sendOn(pg, 'Computer, list simulations', 600);
+  check('sim14: "list simulations" names Starfall', /Starfall/.test(await allS()));
+  if (!(await pg.locator('[data-testid=hub]').count())) await pg.click('[data-testid=open-hub]');
+  await pg.click('[data-testid=hub-tab-archive]');
+  await pg.waitForTimeout(150);
+  check('sim14: Mission Archive lists Training Simulation 014', /Training Simulation 014: Starfall/.test(await pg.innerText('[data-testid=hub]')) && (await pg.locator('[data-testid=archive-train-TRN-starfall]').count()) === 1);
+  await pg.click('[data-testid=hub-close]');
+  await pg.waitForTimeout(100);
+  await sendOn(pg, 'Computer, begin the Starfall simulation', 1200);
+  await pg.waitForSelector('[data-testid=mode-banner][data-mode=simulation]');
+  check('sim14: launch by name starts a simulation', (await modeS()) === 'simulation');
+  await pg.waitForTimeout(4500);
+  await skipIntro(pg);
+  let tr = await allS();
+  check('sim14: intro plays (Caradoc, Thistledown, Adeyemi, Duarte)', /Caradoc/.test(tr) && /Thistledown/.test(tr) && /Adeyemi/.test(tr) && /Duarte/.test(tr), tr.slice(0, 300));
+  await pg.screenshot({ path: `${SHOTS}/sim14-01-intro.png` });
+  check('sim14: the habitat and the yacht on sensors by name', /Thistledown/.test(await pg.innerText('[data-testid=contact-kestrel]')) && /Dividend/.test(await pg.innerText('[data-testid=contact-cruiser]')));
+  for (const c of ['Chief, how much can the hull take?', 'Varga, count the life signs aboard the habitat']) await sendOn(pg, c, 400);
+  tr = await allS();
+  check("sim14: the Chief names the strain she'll sign for", /sign for/.test(tr), tr.slice(-400));
+  await sendOn(pg, "Adeyemi, the helm is yours, fly it your way. Break off at the Chief's limit. Take us down.", 600);
+  tr = await allS();
+  check('sim14: the ensign takes the helm and the descent begins', /Adeyemi/.test(tr) && /(down|cloud deck)/i.test(tr.slice(-600)), tr.slice(-400));
+  await pg.screenshot({ path: `${SHOTS}/sim14-02-descent.png` });
+  for (let i = 0; i < 60 && !(await endedS()); i++) await sendOn(pg, 'wait', 400);
+  await pg.waitForSelector('[data-testid=outcome]');
+  const outS = await pg.innerText('[data-testid=outcome]');
+  check('sim14: led to an ending', /Every Soul Aboard|The Ensign's Line|Under Tow|Scarred in the Clouds|Left in the Clouds|The Uncounted|Dragged Down|Left to Fall|Shots at Thistledown/i.test(outS), outS.slice(0, 200));
+  tr = await allS();
+  const LEAK14 = /Kestrel|Prefect|Ashen Covenant|Tallis|Sabeth|Thornwake|Cantor|Brenn|Teyma|Paley|Larkspur|Saltglass|Rhune|Tarvo|Hollis|Brack|Teague|Saffron Mule|Gannet|Corrie Drift|Hesper|Krenn|Vesk|Sallow|Fosse|Vell Crossing|Eventide|Wick|Vollan|Kittiwake|Orrey|Sorrel|Roake|Dahl|Marchbank|Wrenmoor|Iron Psalm|Sable Narrows|Crake|Haskett|Gardener|Coldwater|Plumb Line|Penhale|Corley|Toller|Hadley|Myrr|Ketter|Mattock|Ember Tide|Strome|Ferrier|furnace|Tamber|Stavely|Seraphine|Vory|Stern Mercy|Calderon|Seventh Bell|Harrow Lane|\[[a-zA-Z_]+\]|undefined|Intergalactic Agency|the Agency/;
+  check('sim14: no other simulation\'s names leak in', !LEAK14.test(tr), (tr.match(new RegExp(`.{0,60}(${LEAK14.source}).{0,60}`)) ?? [''])[0]);
+  await pg.screenshot({ path: `${SHOTS}/sim14-03-outcome.png` });
+  if (await pg.locator('[data-testid=outcome-aar]').count()) await pg.click('[data-testid=outcome-aar]');
+  await pg.waitForTimeout(300);
+  const aarS = (await pg.locator('[data-testid=aar]').count()) ? await pg.innerText('[data-testid=aar]') : '';
+  check('sim14: AAR is available, cites regulations and has no percentages', /Starfall/i.test(aarS) && /ISA regulations/.test(aarS) && !/\d\s*%/.test(aarS), aarS.slice(0, 200));
+  await pg.screenshot({ path: `${SHOTS}/sim14-04-aar.png`, fullPage: true });
+  if (await pg.locator('[data-testid=aar-close]').count()) await pg.click('[data-testid=aar-close]');
+  await pg.setViewportSize({ width: 390, height: 844 });
+  await pg.waitForTimeout(400);
+  const ovS = await pg.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  check('sim14 phone: no horizontal overflow', ovS <= 0, `overflow ${ovS}px`);
+  await ctxS.close();
+}
+
 // ============================================================== v0.8.0 =====
 // The Captain's Handbook: contents, articles, search, bridge commands in every timeline (state untouched),
 // report citations, spoiler safety, desktop and phone width.

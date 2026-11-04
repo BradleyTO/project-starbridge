@@ -43,7 +43,7 @@ Premises can be adjusted when a scenario is built. The core event, the primary c
 | 11 | Coldwater | Engineering refuses orders after a death they think was covered up | Crew conflict and leadership | Chief Okafor (Engineering) | **done** (v0.8.11) |
 | 12 | Ember Tide | A stellar flare will sweep a mining outpost at an uncertain hour | Timing and patience | Lt. Varga (Science) | **done** (v0.8.12) |
 | 13 | The Seventh Bell | An inquiry into an ISA cutter firing on a Directorate courier | Accountability: telling an inconvenient truth | Lt. Cmdr. Rask (Tactical) | **done** (v0.8.14) |
-| 14 | Starfall | A habitat sinking into a gas giant; only the green helmsman can fly the rescue | Trusting a junior officer | Ens. Adeyemi (Helm) | planned |
+| 14 | Starfall | A habitat sinking into a gas giant; only the green helmsman can fly the rescue | Trusting a junior officer | Ens. Adeyemi (Helm) | **done** (v0.8.15) |
 | 15 | Corsairs of the Veyl Shoals | A corsair ambush in an asteroid shoal where sensors and torpedoes fail | Tactical cunning: terrain and deception | Lt. Cmdr. Rask (Tactical) | planned |
 | 16 | The Glass Nebula | A shuttle lost in a nebula that bends sensors and time | Relying on the science officer | Lt. Varga (Science) | planned |
 | 17 | Tribunal at Kesh Varo | A Halcyon crewman is arrested ashore under a capital law | Ethics under orders | Dr. Osei (Medical) | planned |
@@ -85,6 +85,7 @@ Premises can be adjusted when a scenario is built. The core event, the primary c
 
 - #12 Ember Tide shipped as timing and patience (secondary: relying on the science officer).
 - #13 The Seventh Bell shipped as accountability (secondary: deduction from evidence).
+- #14 Starfall shipped as trusting a junior officer (secondary: triage, how many descents the hull can take). Its pivotal officer, Ens. Adeyemi, differs from #13's (Rask), and its primary challenge differs from #13's (accountability).
 - No primary challenge appears more than three times, and no two consecutive simulations share one or the same pivotal officer.
 - **Pivotal officers across #1–#30:** Szabo 4, Varga 5, Okafor 5, Rask 4, Adeyemi 4, Osei 4, Marrow 4 (including the capstone).
 
@@ -563,21 +564,39 @@ Overlap check (guide §12):
 
 Nothing was added to ISA-COM-001.
 
-### 14. Starfall
-**Premise.** A mining habitat is sinking into a gas giant's atmosphere. Transporters scatter in the storm, so the only way to reach it is to fly the Halcyon itself into the upper cloud deck. The helmsman best suited by reflexes is Ens. Adeyemi, in his first real crisis.
+### 14. Starfall (done, v0.8.15)
+**Premise.** Thistledown, a gas-mining habitat in the upper cloud deck of the gas giant Caradoc, has lost its lift engines and is sinking (3–4 km a minute from 34–42 km down) toward the crush line at 100 km, where the pressure will break it. The storm scatters every transporter lock, so the only way to the 150–216 people aboard is to fly the Halcyon herself down to the habitat's docking ring and climb out again, about 72–86 people a descent, for as many descents as the hull will take. Ens. Kofi Adeyemi has the hands for that weather and has never flown a real crisis; Lt. Rafe Duarte, the senior pilot, flies by the book and by instruments. Factor Idris Kemble runs the habitat; Agent Sabra Quell, aboard the company yacht Dividend, wants the habitat towed out whole with its scoop works.
 
 **Command challenge:**
-- **Primary:** trusting a junior officer.
-- **Secondary:** triage (how many trips the hull can take).
-- **Pivotal officer:** Ens. Adeyemi (Helm). The captain must decide whether to hand him the ship and keep him steady.
+- **Primary:** trusting a junior officer (the previous simulation's was accountability).
+- **Secondary:** triage: how many descents the hull can take, and who is still waiting.
+- **Pivotal officer:** Ens. Adeyemi (Helm). Handing him the ship and letting him fly it (no orders from the chair in mid-descent, which cost the hull) is what works; on his first descent he feels a column of rising air on the windward side that no model shows (Lt. Varga's orbital model says the opposite), and his line eases the strain on every later descent. A shaken Adeyemi keeps it to himself unless the captain steadies him; an eager one says the hull will take one more, which is not his call. Chief Okafor knows what the hull will take, but warns before the limit only if she has been asked or given a limit to call. Lt. Duarte cannot hold a dock as deep as Adeyemi can, and cannot hold a tow in a gale or a shear.
 
-**Why it's distinct:** the only rescue that comes down to *delegation*. The captain cannot do it personally and must lift someone else up to do it.
+**Why it's distinct:** the only rescue that comes down to delegation: the captain cannot fly it and must decide how far to trust someone else to.
+
+Overlap check (guide §12):
+- Unlike #6 Ion Season (also Adeyemi at the helm), the call here is not the captain's gut on incomplete information; it is whether to hand the ship to the ensign and leave it with him. There is no convoy to lead and no route to choose.
+- Unlike #8 The Lantern Drift, the triage is not who to save among the dying; everyone can live if the hull is managed. The scarce thing is the Halcyon's own strain, and the Chief's limit is a fact to ask for, not a moral choice.
+- Unlike #12 Ember Tide, the clock is not uncertain and waiting does not help: the habitat sinks at a known rate, and the question is who flies and how far.
+- Unlike #20 Gravity's Edge (planned), the risk to the ship is spent for people, not for science, and the Chief's limit is set by the captain's asking, not by a gamble on the unknown.
+
+**Hidden:** the storm (squall, gale or shear); Adeyemi's nerve today (steady, eager or shaken); the sink rate and starting depth; the hull's safe strain (72–90) until the Chief is asked; the ring's load; the true head count (Kemble's manifest may leave out 12–20 contract scoop hands working off the books in the lower works, and whether he admits it, ashamed or defensive, depends on how he is asked); Adeyemi's line, which exists only once he has flown a descent; and whether Quell is pragmatic or stands on the company's property.
 
 **Endings:**
-- **Success:** everyone rescued, a habitat tow (unconventional), staged lifts.
-- **Failure or partial:** a partial rescue, the Halcyon damaged in the clouds, the Halcyon dragged down.
+- **Success:** Every Soul Aboard (everyone up within the Chief's limit), The Ensign's Line (everyone up, flying Adeyemi's own line), Under Tow (unconventional: the scoop works cut away, with their hands brought up first, and the habitat towed out on the tractor).
+- **Failure or partial:** Scarred in the Clouds (partial: everyone lived, the hull past its limit), Left in the Clouds (people still aboard at the crush line), The Uncounted (the manifest trusted and the scoop hands left), Dragged Down (the Halcyon's frame gave way), Left to Fall (the Halcyon left with people still aboard), Shots at Thistledown.
 
-**Seeds vary:** storm severity, the habitat's sink rate, the administrator's honesty about the head count.
+**Regulations cited:** §4.1 (care-1), §4.2 (care-2), §3.9 (roe-3) and §6.1 (honesty-1). Hidden training references on §2.5 (cmd-3) and §4.5 (care-4).
+
+**Reckless/responsible pair:** Scarred in the Clouds reached once by asking the Chief, setting her limit, counting the living and choosing one more descent past it for the people still waiting (graded sound or principled), and once by sending the ship down again and again without asking (graded mixed or reckless, citing §3.9).
+
+**Exercise objectives:** none. Delegating the helm is covered by §2.5, and no regulation was proposed.
+
+**Naming notes:** no established name was changed; Lt. Rafe Duarte is the existing relief helm officer. New names, flagged for Brad: the gas giant Caradoc, the habitat Thistledown, the yacht Dividend, Factor Idris Kemble and Agent Sabra Quell. "Sabra" is close to the existing "Sabine Thorne" and is flagged rather than changed. The roadmap's "administrator" became Factor Kemble, and "staged lifts" became the descents themselves (Every Soul Aboard, The Ensign's Line).
+
+**Seeds vary:** the storm, Adeyemi's nerve, the sink rate and depth, the hull's limit, the ring's load, the head count and the Factor's honesty about it, and the company agent's stance.
+
+Nothing was added to ISA-COM-001.
 
 ### 15. Corsairs of the Veyl Shoals
 **Premise.** The Halcyon answers a fake distress call into an asteroid shoal. It is a corsair ambush: three light raiders using the rocks as cover where sensors and torpedoes are unreliable. The corsair captain owes a debt she cannot pay to someone worse, and she needs a prize, not a fight to the death.

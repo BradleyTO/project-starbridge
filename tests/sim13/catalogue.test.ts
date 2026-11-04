@@ -66,9 +66,10 @@ describe('launch from the bridge', () => {
     expect(logText(sayB(bridge(), 'Computer, list simulations'))).toContain('The Seventh Bell');
   });
 
-  it('the list\'s example launch line does not double the article ("begin the Seventh Bell simulation")', () => {
+  it('the list names The Seventh Bell and never doubles the article', () => {
+    // v0.8.15: the example launch line now names the newest simulation (Starfall); see tests/sim14.
     const text = logText(sayB(bridge(), 'Computer, list simulations'));
-    expect(text).toContain('"begin the Seventh Bell simulation"');
+    expect(text).toContain('The Seventh Bell');
     expect(text).not.toMatch(/the The\b/);
   });
 
