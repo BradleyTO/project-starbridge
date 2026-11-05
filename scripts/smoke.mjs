@@ -1741,6 +1741,64 @@ for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape',
   await ctxS.close();
 }
 
+// ============================================================== v0.8.16 ====
+// Training Simulation 015: Corsairs of the Veyl Shoals. Listed, launched by name, the charts, Rask's read, a lawful bluff, an ending, AAR filed.
+{
+  const ctxC = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await ctxC.addInitScript(stubs);
+  const pg = await ctxC.newPage();
+  pg.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  pg.on('pageerror', (e) => errors.push(String(e)));
+  const allC = async () => (await pg.innerText('[data-testid=narrative]')) + '\n' + (await pg.innerText('[data-testid=comms]'));
+  const modeC = () => pg.getAttribute('[data-testid=mode-banner]', 'data-mode');
+  const endedC = async () => (await pg.locator('[data-testid=outcome]').count()) > 0;
+  await pg.goto(withSeed(15), { waitUntil: 'networkidle' });
+  await pg.waitForTimeout(600);
+  await skipIntro(pg);
+  await sendOn(pg, 'Computer, list simulations', 600);
+  check('sim15: "list simulations" names Corsairs of the Veyl Shoals', /Corsairs of the Veyl Shoals/.test(await allC()));
+  if (!(await pg.locator('[data-testid=hub]').count())) await pg.click('[data-testid=open-hub]');
+  await pg.click('[data-testid=hub-tab-archive]');
+  await pg.waitForTimeout(150);
+  check('sim15: Mission Archive lists Training Simulation 015', /Training Simulation 015: Corsairs of the Veyl Shoals/.test(await pg.innerText('[data-testid=hub]')) && (await pg.locator('[data-testid=archive-train-TRN-corsairs]').count()) === 1);
+  await pg.click('[data-testid=hub-close]');
+  await pg.waitForTimeout(100);
+  await sendOn(pg, 'Computer, begin the Corsairs of the Veyl Shoals simulation', 1200);
+  await pg.waitForSelector('[data-testid=mode-banner][data-mode=simulation]');
+  check('sim15: launch by name starts a simulation', (await modeC()) === 'simulation');
+  await pg.waitForTimeout(4500);
+  await skipIntro(pg);
+  let tr = await allC();
+  check('sim15: intro plays (Veyl Shoals, Hagfish, Rask)', /Veyl Shoals/.test(tr) && /Hagfish/.test(tr) && /Rask/.test(tr), tr.slice(0, 300));
+  await pg.screenshot({ path: `${SHOTS}/sim15-01-intro.png` });
+  check('sim15: the corsair flagship on sensors by name', /Hagfish/.test(await pg.innerText('[data-testid=contact-kestrel]')));
+  await sendOn(pg, 'Szabo, pull the charts from the beacon', 500);
+  for (let i = 0; i < 6; i++) await sendOn(pg, i % 2 ? 'wait' : 'Rask, what are they doing?', 400);
+  tr = await allC();
+  check('sim15: the charts come in and Rask reads them', /charts are in/.test(tr) && /(pincer|herding us|a bleed|can't yet tell|One more minute)/.test(tr), tr.slice(-500));
+  await pg.screenshot({ path: `${SHOTS}/sim15-02-read.png` });
+  for (const c of ['Szabo, stage frigate traffic', 'hail the corsairs', 'An ISA frigate squadron is right behind us.', 'close the channel']) if (!(await endedC())) await sendOn(pg, c, 500);
+  for (let i = 0; i < 60 && !(await endedC()); i++) await sendOn(pg, 'wait', 400);
+  await pg.waitForSelector('[data-testid=outcome]');
+  const outC = await pg.innerText('[data-testid=outcome]');
+  check('sim15: led to an ending', /Struck Colours|The Creditor's Due|Into the Dust|Called Off|Won the Hard Way|Ran for It|Boarded|The Corsairs' Prize|No Quarter|Paid in Full|Pinned in the Shoals/i.test(outC), outC.slice(0, 200));
+  tr = await allC();
+  const LEAK15 = /Kestrel|Prefect|Ashen Covenant|Tallis|Sabeth|Thornwake|Cantor|Brenn|Teyma|Paley|Larkspur|Saltglass|Rhune|Tarvo|Hollis|Brack|Teague|Saffron Mule|Gannet|Corrie Drift|Hesper|Krenn|Vesk|Sallow|Fosse|Vell Crossing|Eventide|Wick|Vollan|Kittiwake|Orrey|Sorrel|Roake|Dahl|Marchbank|Wrenmoor|Iron Psalm|Sable Narrows|Crake|Haskett|Gardener|Coldwater|Plumb Line|Penhale|Corley|Toller|Hadley|Myrr|Ketter|Mattock|Ember Tide|Strome|Ferrier|furnace|Tamber|Stavely|Seraphine|Vory|Stern Mercy|Calderon|Seventh Bell|Harrow Lane|Caradoc|Thistledown|Kemble|Quell|Dividend|\[[a-zA-Z_]+\]|undefined|Intergalactic Agency|the Agency/;
+  check('sim15: no other simulation\'s names leak in', !LEAK15.test(tr), (tr.match(new RegExp(`.{0,60}(${LEAK15.source}).{0,60}`)) ?? [''])[0]);
+  await pg.screenshot({ path: `${SHOTS}/sim15-03-outcome.png` });
+  if (await pg.locator('[data-testid=outcome-aar]').count()) await pg.click('[data-testid=outcome-aar]');
+  await pg.waitForTimeout(300);
+  const aarC = (await pg.locator('[data-testid=aar]').count()) ? await pg.innerText('[data-testid=aar]') : '';
+  check('sim15: AAR is available, cites regulations and has no percentages', /Corsairs of the Veyl Shoals/i.test(aarC) && /ISA regulations/.test(aarC) && !/\d\s*%/.test(aarC), aarC.slice(0, 200));
+  await pg.screenshot({ path: `${SHOTS}/sim15-04-aar.png`, fullPage: true });
+  if (await pg.locator('[data-testid=aar-close]').count()) await pg.click('[data-testid=aar-close]');
+  await pg.setViewportSize({ width: 390, height: 844 });
+  await pg.waitForTimeout(400);
+  const ovC = await pg.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  check('sim15 phone: no horizontal overflow', ovC <= 0, `overflow ${ovC}px`);
+  await ctxC.close();
+}
+
 // ============================================================== v0.8.0 =====
 // The Captain's Handbook: contents, articles, search, bridge commands in every timeline (state untouched),
 // report citations, spoiler safety, desktop and phone width.

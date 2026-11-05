@@ -44,7 +44,7 @@ Premises can be adjusted when a scenario is built. The core event, the primary c
 | 12 | Ember Tide | A stellar flare will sweep a mining outpost at an uncertain hour | Timing and patience | Lt. Varga (Science) | **done** (v0.8.12) |
 | 13 | The Seventh Bell | An inquiry into an ISA cutter firing on a Directorate courier | Accountability: telling an inconvenient truth | Lt. Cmdr. Rask (Tactical) | **done** (v0.8.14) |
 | 14 | Starfall | A habitat sinking into a gas giant; only the green helmsman can fly the rescue | Trusting a junior officer | Ens. Adeyemi (Helm) | **done** (v0.8.15) |
-| 15 | Corsairs of the Veyl Shoals | A corsair ambush in an asteroid shoal where sensors and torpedoes fail | Tactical cunning: terrain and deception | Lt. Cmdr. Rask (Tactical) | planned |
+| 15 | Corsairs of the Veyl Shoals | A corsair ambush in an asteroid shoal where sensors and torpedoes fail | Tactical cunning: terrain and deception | Lt. Cmdr. Rask (Tactical) | **done** (v0.8.16) |
 | 16 | The Glass Nebula | A shuttle lost in a nebula that bends sensors and time | Relying on the science officer | Lt. Varga (Science) | planned |
 | 17 | Tribunal at Kesh Varo | A Halcyon crewman is arrested ashore under a capital law | Ethics under orders | Dr. Osei (Medical) | planned |
 | 18 | The Weather Engine | A dead founder's cipher locks a colony's weather control as a superstorm builds | The comms officer cracking a code | Lt. Szabo (Comms) | planned |
@@ -86,6 +86,7 @@ Premises can be adjusted when a scenario is built. The core event, the primary c
 - #12 Ember Tide shipped as timing and patience (secondary: relying on the science officer).
 - #13 The Seventh Bell shipped as accountability (secondary: deduction from evidence).
 - #14 Starfall shipped as trusting a junior officer (secondary: triage, how many descents the hull can take). Its pivotal officer, Ens. Adeyemi, differs from #13's (Rask), and its primary challenge differs from #13's (accountability).
+- #15 Corsairs of the Veyl Shoals shipped as tactical cunning (secondary: bluffing). Its pivotal officer, Lt. Cmdr. Rask, differs from #14's (Adeyemi), and its primary challenge differs from #13's and #14's (accountability; trusting a junior officer).
 - No primary challenge appears more than three times, and no two consecutive simulations share one or the same pivotal officer.
 - **Pivotal officers across #1–#30:** Szabo 4, Varga 5, Okafor 5, Rask 4, Adeyemi 4, Osei 4, Marrow 4 (including the capstone).
 
@@ -598,21 +599,38 @@ Overlap check (guide §12):
 
 Nothing was added to ISA-COM-001.
 
-### 15. Corsairs of the Veyl Shoals
-**Premise.** The Halcyon answers a fake distress call into an asteroid shoal. It is a corsair ambush: three light raiders using the rocks as cover where sensors and torpedoes are unreliable. The corsair captain owes a debt she cannot pay to someone worse, and she needs a prize, not a fight to the death.
+### 15. Corsairs of the Veyl Shoals (done, v0.8.16)
+**Premise.** The Halcyon, carrying a consignment of drive lattices for a colony shipyard, answers a distress call from an ore skiff, the Bryony, at an old survey beacon deep in the Veyl Shoals, a reef of asteroids and metallic dust where sensors smear beyond close range and torpedo seekers will not hold a lock. There is no skiff: the call is a recording on a loop. Captain Ione Draycott of the corsair raider Hagfish, with one or two escorts (the Gudgeon, and the Snipe), wants the lattices out of the cargo lock and gives the Halcyon a few minutes before she opens fire. She owes the Grist Syndicate a debt she cannot pay, and Collector Amos Skerrit, aboard the Syndicate gunship Gavel, is on his way to collect it.
 
 **Command challenge:**
-- **Primary:** tactical cunning: using terrain, deception and the corsairs' own constraints.
-- **Secondary:** bluffing.
-- **Pivotal officer:** Lt. Cmdr. Rask (Tactical), who reads the corsairs' pattern.
+- **Primary:** tactical cunning: beating an ambush on ground the enemy chose, with terrain and deception rather than by trading blows (the previous simulation's was trusting a junior officer).
+- **Secondary:** bluffing: a lawful ruse about the ship's own strength, timed to an opponent whose nerve has been read, never a false surrender or false distress.
+- **Pivotal officer:** Lt. Cmdr. Rask (Tactical). Given a minute or two of watching, he reads the corsairs' pattern (a pincer, a herd or a bleed); on some seeds he is torn between two until he has watched longer or a probe has seen the escorts' tracks, and he will not guess. Each pattern has its own answer on the ground: the Needle (a narrow channel, open or choked with rubble the Chief can clear with the tractor) beats a pincer or a herd; the iron shadow of the Anvil, running dark, beats anything; charging the flagship beats a bleed. The wrong ground does not. Lt. Szabo can pull the beacon's survey charts without lighting the ship up, hears that the distress call is a loop, and learns the debt from their traffic; Lt. Varga can learn the ground with a passive probe or an active sweep that gives the ship away; Chief Okafor can make a sensor ghost; Ens. Adeyemi warns, the first time, that the obvious gap is too clean (under a herd it leads into the Sump, a dead end where the Halcyon is boarded).
 
-**Why it's distinct:** the only pirate encounter, and the only one where the Halcyon itself is the target. There are no hostages and no convoy.
+**Why it's distinct:** the only pirate encounter, and the only one where the Halcyon herself is the prize: no hostages, no convoy, nobody to rescue. The puzzle is reading an enemy's plan and the ground at once.
+
+Overlap check (guide §12):
+- Unlike #9 The Long Picket (bluffing a superior warship at a border), the bluff here is the secondary tool: it lands only on a captain whose nerve has been read, or after her plan has been broken, and the ground does most of the work.
+- Unlike #1 The Kestrel Incident, there is no one to protect but the ship; the question of protection arises only if the captain finds out what Draycott is running from and offers it.
+- Unlike #26 Silent Running (planned), running dark is one tool among several and works only against the right rock.
+
+**Hidden:** the pattern (and, on a torn read, the decoy Rask cannot yet rule out); whether the Needle is open or choked; whether the Anvil is iron or ice; Draycott's nerve (desperate, proud or wavering), which decides whether she strikes when told to, calls a bluff, or needs something better than surrender; her deadline (3–5 minutes); when the collector arrives (11–16); the debt; the crew; one or two escorts.
 
 **Endings:**
-- **Success:** the corsairs outmanoeuvred and captured, turned against their creditor, sent off with a deal.
-- **Failure or partial:** the Halcyon boarded, a pyrrhic victory, the corsairs escape with plunder.
+- **Success:** Struck Colours (the Hagfish strikes; a proud captain only to a plan read before it broke, a desperate one never without protection), The Creditor's Due (Draycott offered ISA protection once her debt is known, and the collector refused when he asks for her by name), Into the Dust (the plan broken on their own ground and out without a shot), Called Off (a lawful bluff, staged frigate traffic about the ship's own strength).
+- **Failure or partial:** Won the Hard Way (partial: the Hagfish beaten with the guns), Ran for It (partial: out with the cargo, the plan never broken), Boarded (the Sump, or worn down), The Corsairs' Prize (the lattices given up), No Quarter (fired on a corsair that had stopped fighting), Paid in Full (a person in ISA custody handed to her creditor), Pinned in the Shoals (time runs out).
 
-**Seeds vary:** the shoal layout, the corsair captain's debt and nerve, the number of raiders.
+**Regulations cited:** §3.1 (roe-2), §3.3 (roe-1), §3.9 (roe-3), §6.1 (honesty-1) and §7.1 (asylum-1). Hidden training references on §3.1 (roe-2) and §3.5 (roe-4), no longer marked planned, and on §6.2 (conduct-1, lawful ruses). Crew refusals: Lt. Szabo will not send a false distress or surrender signal (§6.2); Rask will not fire on the Hagfish once she has struck (existing ROE refusal, §3.3).
+
+**Reckless/responsible pair:** Won the Hard Way reached once by raising shields, waiting for the corsairs to open fire and only then answering it (graded sound), and once by opening fire on a ship that had only made demands (graded reckless, citing §3.1).
+
+**Exercise objectives:** none. Proportion, self-defence, lawful ruses and protection are already covered by §3.1–3.5, §6.2 and §7.1, and no regulation was proposed.
+
+**Naming notes:** no established name was changed. New names, flagged for Brad: the Veyl Shoals, the skiff Bryony, the raider Hagfish, the escorts Gudgeon and Snipe, the gunship Gavel, the Grist Syndicate, Captain Ione Draycott, Collector Amos Skerrit, and the shoal's features the Needle, the Anvil and the Sump. Near-collisions flagged rather than changed: "Gavel" is close to the existing "Gannet", and "Snipe" shares its opening with "Sable Narrows". "The Narrows" was avoided for the channel (Sable Narrows) and "the Throat" (Saltglass) for the same reason. The roadmap's "three light raiders" became a flagship with one or two escorts.
+
+**Seeds vary:** the pattern and whether Rask's first read is sure or torn, the Needle, the Anvil, Draycott's nerve, her deadline, the collector's arrival, the debt, the crew and the number of escorts.
+
+Nothing was added to ISA-COM-001.
 
 ### 16. The Glass Nebula
 **Premise.** A survey shuttle is lost inside a nebula that bends sensor returns and stretches time signals. Its last two messages contradict each other. One says "stay away"; the other, sent apparently later, asks for help.

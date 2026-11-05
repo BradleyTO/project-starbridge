@@ -2,6 +2,31 @@
 
 All notable changes to Project Starbridge are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.8.16] — 2026-11-04 — Training Simulation 015: Corsairs of the Veyl Shoals
+
+Nightly simulation build. Fifteenth of 30 training simulations. No change to grading, evaluation rules, crew refusal behaviour in other simulations or ISA-COM-001 wording.
+
+### Added
+- **Training Simulation 015: Corsairs of the Veyl Shoals** (`src/scenarios/corsairs/`). A distress call from the ore skiff Bryony draws the Halcyon, carrying drive lattices, to an old survey beacon deep in the Veyl Shoals, where metallic dust smears sensors and torpedo seekers lose their lock. The call is a recording. Captain Ione Draycott of the corsair raider Hagfish, with one or two escorts, wants the cargo; she owes the Grist Syndicate, and Collector Amos Skerrit is coming aboard the gunship Gavel to collect.
+  - **Primary challenge:** tactical cunning, beating an ambush on the enemy's chosen ground. **Secondary:** bluffing. **Pivotal officer:** Lt. Cmdr. Rask (Tactical).
+  - Seeded, deterministic and offline: the corsairs' pattern (pincer, herd or bleed) and whether Rask's first read is sure or torn; whether the Needle is open or choked; whether the Anvil is iron or ice; Draycott's nerve (desperate, proud or wavering); her deadline; the collector's arrival; the debt; one or two escorts.
+  - Officers' expertise matters: Rask reads the pattern and will not guess; each pattern has its own answer on the ground (the Needle, dark in the Anvil's iron shadow, or charging the flagship) and the wrong ground does not help. Szabo pulls the beacon's charts quietly, hears the loop and the debt; Varga's probe is quiet and her active sweep gives the ship away; the Chief makes a sensor ghost and can clear a choked Needle with the tractor; Ens. Adeyemi warns that the obvious gap is too clean.
+  - The others act for themselves: the escorts work their pattern; Draycott opens fire when her time is up and slips away when beaten; the collector arrives in his own time and asks for her by name.
+  - Unconventional options: running dark against iron with a ghost; clearing the Needle under fire; a lawful bluff with staged frigate traffic; offering the corsair captain ISA protection for what she knows.
+  - Endings — success: Struck Colours, The Creditor's Due, Into the Dust, Called Off. Failure or partial: Won the Hard Way (partial), Ran for It (partial), Boarded, The Corsairs' Prize, No Quarter, Paid in Full, Pinned in the Shoals.
+  - Crew refusals: Lt. Szabo will not send a false distress or surrender signal (recorded with §6.2); Rask's existing ROE refusal stops fire on the Hagfish once she has struck.
+  - Listed in the catalogue and Mission Archive; launch with "Computer, begin the Corsairs of the Veyl Shoals simulation" (also "simulation fifteen"). Distinct voice hints for Draycott and Skerrit.
+  - Evaluation data (§6b): objectives with priorities, ending tiers, judgment markers, regulations §3.1 (roe-2), §3.3 (roe-1), §3.9 (roe-3), §6.1 (honesty-1) and §7.1 (asylum-1), and a reckless/responsible pair on Won the Hard Way. No exercise objective and no proposed regulation.
+- Interpreter, scoped to this simulation only: its orders are understood ("take us into the Needle", "behind the Anvil", "go dark", "Szabo, pull the charts", "Chief, clear the rubble", "stage frigate traffic"); statements on an open channel are spoken rather than read as orders; its names are protected from spelling correction; "fifteen"/"fifteenth" launch it.
+- Hidden handbook training references (internal data, not shown to the player): §3.1 (roe-2) and §3.5 (roe-4) are no longer marked planned for #15, and §6.2 (conduct-1) gains a reference to #15.
+
+### Changed
+- `tests/sim14/catalogue.test.ts`: the example launch line in `Computer, list simulations` names the newest simulation, so the test now checks Starfall is listed rather than that it is the example.
+
+### Tests
+- New `tests/sim15/` (helpers plus catalogue, scenario, endings and evaluation tests): every ending through scripted playthroughs; a 60-seed sweep in which a careful captain always breaks the plan without firing; seed variation; hidden information, NPC goals, the tactical officer's expertise and crew refusals; a 60-game fuzz with engine invariants and a name-leak check; the reckless/responsible pair; the catalogue, launch lines, voices, handbook references, Mission Archive, save round-trip and canon untouched.
+- Smoke test: a sim15 block (list, archive, launch by name, intro, contacts, the charts and Rask's read, a bluff, an ending, AAR, phone width).
+
 ## [0.8.15] — 2026-11-03 — Training Simulation 014: Starfall
 
 Nightly simulation build. Fourteenth of 30 training simulations. No change to grading, evaluation rules, crew refusal behaviour in other simulations or ISA-COM-001 wording.

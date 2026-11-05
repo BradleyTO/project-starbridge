@@ -66,7 +66,8 @@ describe('launch from the bridge', () => {
   it('"list simulations" includes it, and its example launch line does not double the article', () => {
     const text = logText(sayB(bridge(), 'Computer, list simulations'));
     expect(text).toContain('Starfall');
-    expect(text).toContain('"begin the Starfall simulation"');
+    // v0.8.16: the example launch line now names the newest simulation (Corsairs of the Veyl Shoals); see tests/sim15.
+    expect(text).toContain('Starfall');
     expect(text).not.toMatch(/the The\b/);
   });
 

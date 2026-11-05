@@ -578,8 +578,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
         {
           "simulation": 15,
           "title": "Corsairs of the Veyl Shoals",
-          "purpose": "Using force economically when it is truly needed.",
-          "planned": true
+          "purpose": "Using force economically when it is truly needed."
         }
       ],
       "enforcement": {
@@ -727,8 +726,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
         {
           "simulation": 15,
           "title": "Corsairs of the Veyl Shoals",
-          "purpose": "Defending the ship without overreaching.",
-          "planned": true
+          "purpose": "Defending the ship without overreaching."
         }
       ],
       "enforcement": {
@@ -1761,6 +1759,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "simulation": 9,
           "title": "The Long Picket",
           "purpose": "Bluffing well, and knowing where a bluff must stop."
+        },
+        {
+          "simulation": 15,
+          "title": "Corsairs of the Veyl Shoals",
+          "purpose": "Bluffing a hostile party about the ship’s own strength, and nothing more."
         },
         {
           "simulation": 29,
