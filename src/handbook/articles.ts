@@ -208,6 +208,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "simulation": 13,
           "title": "The Seventh Bell",
           "purpose": "Judging a past decision on what was known when it was made."
+        },
+        {
+          "simulation": 16,
+          "title": "The Glass Nebula",
+          "purpose": "Judging which signal to trust on the information available at the time, not on its label."
         }
       ],
       "enforcement": {
@@ -861,7 +866,12 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "title": "Ion Season",
           "purpose": "Weighing what the ship carries for others against her own safety."
         },
-        {
+                {
+          "simulation": 16,
+          "title": "The Glass Nebula",
+          "purpose": "Not committing the ship to a lying environment on an unproven signal."
+        },
+{
           "simulation": 20,
           "title": "Gravity's Edge",
           "purpose": "Judging how much risk to the ship a goal is worth.",
@@ -951,7 +961,12 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "title": "The Lantern Drift",
           "purpose": "Deciding who can be saved when not everyone can."
         },
-        {
+                {
+          "simulation": 16,
+          "title": "The Glass Nebula",
+          "purpose": "Recovering people when their distress calls may not be what they seem."
+        },
+{
           "simulation": 22,
           "title": "Exodus at Cinder Vale",
           "purpose": "Making hard choices against the clock.",
@@ -1040,6 +1055,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "simulation": 11,
           "title": "Coldwater",
           "purpose": "Proving a plant safe before anyone goes back into it."
+        },
+        {
+          "simulation": 16,
+          "title": "The Glass Nebula",
+          "purpose": "Keeping the crew out of a lying environment until science has a map."
         }
       ],
       "enforcement": {
@@ -1177,7 +1197,12 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "title": "Starfall",
           "purpose": "Weighing what the ship can still take against the people still waiting."
         },
-        {
+                {
+          "simulation": 16,
+          "title": "The Glass Nebula",
+          "purpose": "Not leaving a rescue unfinished when the evidence still says it can be reached."
+        },
+{
           "simulation": 20,
           "title": "Gravity's Edge",
           "purpose": "Judging how long it is safe to stay.",
@@ -1695,6 +1720,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "simulation": 9,
           "title": "The Long Picket",
           "purpose": "Keeping the word given to a blockading commander."
+        },
+        {
+          "simulation": 16,
+          "title": "The Glass Nebula",
+          "purpose": "Not claiming more about contradictory signals than science has established."
         }
       ],
       "enforcement": {

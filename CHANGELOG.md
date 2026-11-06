@@ -2,6 +2,24 @@
 
 All notable changes to Project Starbridge are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.8.17] — 2026-11-05 — Training Simulation 016: The Glass Nebula
+
+Nightly simulation build. Sixteenth of 30 training simulations. No change to grading, evaluation rules, crew refusal behaviour in other simulations or ISA-COM-001 wording.
+
+### Added
+- **Training Simulation 016: The Glass Nebula** (`src/scenarios/glass/`). The survey shuttle Citrine is lost inside the Glass Nebula, where sensor returns bend and time signals stretch until the stamps on a message lie. Two contradictory messages arrive: one says stay away; the other, stamped later, asks for help. Lt. Varga's model is the only map. Surveyor Nessa Vale may answer in garbled fragments; buoy Prism is an automated relay.
+  - Primary challenge: relying on the science officer. Secondary: a gut call (which message to believe). Pivotal officer: Lt. Varga (Science).
+  - Seeded: which message is the echo, what the nebula does (shear, mirror or lag), the shuttle crew's state, and how long the model takes.
+  - Endings — success: Brought Home, Through the Shear, The Probe Chain, Turned Back. Failure or partial: Too Late by Their Clock (partial), Ghost Chase, Stranded in Glass, Left in the Glass, Shuttle Lost, Shattered, Lost in the Glass.
+  - Regulations cited (evaluator catalogue): care-1 (§4.1), care-2 (§4.2), roe-3 (§3.9), honesty-1 (§6.1). Handbook also links care-4 (§4.5) and cmd-4 (§1.4). Exercise objective: do not commit the ship deep until the science officer has a working model.
+  - Listed in the catalogue and Mission Archive; launch with "Computer, begin the Glass Nebula simulation" (also "simulation sixteen"). Distinct voice hints for Vale and buoy Prism.
+- `tests/sim16/`: catalogue, scenario, endings, evaluation (every ending playthrough, seed sweep, fuzz, canon untouched, reckless/responsible pair).
+- Smoke block for #16.
+
+### Changed
+- `tests/sim15/catalogue.test.ts`: the example launch line in `Computer, list simulations` names the newest simulation, so the test now checks Corsairs is listed rather than that it is the example.
+- Roadmap #16 marked **done (v0.8.17)**; library 16 of 30.
+
 ## [0.8.16] — 2026-11-04 — Training Simulation 015: Corsairs of the Veyl Shoals
 
 Nightly simulation build. Fifteenth of 30 training simulations. No change to grading, evaluation rules, crew refusal behaviour in other simulations or ISA-COM-001 wording.

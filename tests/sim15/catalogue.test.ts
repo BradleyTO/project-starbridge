@@ -39,6 +39,7 @@ describe('catalogue and registry', () => {
     expect(G.title).toBe(x.title);
     expect(TRAINING_SCENARIOS.corsairs).toBe(G);
     expect(SIMULATIONS.length).toBeGreaterThanOrEqual(15);
+    expect(SIMULATIONS.length).toBeGreaterThanOrEqual(16);
   });
 
   it('names resolve to the right simulation, and older names are unchanged', () => {
@@ -63,10 +64,9 @@ describe('launch from the bridge', () => {
     expect(sayB(bridge(), 'Computer, begin the Seventh Bell simulation.').uiRequest).toMatchObject({ kind: 'beginSim', id: 'TRN-seventh-bell' });
   });
 
-  it('"list simulations" includes it, and its example launch line does not double the article', () => {
+  it('"list simulations" includes it (the example launch line names the newest simulation)', () => {
     const text = logText(sayB(bridge(), 'Computer, list simulations'));
     expect(text).toContain('Corsairs of the Veyl Shoals');
-    expect(text).toContain('"begin the Corsairs of the Veyl Shoals simulation"');
     expect(text).not.toMatch(/the The\b/);
   });
 

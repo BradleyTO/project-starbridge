@@ -45,7 +45,7 @@ Premises can be adjusted when a scenario is built. The core event, the primary c
 | 13 | The Seventh Bell | An inquiry into an ISA cutter firing on a Directorate courier | Accountability: telling an inconvenient truth | Lt. Cmdr. Rask (Tactical) | **done** (v0.8.14) |
 | 14 | Starfall | A habitat sinking into a gas giant; only the green helmsman can fly the rescue | Trusting a junior officer | Ens. Adeyemi (Helm) | **done** (v0.8.15) |
 | 15 | Corsairs of the Veyl Shoals | A corsair ambush in an asteroid shoal where sensors and torpedoes fail | Tactical cunning: terrain and deception | Lt. Cmdr. Rask (Tactical) | **done** (v0.8.16) |
-| 16 | The Glass Nebula | A shuttle lost in a nebula that bends sensors and time | Relying on the science officer | Lt. Varga (Science) | planned |
+| 16 | The Glass Nebula | A shuttle lost in a nebula that bends sensors and time | Relying on the science officer | Lt. Varga (Science) | **done** (v0.8.17) |
 | 17 | Tribunal at Kesh Varo | A Halcyon crewman is arrested ashore under a capital law | Ethics under orders | Dr. Osei (Medical) | planned |
 | 18 | The Weather Engine | A dead founder's cipher locks a colony's weather control as a superstorm builds | The comms officer cracking a code | Lt. Szabo (Comms) | planned |
 | 19 | Hollow Crown | A deposed governor holds a relay station's staff hostage | Reading people and detecting lies | Dr. Osei (Medical) | planned |
@@ -87,6 +87,7 @@ Premises can be adjusted when a scenario is built. The core event, the primary c
 - #13 The Seventh Bell shipped as accountability (secondary: deduction from evidence).
 - #14 Starfall shipped as trusting a junior officer (secondary: triage, how many descents the hull can take). Its pivotal officer, Ens. Adeyemi, differs from #13's (Rask), and its primary challenge differs from #13's (accountability).
 - #15 Corsairs of the Veyl Shoals shipped as tactical cunning (secondary: bluffing). Its pivotal officer, Lt. Cmdr. Rask, differs from #14's (Adeyemi), and its primary challenge differs from #13's and #14's (accountability; trusting a junior officer).
+- #16 The Glass Nebula shipped as relying on the science officer (secondary: a gut call on which message to believe). Its pivotal officer, Lt. Varga, differs from #15's (Rask), and its primary challenge differs from #13–#15 (accountability; trusting a junior officer; tactical cunning).
 - No primary challenge appears more than three times, and no two consecutive simulations share one or the same pivotal officer.
 - **Pivotal officers across #1–#30:** Szabo 4, Varga 5, Okafor 5, Rask 4, Adeyemi 4, Osei 4, Marrow 4 (including the capstone).
 
@@ -633,20 +634,28 @@ Overlap check (guide §12):
 Nothing was added to ISA-COM-001.
 
 ### 16. The Glass Nebula
-**Premise.** A survey shuttle is lost inside a nebula that bends sensor returns and stretches time signals. Its last two messages contradict each other. One says "stay away"; the other, sent apparently later, asks for help.
+**Status:** **done** (v0.8.17).
+
+**Premise.** A survey shuttle is lost inside a nebula that bends sensor returns and stretches time signals. Its last two messages contradict each other. One says "stay away"; the other, sent apparently later, asks for help. The Halcyon answers from the Rim; Surveyor Nessa Vale on the shuttle Citrine may answer only in garbled fragments until the science is in; buoy Prism is an automated survey relay.
 
 **Command challenge:**
 - **Primary:** relying on the science officer to understand the physics.
 - **Secondary:** a gut call (which message to believe).
 - **Pivotal officer:** Lt. Varga (Science), whose model of the nebula is the only map.
 
-**Why it's distinct:** the only physics puzzle. The environment itself lies, and there is no one to talk to.
+**Why it's distinct:** the only physics puzzle. The environment itself lies, and there is no one to talk to at first (unlike Ion Season's gut call with haulers, Ember Tide's timing/flare, Gardener's restraint/life, Quiet Signal's comms code, or Lantern Drift's derelict triage).
 
 **Endings:**
-- **Success:** the shuttle recovered, a scientific discovery, a rescue through the time-shear.
-- **Failure or partial:** the shuttle lost, the Halcyon stranded for weeks, a rescue that arrives "too late" by the shuttle's clock.
+- **Success:** Brought Home (recover at the true locus on Varga's model); Through the Shear (ride the Fold once the model shows it is a path); The Probe Chain (probe relay recovers the crew without committing the ship deep); Turned Back (help recognised as an echo; hold at the Rim).
+- **Failure or partial:** Too Late by Their Clock (partial — true locus reached after the shuttle's clock ran out); Ghost Chase (followed a false help signal into a invented locus); Stranded in Glass (went deep without a model); Left in the Glass (left while help was real); Shuttle Lost (crew gone; including a principled turn-back when they were already gone); Shattered (forced a path and destroyed the shuttle); Lost in the Glass (time-up).
 
-**Seeds vary:** what the nebula actually does, the shuttle crew's state, which message is real.
+**Seeds vary:** which message is the echo (`help-false` / `stay-false`), what the nebula does (`shear` / `mirror` / `lag`), the shuttle crew's state (`alive` / `failing` / `gone`), and how long Varga's model takes.
+
+**Handbook cites (existing ids only):** care-1 (§4.1), care-2 (§4.2), roe-3 (§3.9), honesty-1 (§6.1) in the evaluator; care-4 (§4.5) and cmd-4 (§1.4) as hidden handbook training references. Exercise objective (not law): do not commit the ship deep until the science officer has a working model.
+
+**Naming notes (flag for Brad):** survey shuttle **Citrine**; Surveyor **Nessa Vale**; buoy **Prism**; landmarks **the Rim**, **the Looking Glass**, **the Fold**. No collision found with existing cast or pending Starfall/Seventh Bell names.
+
+**Overlap notes:** distinct from #2 Tallis (contagion + science), #6 Ion Season (gut call with haulers), #10 Gardener (restraint / unknown life), #12 Ember Tide (timing / flare forecast), #3 Quiet Signal (comms code). Primary challenge shares the "relying on the science officer" bucket with #2 and planned #25, within the three-use cap; consecutive primary and pivotal officer differ from #15.
 
 ### 17. Tribunal at Kesh Varo
 **Premise.** On shore leave, a Halcyon crewman is arrested by the independent world of Kesh Varo for entering a sacred site, a capital offence there. He says he went in to help a collapsed pilgrim. Fleet orders are to respect local sovereignty: a trade treaty is at stake. The trial is tomorrow.
