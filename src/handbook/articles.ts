@@ -61,8 +61,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
         {
           "simulation": 17,
           "title": "Tribunal at Kesh Varo",
-          "purpose": "Holding to the law when authority points the other way.",
-          "planned": true
+          "purpose": "Holding to the law when authority points the other way."
         },
         {
           "simulation": 27,
@@ -1327,8 +1326,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
         {
           "simulation": 17,
           "title": "Tribunal at Kesh Varo",
-          "purpose": "Working within the law when authorities disagree.",
-          "planned": true
+          "purpose": "Working within the law when authorities disagree."
         }
       ],
       "enforcement": {
@@ -1565,8 +1563,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
         {
           "simulation": 17,
           "title": "Tribunal at Kesh Varo",
-          "purpose": "Recognising when an order crosses a legal line.",
-          "planned": true
+          "purpose": "Recognising when an order crosses a legal line."
         },
         {
           "simulation": 27,
@@ -2165,8 +2162,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
         {
           "simulation": 17,
           "title": "Tribunal at Kesh Varo",
-          "purpose": "Standing by crew when a foreign law threatens them.",
-          "planned": true
+          "purpose": "Standing by crew when a foreign law threatens them."
         }
       ],
       "enforcement": {
@@ -2292,8 +2288,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
         {
           "simulation": 17,
           "title": "Tribunal at Kesh Varo",
-          "purpose": "Respecting a foreign law while protecting your crew.",
-          "planned": true
+          "purpose": "Respecting a foreign law while protecting your crew."
         }
       ],
       "enforcement": {

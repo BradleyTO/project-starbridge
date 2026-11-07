@@ -1845,7 +1845,7 @@ for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape',
   const outG = await pg.innerText('[data-testid=outcome]');
   check('sim16: led to an ending', /Brought Home|Through the Shear|The Probe Chain|Turned Back|Too Late by Their Clock|Ghost Chase|Stranded in Glass|Left in the Glass|Shuttle Lost|Shattered|Lost in the Glass/i.test(outG), outG.slice(0, 200));
   tr = await allG();
-  const LEAK16 = /Kestrel|Prefect|Ashen Covenant|Tallis|Sabeth|Thornwake|Cantor|Brenn|Teyma|Paley|Larkspur|Saltglass|Rhune|Tarvo|Hollis|Brack|Teague|Saffron Mule|Gannet|Corrie Drift|Hesper|Krenn|Vesk|Sallow|Fosse|Vell Crossing|Eventide|Wick|Vollan|Kittiwake|Orrey|Sorrel|Roake|Dahl|Marchbank|Wrenmoor|Iron Psalm|Sable Narrows|Crake|Haskett|Gardener|Coldwater|Plumb Line|Penhale|Corley|Toller|Hadley|Myrr|Ketter|Mattock|Ember Tide|Strome|Ferrier|furnace|Tamber|Stavely|Seraphine|Vory|Stern Mercy|Calderon|Seventh Bell|Harrow Lane|Caradoc|Thistledown|Kemble|Quell|Dividend|Hagfish|Draycott|Skerrit|Veyl|Gavel|Bryony|\[[a-zA-Z_]+\]|undefined|Intergalactic Agency|the Agency/;
+  const LEAK16 = /Kestrel|Prefect|Ashen Covenant|Tallis|Sabeth|Thornwake|Cantor|Brenn|Teyma|Paley|Larkspur|Saltglass|Rhune|Tarvo|Hollis|Brack|Teague|Saffron Mule|Gannet|Corrie Drift|Hesper|Krenn|Vesk|Sallow|Fosse|Vell Crossing|Eventide|Wick|Vollan|Kittiwake|Orrey|Sorrel|Roake|Dahl|Marchbank|Wrenmoor|Iron Psalm|Sable Narrows|Crake|Haskett|Gardener|Coldwater|Plumb Line|Penhale|Corley|Toller|Hadley|Myrr|Ketter|Mattock|Ember Tide|Strome|Ferrier|furnace|Tamber|Stavely|Seraphine|Vory|Stern Mercy|Calderon|Seventh Bell|Harrow Lane|Caradoc|Thistledown|Kemble|Quell|Dividend|Hagfish|Draycott|Skerrit|Veyl|Gavel|Bryony|Askel|Soth|Dorn|Toras|Brask|Orun|Quiet Stone|\[[a-zA-Z_]+\]|undefined|Intergalactic Agency|the Agency/;
   check('sim16: no other simulation\'s names leak in', !LEAK16.test(tr), (tr.match(new RegExp(`.{0,60}(${LEAK16.source}).{0,60}`)) ?? [''])[0]);
   await pg.screenshot({ path: `${SHOTS}/sim16-03-outcome.png` });
   if (await pg.locator('[data-testid=outcome-aar]').count()) await pg.click('[data-testid=outcome-aar]');
@@ -1859,6 +1859,69 @@ for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape',
   const ovG = await pg.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   check('sim16 phone: no horizontal overflow', ovG <= 0, `overflow ${ovG}px`);
   await ctxG.close();
+}
+
+
+// ============================================================== v0.8.18 ====
+// Training Simulation 017: Tribunal at Kesh Varo. Listed, launched by name, Osei's brief, a medical beat, an ending, AAR filed.
+{
+  const ctxT = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await ctxT.addInitScript(stubs);
+  const pg = await ctxT.newPage();
+  pg.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  pg.on('pageerror', (e) => errors.push(String(e)));
+  const allT = async () => (await pg.innerText('[data-testid=narrative]')) + '\n' + (await pg.innerText('[data-testid=comms]'));
+  const modeT = () => pg.getAttribute('[data-testid=mode-banner]', 'data-mode');
+  const endedT = async () => (await pg.locator('[data-testid=outcome]').count()) > 0;
+  await pg.goto(withSeed(8), { waitUntil: 'networkidle' });
+  await pg.waitForTimeout(600);
+  await skipIntro(pg);
+  await sendOn(pg, 'Computer, list simulations', 600);
+  check('sim17: "list simulations" names Tribunal at Kesh Varo', /Tribunal at Kesh Varo/.test(await allT()));
+  if (!(await pg.locator('[data-testid=hub]').count())) await pg.click('[data-testid=open-hub]');
+  await pg.click('[data-testid=hub-tab-archive]');
+  await pg.waitForTimeout(150);
+  check('sim17: Mission Archive lists Training Simulation 017', /Training Simulation 017: Tribunal at Kesh Varo/.test(await pg.innerText('[data-testid=hub]')) && (await pg.locator('[data-testid=archive-train-TRN-tribunal]').count()) === 1);
+  await pg.click('[data-testid=hub-close]');
+  await pg.waitForTimeout(100);
+  await sendOn(pg, 'Computer, begin the Tribunal at Kesh Varo simulation', 1200);
+  await pg.waitForSelector('[data-testid=mode-banner][data-mode=simulation]');
+  check('sim17: launch by name starts a simulation', (await modeT()) === 'simulation');
+  await pg.waitForTimeout(4500);
+  await skipIntro(pg);
+  let tr = await allT();
+  check('sim17: intro plays (Kesh Varo, Askel, Osei)', /Kesh Varo/.test(tr) && /Askel/.test(tr) && /Osei/.test(tr), tr.slice(0, 300));
+  await pg.screenshot({ path: `${SHOTS}/sim17-01-intro.png` });
+  check('sim17: detention on sensors by name', /Askel|Orun Hold/.test(await pg.innerText('[data-testid=contact-kestrel]')));
+  await sendOn(pg, 'hail Askel', 500);
+  await sendOn(pg, 'Tell me what happened, in your own words.', 500);
+  await sendOn(pg, 'close the channel', 400);
+  await sendOn(pg, 'Osei, prepare a medical brief', 500);
+  for (let i = 0; i < 6; i++) await sendOn(pg, 'wait', 400);
+  tr = await allT();
+  check('sim17: Osei prepares the medical brief', /medical|brief|emergency|examine|Osei/i.test(tr), tr.slice(-500));
+  await pg.screenshot({ path: `${SHOTS}/sim17-02-brief.png` });
+  await sendOn(pg, 'hail the tribunal', 500);
+  await sendOn(pg, 'present the medical brief to the magister', 500);
+  for (let i = 0; i < 60 && !(await endedT()); i++) await sendOn(pg, 'wait', 400);
+  await pg.waitForSelector('[data-testid=outcome]');
+  const outT = await pg.innerText('[data-testid=outcome]');
+  check('sim17: led to an ending', /Acquitted on the Evidence|Commuted by Custom|Honour Bound by Both Laws|The Code Held|Broken by Force|The Quiet Stone Claims Him|Fleet Takes the Matter|Surrendered to the Bench|The Gavel Falls/i.test(outT), outT.slice(0, 200));
+  tr = await allT();
+  const LEAK17 = /Kestrel|Prefect|Ashen Covenant|Tallis|Sabeth|Thornwake|Cantor|Brenn|Teyma|Paley|Larkspur|Saltglass|Rhune|Tarvo|Hollis|Brack|Teague|Saffron Mule|Gannet|Corrie Drift|Hesper|Krenn|Vesk|Sallow|Fosse|Vell Crossing|Eventide|Wick|Vollan|Kittiwake|Orrey|Sorrel|Roake|Dahl|Marchbank|Wrenmoor|Iron Psalm|Sable Narrows|Crake|Haskett|Gardener|Coldwater|Plumb Line|Penhale|Corley|Toller|Hadley|Myrr|Ketter|Mattock|Ember Tide|Strome|Ferrier|furnace|Tamber|Stavely|Seraphine|Vory|Stern Mercy|Calderon|Seventh Bell|Harrow Lane|Caradoc|Thistledown|Kemble|Quell|Dividend|Hagfish|Draycott|Skerrit|Veyl|Gavel|Bryony|Citrine|Nessa Vale|Prism|Looking Glass|Glass Nebula|\[[a-zA-Z_]+\]|undefined|Intergalactic Agency|the Agency/;
+  check('sim17: no other simulation\'s names leak in', !LEAK17.test(tr), (tr.match(new RegExp(`.{0,60}(${LEAK17.source}).{0,60}`)) ?? [''])[0]);
+  await pg.screenshot({ path: `${SHOTS}/sim17-03-outcome.png` });
+  if (await pg.locator('[data-testid=outcome-aar]').count()) await pg.click('[data-testid=outcome-aar]');
+  await pg.waitForTimeout(300);
+  const aarT = (await pg.locator('[data-testid=aar]').count()) ? await pg.innerText('[data-testid=aar]') : '';
+  check('sim17: AAR is available, cites regulations and has no percentages', /Tribunal|Kesh Varo/i.test(aarT) && /ISA regulations/.test(aarT) && !/\d\s*%/.test(aarT), aarT.slice(0, 200));
+  await pg.screenshot({ path: `${SHOTS}/sim17-04-aar.png`, fullPage: true });
+  if (await pg.locator('[data-testid=aar-close]').count()) await pg.click('[data-testid=aar-close]');
+  await pg.setViewportSize({ width: 390, height: 844 });
+  await pg.waitForTimeout(400);
+  const ovT = await pg.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  check('sim17 phone: no horizontal overflow', ovT <= 0, `overflow ${ovT}px`);
+  await ctxT.close();
 }
 
 // ============================================================== v0.8.0 =====

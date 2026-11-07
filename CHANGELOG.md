@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.8.18] — 2026-11-06 — Training Simulation 017: Tribunal at Kesh Varo
+
+### Added
+- **Training Simulation 017: Tribunal at Kesh Varo** (`src/scenarios/tribunal/`). On shore leave, Crewman Jory Askel is arrested by the independent world of Kesh Varo for entering the Quiet Stone — a capital offence there. He says he went in to help a collapsed pilgrim. Fleet orders are to respect local sovereignty; a trade treaty is at stake. The trial is tomorrow. Dr. Osei can prove or disprove the medical emergency. Magister Lirra Soth presides; Keeper Yasha Dorn keeps the site's custom; Commodore Niall Brask speaks for Fleet Command.
+  - Primary challenge: ethics under orders. Secondary: negotiation within an alien legal system. Pivotal officer: Dr. Osei (Medical).
+  - Success endings: Acquitted on the Evidence; Commuted by Custom; Honour Bound by Both Laws.
+  - Partial: The Code Held. Failures: Broken by Force; The Quiet Stone Claims Him; Fleet Takes the Matter; Surrendered to the Bench; The Gavel Falls.
+  - Listed in the catalogue and Mission Archive; launch with "Computer, begin the Tribunal at Kesh Varo simulation" (also "simulation seventeen"). Distinct voice hints for Askel, Soth, Dorn and Toras.
+  - Handbook training cross-refs shipped (no longer planned) on cmd-5 (§1.1), orders-2 (§5.2), reg-7.4 (§5.7), health-2 (§8.3), contact-2 (§9.3). Evaluator cites asylum-1, reg-7.4, care-1, honesty-1, roe-2. Exercise objective: establish the medical emergency before accepting a capital finding.
+- `tests/sim17/`: catalogue, scenario, endings, evaluation.
+- `scripts/smoke.mjs`: sim17 block.
+
+### Changed
+- Library is **17 of 30**. Package version **0.8.18**.
+- `tests/sim16/catalogue.test.ts`: the example launch line in `Computer, list simulations` names the newest simulation, so the test now checks Glass is listed rather than that it is the example.
+
+
 All notable changes to Project Starbridge are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [0.8.17] — 2026-11-05 — Training Simulation 016: The Glass Nebula

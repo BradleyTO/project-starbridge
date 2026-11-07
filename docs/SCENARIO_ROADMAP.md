@@ -46,7 +46,7 @@ Premises can be adjusted when a scenario is built. The core event, the primary c
 | 14 | Starfall | A habitat sinking into a gas giant; only the green helmsman can fly the rescue | Trusting a junior officer | Ens. Adeyemi (Helm) | **done** (v0.8.15) |
 | 15 | Corsairs of the Veyl Shoals | A corsair ambush in an asteroid shoal where sensors and torpedoes fail | Tactical cunning: terrain and deception | Lt. Cmdr. Rask (Tactical) | **done** (v0.8.16) |
 | 16 | The Glass Nebula | A shuttle lost in a nebula that bends sensors and time | Relying on the science officer | Lt. Varga (Science) | **done** (v0.8.17) |
-| 17 | Tribunal at Kesh Varo | A Halcyon crewman is arrested ashore under a capital law | Ethics under orders | Dr. Osei (Medical) | planned |
+| 17 | Tribunal at Kesh Varo | A Halcyon crewman is arrested ashore under a capital law | Ethics under orders | Dr. Osei (Medical) | **done** (v0.8.18) |
 | 18 | The Weather Engine | A dead founder's cipher locks a colony's weather control as a superstorm builds | The comms officer cracking a code | Lt. Szabo (Comms) | planned |
 | 19 | Hollow Crown | A deposed governor holds a relay station's staff hostage | Reading people and detecting lies | Dr. Osei (Medical) | planned |
 | 20 | Gravity's Edge | A once-in-a-millennium neutron star flyby: how long dare the Halcyon stay? | Gut call: judging risk | Chief Okafor (Engineering) | planned |
@@ -88,6 +88,7 @@ Premises can be adjusted when a scenario is built. The core event, the primary c
 - #14 Starfall shipped as trusting a junior officer (secondary: triage, how many descents the hull can take). Its pivotal officer, Ens. Adeyemi, differs from #13's (Rask), and its primary challenge differs from #13's (accountability).
 - #15 Corsairs of the Veyl Shoals shipped as tactical cunning (secondary: bluffing). Its pivotal officer, Lt. Cmdr. Rask, differs from #14's (Adeyemi), and its primary challenge differs from #13's and #14's (accountability; trusting a junior officer).
 - #16 The Glass Nebula shipped as relying on the science officer (secondary: a gut call on which message to believe). Its pivotal officer, Lt. Varga, differs from #15's (Rask), and its primary challenge differs from #13–#15 (accountability; trusting a junior officer; tactical cunning).
+- #17 Tribunal at Kesh Varo shipped as ethics under orders (secondary: negotiation within an alien legal system). Its pivotal officer, Dr. Osei, differs from #16's (Varga), and its primary challenge differs from #14–#16 (junior trust; tactical cunning; science officer).
 - No primary challenge appears more than three times, and no two consecutive simulations share one or the same pivotal officer.
 - **Pivotal officers across #1–#30:** Szabo 4, Varga 5, Okafor 5, Rask 4, Adeyemi 4, Osei 4, Marrow 4 (including the capstone).
 
@@ -658,20 +659,29 @@ Nothing was added to ISA-COM-001.
 **Overlap notes:** distinct from #2 Tallis (contagion + science), #6 Ion Season (gut call with haulers), #10 Gardener (restraint / unknown life), #12 Ember Tide (timing / flare forecast), #3 Quiet Signal (comms code). Primary challenge shares the "relying on the science officer" bucket with #2 and planned #25, within the three-use cap; consecutive primary and pivotal officer differ from #15.
 
 ### 17. Tribunal at Kesh Varo
-**Premise.** On shore leave, a Halcyon crewman is arrested by the independent world of Kesh Varo for entering a sacred site, a capital offence there. He says he went in to help a collapsed pilgrim. Fleet orders are to respect local sovereignty: a trade treaty is at stake. The trial is tomorrow.
+**Status:** **done** (v0.8.18).
+
+**Premise.** On shore leave, Crewman Jory Askel of the Halcyon is arrested by the independent world of Kesh Varo for entering the Quiet Stone — a sacred site, and a capital offence there. He says he went in to help a collapsed pilgrim (Pilgrim Elen Toras). Fleet orders are to respect local sovereignty: the Kesh Varo trade treaty is at stake. The trial is tomorrow. Magister Lirra Soth presides; Keeper Yasha Dorn keeps the site's custom; Commodore Niall Brask speaks for Fleet Command.
 
 **Command challenge:**
 - **Primary:** ethics under orders.
 - **Secondary:** negotiation within an alien legal system.
 - **Pivotal officer:** Dr. Osei (Medical), who can prove, or disprove, the medical emergency.
 
-**Why it's distinct:** the only simulation set in a courtroom. It is the only one where the threat is a legal system, not a weapon, and the person at risk is one of the captain's own crew.
+**Why it's distinct:** the only simulation set in a courtroom. It is the only one where the threat is a legal system, not a weapon, and the person at risk is one of the captain's own crew. Unlike #13 Seventh Bell, the ISA is not the judge — Kesh Varo is. Unlike #1/#2, no armed standoff over a civilian ship.
 
-**Endings:**
-- **Success:** acquittal on the evidence, a sentence commuted by local custom, a diplomatic exchange that honours both laws.
-- **Failure or partial:** a rescue by force (the treaty broken), the crewman sentenced, Fleet relieves the captain of the matter.
+**Endings (shipped):**
+- **Success:** Acquitted on the Evidence; Commuted by Custom; Honour Bound by Both Laws.
+- **Partial:** The Code Held (force and unlawful handover refused; crewman still condemned; treaty intact).
+- **Failure:** Broken by Force (treaty broken); The Quiet Stone Claims Him (sentenced); Fleet Takes the Matter; Surrendered to the Bench (handover under capital risk); The Gavel Falls (time-up).
 
-**Seeds vary:** what really happened at the site, the judges' disposition, the pilgrim's fate.
+**Seeds vary:** what really happened at the site (`rescue` / `trespass` / `staged`); the bench's disposition (`strict` / `custom` / `open`); the pilgrim's fate (`alive` / `dead` / `absent`).
+
+**Handbook cites (existing ids only):** asylum-1 (§7.1), reg-7.4 (§5.7), care-1 (§4.1), honesty-1 (§6.1), roe-2 (§3.1) in the evaluator; cmd-5 (§1.1), orders-2 (§5.2), reg-7.4 (§5.7), health-2 (§8.3), contact-2 (§9.3) as handbook training references. Exercise objective (not law): establish the medical emergency before accepting a capital finding.
+
+**Naming notes (flag for Brad):** Crewman **Jory Askel**; Magister **Lirra Soth**; Keeper **Yasha Dorn**; Pilgrim **Elen Toras**; Commodore **Niall Brask**; sacred site **the Quiet Stone**; detention **Orun Hold**; world **Kesh Varo**. Avoided Lysa Venn / Teo Maras (Kestrel cast). No collision found with Paley, Adeyemi, Quell, Vale, Quill.
+
+**Overlap notes:** distinct from #13 Seventh Bell (ISA as judge of its own cutter), #1/#2 (armed standoffs), #5 Saltglass (mediation aboard, not a capital foreign court). Primary challenge shares the "ethics under orders" bucket with planned #27, within the two-use cap; consecutive primary and pivotal officer differ from #16.
 
 ### 18. The Weather Engine
 **Premise.** The colony Meridian's weather control station has locked itself down, and a superstorm is building. Its founder, who died last year, sealed the master controls with a personal cipher hidden in his journals, letters and favourite poems. The colonists know fragments; his estranged daughter knows more and won't help.

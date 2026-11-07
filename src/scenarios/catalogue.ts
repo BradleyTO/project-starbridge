@@ -172,10 +172,19 @@ export const SIMULATIONS: readonly SimulationInfo[] = [
     ['the glass nebula', 'glass nebula', 'glass', 'nebula', 'citrine', 'the citrine'],
     ['the glass nebula', 'glass nebula'],
   ),
+  entry(
+    17,
+    'TRN-tribunal',
+    'tribunal',
+    'Tribunal at Kesh Varo',
+    'On shore leave, a Halcyon crewman is arrested by the independent world of Kesh Varo for entering a sacred site — a capital offence there. He says he went in to help a collapsed pilgrim. Fleet orders are to respect local sovereignty: a trade treaty is at stake. The trial is tomorrow. Seeded: every run can differ.',
+    ['tribunal at kesh varo', 'tribunal', 'kesh varo', 'kesh', 'varo', 'quiet stone', 'askel'],
+    ['tribunal at kesh varo', 'tribunal', 'kesh varo'],
+  ),
 ];
 
 const NUMBER_WORDS: Record<string, number> = {
-  one: 1, first: 1, two: 2, second: 2, three: 3, third: 3, four: 4, fourth: 4, five: 5, fifth: 5, six: 6, sixth: 6, seven: 7, seventh: 7, eight: 8, eighth: 8, nine: 9, ninth: 9, ten: 10, tenth: 10, eleven: 11, eleventh: 11, twelve: 12, twelfth: 12, thirteen: 13, thirteenth: 13, fourteen: 14, fourteenth: 14, fifteen: 15, fifteenth: 15, sixteen: 16, sixteenth: 16,
+  one: 1, first: 1, two: 2, second: 2, three: 3, third: 3, four: 4, fourth: 4, five: 5, fifth: 5, six: 6, sixth: 6, seven: 7, seventh: 7, eight: 8, eighth: 8, nine: 9, ninth: 9, ten: 10, tenth: 10, eleven: 11, eleventh: 11, twelve: 12, twelfth: 12, thirteen: 13, thirteenth: 13, fourteen: 14, fourteenth: 14, fifteen: 15, fifteenth: 15, sixteen: 16, sixteenth: 16, seventeen: 17, seventeenth: 17,
 };
 
 /** Words that do not name a simulation ("begin the training simulation"). */
@@ -190,7 +199,7 @@ export function simulationByName(spoken: string | undefined): SimulationInfo | n
   const t = (spoken ?? '').toLowerCase().replace(/[#"'’.,!?]/g, ' ').replace(/\s+/g, ' ').trim();
   const rest = t.replace(GENERIC, ' ').replace(/\s+/g, ' ').trim();
   if (!rest) return SIMULATIONS[0];
-  const num = /^(?:0*(\d{1,3})|(thirteenth|fourteenth|fifteenth|sixteenth|eleventh|thirteen|fourteen|seventh|twelfth|fifteen|sixteen|second|fourth|eighth|eleven|twelve|three|seven|eight|first|third|fifth|sixth|ninth|tenth|four|five|nine|one|two|six|ten))(?: one)?$/.exec(rest);
+  const num = /^(?:0*(\d{1,3})|(seventeenth|seventeen|thirteenth|fourteenth|fifteenth|sixteenth|eleventh|thirteen|fourteen|seventh|twelfth|fifteen|sixteen|second|fourth|eighth|eleven|twelve|three|seven|eight|first|third|fifth|sixth|ninth|tenth|four|five|nine|one|two|six|ten))(?: one)?$/.exec(rest);
   if (num) return SIMULATIONS.find((x) => x.number === (num[1] ? Number(num[1]) : NUMBER_WORDS[num[2]])) ?? null;
   // Longest matching phrase wins ("kestrel incident" before "incident").
   let best: { s: SimulationInfo; len: number } | null = null;

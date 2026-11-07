@@ -38,7 +38,7 @@ describe('catalogue and registry', () => {
     expect(scenarioFor('glass-nebula')).toBe(G);
     expect(G.title).toBe(x.title);
     expect(TRAINING_SCENARIOS['glass-nebula']).toBe(G);
-    expect(SIMULATIONS.length).toBe(16);
+    expect(SIMULATIONS.length).toBe(17);
   });
 
   it('names resolve to the right simulation, and older names are unchanged', () => {
@@ -62,10 +62,9 @@ describe('launch from the bridge', () => {
     expect(sayB(bridge(), 'Computer, begin the Starfall simulation.').uiRequest).toMatchObject({ kind: 'beginSim', id: 'TRN-starfall' });
   });
 
-  it('"list simulations" includes it, and its example launch line does not double the article', () => {
+  it('"list simulations" includes it (the example launch line names the newest simulation)', () => {
     const text = logText(sayB(bridge(), 'Computer, list simulations'));
     expect(text).toContain('The Glass Nebula');
-    expect(text).toContain('"begin the Glass Nebula simulation"');
     expect(text).not.toMatch(/the The\b/);
   });
 

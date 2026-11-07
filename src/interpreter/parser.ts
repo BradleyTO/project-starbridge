@@ -26,6 +26,7 @@ import { ADDRESSED as EMBER_ADDRESSED, SPEECHY as EMBER_SPEECHY, EMBER_NAMES, em
 import { ADDRESSED as STAR_ADDRESSED, SPEECHY as STAR_SPEECHY, STARFALL_NAMES, starfallAsk, starfallOrder } from '../scenarios/starfall/words';
 import { ADDRESSED as CORS_ADDRESSED, SPEECHY as CORS_SPEECHY, CORSAIRS_NAMES, corsairsAsk, corsairsOrder } from '../scenarios/corsairs/words';
 import { ADDRESSED as GLASS_ADDRESSED, SPEECHY as GLASS_SPEECHY, GLASS_NAMES, glassAsk, glassOrder } from '../scenarios/glass/words';
+import { ADDRESSED as TRIB_ADDRESSED, SPEECHY as TRIB_SPEECHY, TRIBUNAL_NAMES, tribunalAsk, tribunalOrder } from '../scenarios/tribunal/words';
 import { ADDRESSED as BELL_ADDRESSED, SPEECHY as BELL_SPEECHY, BELL_NAMES, bellAsk, bellFleetReply, bellOrder } from '../scenarios/seventhbell/words';
 import { ADDRESSED as COLDWATER_ADDRESSED, SPEECHY as COLDWATER_SPEECHY, COLDWATER_NAMES, coldwaterAsk, coldwaterOrder } from '../scenarios/coldwater/words';
 import type { Interpretation, ProposedActionInput, CommIntent, TradeOffer, ManeuverIntentT } from '../engine/schema';
@@ -455,6 +456,23 @@ const RULES: Rule[] = [
       const d = ctx.addressee ? `${ctx.addressee}: ${c}` : c;
       if (glassOrder(c, ctx.addressee)) return { kind: 'action', action: { type: 'improvise', method: 'other', description: d.slice(0, 400) } };
       if (glassAsk(c)) return { kind: 'action', action: { type: 'bridge', op: 'chat', officer: '', text: d.slice(0, 300) } };
+      return { kind: 'none' };
+    },
+  },
+  {
+    // v0.8.18: Tribunal at Kesh Varo — orders and words about the medical brief, the tribunal,
+    // custom, force extraction and Fleet ("Osei, prepare a medical brief", "present the brief").
+    // Only while that simulation runs; the scenario decides what they mean.
+    name: 'tribunal',
+    test: /\S/,
+    build: (c, ctx) => {
+      if (ctx.setting?.scenarioId !== 'tribunal') return { kind: 'none' };
+      if (ctx.channel?.state === 'open' && ctx.channel.party !== 'passenger' && !ctx.addressee && !TRIB_ADDRESSED.test(c) && TRIB_SPEECHY.test(c)) {
+        return { kind: 'action', action: { type: 'speak', to: ctx.channel.party, text: c.slice(0, 400), intents: ['unknown'], relayed: false } };
+      }
+      const d = ctx.addressee ? `${ctx.addressee}: ${c}` : c;
+      if (tribunalOrder(c, ctx.addressee)) return { kind: 'action', action: { type: 'improvise', method: 'other', description: d.slice(0, 400) } };
+      if (tribunalAsk(c)) return { kind: 'action', action: { type: 'bridge', op: 'chat', officer: '', text: d.slice(0, 300) } };
       return { kind: 'none' };
     },
   },
@@ -1367,7 +1385,7 @@ export function interpretSync(input: string, ctx: InterpreterContext): Interpret
 
 const SIM_WORD = '(?:simulation|sim|simulator|drill|exercise|training(?: simulation| run| exercise)?|holo(?:gram|deck)?(?: program(?:me)?)?|(?:simulation|training|holo) program(?:me)?)';
 const LEAD = "^(?:(?:computer|ship|ops|xo|number one|first officer|commander|marrow)[,:]?\\s+)?(?:please\\s+)?(?:(?:can|could|would) you\\s+)?(?:let'?s\\s+)?";
-const BEGIN_SIM = new RegExp(`${LEAD}(?:begin|start|run|load|launch|initiate|commence|play|engage|activate|set up|give me|i want|i'd like|we'?ll (?:run|do))\\s+(?:up\\s+)?(?:the\\s+|a\\s+|another\\s+|new\\s+)*(?:(.{0,40}?)\\s+)?${SIM_WORD}\\b(?:\\s+(?:of|called|named|for)\\s+(.+)|\\s+(?:number\\s+|no\\.?\\s+|#\\s*)?(\\d{1,3}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|sixteenth)\\b)?|${LEAD}(?:begin|start|run|load|launch|play)\\s+(?:the\\s+)?(${SIMULATION_NAME_PATTERN})\\b`);
+const BEGIN_SIM = new RegExp(`${LEAD}(?:begin|start|run|load|launch|initiate|commence|play|engage|activate|set up|give me|i want|i'd like|we'?ll (?:run|do))\\s+(?:up\\s+)?(?:the\\s+|a\\s+|another\\s+|new\\s+)*(?:(.{0,40}?)\\s+)?${SIM_WORD}\\b(?:\\s+(?:of|called|named|for)\\s+(.+)|\\s+(?:number\\s+|no\\.?\\s+|#\\s*)?(\\d{1,3}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|sixteenth|seventeen|seventeenth)\\b)?|${LEAD}(?:begin|start|run|load|launch|play)\\s+(?:the\\s+)?(${SIMULATION_NAME_PATTERN})\\b`);
 const END_SIM = new RegExp(`${LEAD}(?:end|stop|terminate|exit|abort|cancel|quit|close|leave|freeze)\\s+(?:the\\s+|this\\s+)?${SIM_WORD}\\b|^(?:computer[,:]?\\s+)?(?:end|exit) program(?:me)?\\b`);
 /** "List simulations", "what simulations are available?", "which training simulations do we have?" */
 const LIST_SIMS = new RegExp(`${LEAD}(?:list|name|read(?: out)?|tell me)\\s+(?:the\\s+|all\\s+|our\\s+|the available\\s+)*(?:training\\s+)?(?:simulations|sims|training (?:simulations|programs?|programmes?))\\b|\\b(?:what|which)\\s+(?:training\\s+)?(?:simulations|sims)\\b(?:.*\\b(?:available|have|are there|on file|can (?:i|we) (?:run|play|do)|do we))?|\\bhow many (?:training )?simulations\\b`);
@@ -1583,11 +1601,11 @@ function applyScenarioVocabulary(ctx: InterpreterContext): void {
 
 // ------------------------------------------------------------- spelling ---
 
-let protectedNames = new Set<string>(['arden', 'vane', 'venn', 'maras', 'ivet', 'lysa', 'teo', 'szabo', 'varga', 'rask', 'okafor', 'adeyemi', 'marrow', 'osei', 'halcyon', 'tessarine', 'calloway']);
+let protectedNames = new Set<string>(['arden', 'vane', 'venn', 'maras', 'ivet', 'lysa', 'teo', 'szabo', 'varga', 'rask', 'okafor', 'adeyemi', 'marrow', 'osei', 'halcyon', 'tessarine', 'calloway', 'askel', 'soth', 'dorn', 'toras', 'brask', 'kesh', 'varo', 'orun']);
 let spell: SpellCorrector | null = null;
 function SPELL(): SpellCorrector {
   if (!spell) {
-    const sources: (RegExp | string)[] = [KESTREL_BASE, CRUISER_BASE, PASSENGER, BORDER, PAIR, COMPARTMENT, SPEECH, ON_SCREEN, ALL_TARGETS, SPEED_SLOW, SPEED_HALF, NEGATED_HOSTILITY, PEACEFUL, ASSERTIVE, ADDRESSEES, ...SYSTEMS.map((x) => x[1]), ...RULES.map((r) => r.test), LEDGER_NAMES, LANTERN_NAMES, PICKET_NAMES, GARDENER_NAMES, COLDWATER_NAMES, EMBER_NAMES, BELL_NAMES, STARFALL_NAMES, CORSAIRS_NAMES, GLASS_NAMES, 'shields weapons transporter tractor channel freighter cruiser kestrel position between hostile hail aggressive threatening'];
+    const sources: (RegExp | string)[] = [KESTREL_BASE, CRUISER_BASE, PASSENGER, BORDER, PAIR, COMPARTMENT, SPEECH, ON_SCREEN, ALL_TARGETS, SPEED_SLOW, SPEED_HALF, NEGATED_HOSTILITY, PEACEFUL, ASSERTIVE, ADDRESSEES, ...SYSTEMS.map((x) => x[1]), ...RULES.map((r) => r.test), LEDGER_NAMES, LANTERN_NAMES, PICKET_NAMES, GARDENER_NAMES, COLDWATER_NAMES, EMBER_NAMES, BELL_NAMES, STARFALL_NAMES, CORSAIRS_NAMES, GLASS_NAMES, TRIBUNAL_NAMES, 'shields weapons transporter tractor channel freighter cruiser kestrel position between hostile hail aggressive threatening'];
     spell = new SpellCorrector(vocabularyFrom(sources));
   }
   return spell;
