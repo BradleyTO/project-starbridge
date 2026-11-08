@@ -264,7 +264,13 @@ export const ARTICLES: readonly HandbookArticle[] = [
         "service-3",
         "care-4"
       ],
-      "training": [],
+      "training": [
+        {
+          "simulation": 18,
+          "title": "The Weather Engine",
+          "purpose": "Deciding under a clock while information is still coming in."
+        }
+      ],
       "enforcement": {
         "status": "not-yet",
         "note": "Not assessed in after-action reports, and no crew member checks it."
@@ -500,6 +506,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "simulation": 14,
           "title": "Starfall",
           "purpose": "Trusting a junior officer with a task only they can carry out."
+        },
+        {
+          "simulation": 18,
+          "title": "The Weather Engine",
+          "purpose": "Delegating to a specialist and standing by their work."
         }
       ],
       "enforcement": {
@@ -1722,6 +1733,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "simulation": 16,
           "title": "The Glass Nebula",
           "purpose": "Not claiming more about contradictory signals than science has established."
+        },
+        {
+          "simulation": 18,
+          "title": "The Weather Engine",
+          "purpose": "Keeping your word honest when someone's help depends on it."
         }
       ],
       "enforcement": {
@@ -2289,6 +2305,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "simulation": 17,
           "title": "Tribunal at Kesh Varo",
           "purpose": "Respecting a foreign law while protecting your crew."
+        },
+        {
+          "simulation": 18,
+          "title": "The Weather Engine",
+          "purpose": "Respecting a local authority's say over its own installations."
         }
       ],
       "enforcement": {

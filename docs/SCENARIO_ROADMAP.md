@@ -47,7 +47,7 @@ Premises can be adjusted when a scenario is built. The core event, the primary c
 | 15 | Corsairs of the Veyl Shoals | A corsair ambush in an asteroid shoal where sensors and torpedoes fail | Tactical cunning: terrain and deception | Lt. Cmdr. Rask (Tactical) | **done** (v0.8.16) |
 | 16 | The Glass Nebula | A shuttle lost in a nebula that bends sensors and time | Relying on the science officer | Lt. Varga (Science) | **done** (v0.8.17) |
 | 17 | Tribunal at Kesh Varo | A Halcyon crewman is arrested ashore under a capital law | Ethics under orders | Dr. Osei (Medical) | **done** (v0.8.18) |
-| 18 | The Weather Engine | A dead founder's cipher locks a colony's weather control as a superstorm builds | The comms officer cracking a code | Lt. Szabo (Comms) | planned |
+| 18 | The Weather Engine | A dead founder's cipher locks a colony's weather control as a superstorm builds | The comms officer cracking a code | Lt. Szabo (Comms) | **done** (v0.8.19) |
 | 19 | Hollow Crown | A deposed governor holds a relay station's staff hostage | Reading people and detecting lies | Dr. Osei (Medical) | planned |
 | 20 | Gravity's Edge | A once-in-a-millennium neutron star flyby: how long dare the Halcyon stay? | Gut call: judging risk | Chief Okafor (Engineering) | planned |
 | 21 | The Ninefold Lock | A survey team trapped by an abandoned depot's nine-lock defence logic | Deduction and reasoning | Lt. Cmdr. Rask (Tactical) | planned |
@@ -89,6 +89,7 @@ Premises can be adjusted when a scenario is built. The core event, the primary c
 - #15 Corsairs of the Veyl Shoals shipped as tactical cunning (secondary: bluffing). Its pivotal officer, Lt. Cmdr. Rask, differs from #14's (Adeyemi), and its primary challenge differs from #13's and #14's (accountability; trusting a junior officer).
 - #16 The Glass Nebula shipped as relying on the science officer (secondary: a gut call on which message to believe). Its pivotal officer, Lt. Varga, differs from #15's (Rask), and its primary challenge differs from #13–#15 (accountability; trusting a junior officer; tactical cunning).
 - #17 Tribunal at Kesh Varo shipped as ethics under orders (secondary: negotiation within an alien legal system). Its pivotal officer, Dr. Osei, differs from #16's (Varga), and its primary challenge differs from #14–#16 (junior trust; tactical cunning; science officer).
+- #18 The Weather Engine shipped as the comms officer cracking a code (secondary: timing, the storm's landfall and getting the colony under cover). Its pivotal officer, Lt. Szabo, differs from #17's (Osei), and its primary challenge differs from #14–#17 (junior trust; tactical cunning; science officer; ethics under orders).
 - No primary challenge appears more than three times, and no two consecutive simulations share one or the same pivotal officer.
 - **Pivotal officers across #1–#30:** Szabo 4, Varga 5, Okafor 5, Rask 4, Adeyemi 4, Osei 4, Marrow 4 (including the capstone).
 
@@ -684,20 +685,31 @@ Nothing was added to ISA-COM-001.
 **Overlap notes:** distinct from #13 Seventh Bell (ISA as judge of its own cutter), #1/#2 (armed standoffs), #5 Saltglass (mediation aboard, not a capital foreign court). Primary challenge shares the "ethics under orders" bucket with planned #27, within the two-use cap; consecutive primary and pivotal officer differ from #16.
 
 ### 18. The Weather Engine
-**Premise.** The colony Meridian's weather control station has locked itself down, and a superstorm is building. Its founder, who died last year, sealed the master controls with a personal cipher hidden in his journals, letters and favourite poems. The colonists know fragments; his estranged daughter knows more and won't help.
+**Status:** **done** (v0.8.19).
+
+**Premise.** On the ridge above the farming colony Meridian stands the Weather Engine, the station that has kept the plain's weather gentle for thirty years. A year to the day after its founder, Elias Quarrie, died, it locked itself down: its master controls answer only to his personal cipher. Now a superstorm the colonists call the Greywall is building over the western sea. Steward Anwen Tull of Meridian Hall is certain the key is the colony motto, "Rain Is a Promise Kept". Technician Bastian Lowe and his apprentice are shut inside the station. The founder's estranged daughter, Marit Quarrie, holds his survey journal and what he used to say to her, and will not help the Hall that, in her view, wore him out.
 
 **Command challenge:**
-- **Primary:** the comms officer cracking a code.
-- **Secondary:** timing (the storm's growth).
-- **Pivotal officer:** Lt. Szabo (Comms), who rebuilds the cipher from personal documents.
+- **Primary:** the comms officer cracking a code: trusting Lt. Szabo's reading of the lock over the colony's certainty, winning the papers the key is built from, and never spending one of the lock's few answers on a guess.
+- **Secondary:** timing: the storm's landfall, and getting the colony under cover while the work goes on.
+- **Pivotal officer:** Lt. Szabo (Comms), who reads the lock (what kind of answer it wants, how many wrong answers it allows, where the failsafe runs) and rebuilds the key from his poems, letters or survey journal.
 
-**Why it's distinct:** a human puzzle, unlike #3's mathematical contact. The key is a dead man's mind, and the clock is weather, not a fleet.
+**Why it's distinct:** a human puzzle, unlike #3's mathematical contact: the key is a dead man's life, and it is won from living people (the Hall's archive and pride, the daughter's grievance). The clock is weather, and the forecast is reliable once Lt. Varga runs it, unlike #12 Ember Tide's uncertain flare; the puzzle is the cipher, not the timing. Unlike #4 Reactor Night and planned #21 The Ninefold Lock, the lock is opened by understanding a person, not by engineering or defence logic.
 
-**Endings:**
-- **Success:** the cipher cracked and the storm dispersed, the daughter persuaded to help, a brute-force override that holds.
-- **Failure or partial:** a partial evacuation, the station destroyed to stop the storm (the colony uninhabitable for years), the colony lost.
+**Endings (shipped):**
+- **Success:** The Founder's Key (Szabo's vouched key from his papers); His Daughter's Hand (Marit gives what only she knew, or goes up and enters it herself); Through the Trunk (Chief Okafor overrides the lock around a failsafe Szabo has mapped).
+- **Partial:** Half a Storm (the Engine turns too late and only blunts the storm); Under the Plain (the Engine never turns but every colonist is under cover).
+- **Failure:** Sealed for Good (too many wrong answers); The Failsafe (a blind override trips the founder's failsafe); The Greywall (landfall with people in the open); A Scar on the Plain (the core burned out: storm broken, valley poisoned for years); Left to the Weather (the Halcyon leaves).
 
-**Seeds vary:** the cipher's construction, the daughter's grievance, the storm's rate.
+**Seeds vary:** which papers the key is built from (`poem` / `letters` / `journal`); the daughter's grievance and what honestly wins her (`blame`: the Hall's admission; `legacy`: the Hall's pledge; `fear`: the lock's safeguards, once read); whether the Engine can be overridden at all (`open` / `sealed`); which of two poem lines is right; how many wrong answers the lock allows (2 or 3); landfall time; population and shelter rate; when the Steward presses the motto and asks for the burn; how long the cipher takes.
+
+**Unconventional routes:** the founder's unsent letter to Marit (found in the Hall's archive) wins her whatever her grievance; Marit can go up and enter the key herself; Technician Lowe can read the plate aloud to speed Szabo's read; a mapped override through the control trunk; shuttles to carry people to the storm cellars. Crew refuse to burn the Engine out while Lowe and his apprentice are inside, and shared rules of engagement refuse to fire on the civilian station or the Hall while people are aboard.
+
+**Handbook cites (existing ids only):** care-1 (§4.1), care-2 (§4.2), honesty-1 (§6.1) in the evaluator; general-1 (§1.5), cmd-3 (§2.5), honesty-1 (§6.1), contact-2 (§9.3) as hidden handbook training references. Exercise objective (not law): have Lt. Szabo read the lock and vouch for a key before anything is entered. No new regulation proposed. contact-2 is not in the evaluator's v0.7 catalogue, so the "without the colony's leave" marker carries no regulation.
+
+**Naming notes (flag for Brad):** colony **Meridian** and **Meridian Hall** (from this roadmap entry; note `src/fleet/requests.ts` uses "ISV Meridian" as an example in a code comment only, not shipped text); station **the Weather Engine**; founder **Elias Quarrie**; daughter **Marit Quarrie**; **Steward Anwen Tull**; **Technician Bastian Lowe**; storm **the Greywall**; motto **"Rain Is a Promise Kept"**; poem **"A Litany for Small Weather"**; **the storm cellars**. No other collision found with existing cast or places.
+
+**Overlap notes:** distinct from #3 The Quiet Signal (mathematics, first contact), #12 Ember Tide (uncertain timing of a natural hazard), #4 Reactor Night (engineering improvisation), #10 The Gardener (restraint) and planned #21 The Ninefold Lock (mechanical defence logic). Primary challenge shares the "comms officer cracking a code" bucket with #3, within the two-use cap; consecutive primary and pivotal officer differ from #17.
 
 ### 19. Hollow Crown
 **Premise.** A deposed colonial governor has taken the staff of a relay station hostage and demands to be restored. His successor wants him dead and is sending a strike team. One hostage is not who she claims to be.

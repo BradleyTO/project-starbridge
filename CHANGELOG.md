@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.8.19] — 2026-11-07 — Training Simulation 018: The Weather Engine
+
+Nightly simulation build. Eighteenth of 30 training simulations. No change to grading rules, crew refusal behaviour in other simulations or ISA-COM-001 wording.
+
+### Added
+- **Training Simulation 018: The Weather Engine** (`src/scenarios/weather/`). The colony Meridian's weather station has locked itself down a year after its founder, Elias Quarrie, died; its master controls answer only to his personal cipher, and the superstorm the colonists call the Greywall is building. Steward Anwen Tull is sure the key is the colony motto. Technician Bastian Lowe is shut inside. The founder's estranged daughter, Marit Quarrie, holds what the key may need and will not help the Hall.
+  - Primary challenge: the comms officer cracking a code. Secondary: timing (landfall, and getting the colony under cover). Pivotal officer: Lt. Szabo (Comms).
+  - Seeded: which papers the key is built from (poems, letters or survey journal), the daughter's grievance and what honestly wins her, whether the Engine can be overridden, the right poem line, the number of wrong answers allowed, and the clocks.
+  - Success endings: The Founder's Key; His Daughter's Hand; Through the Trunk. Partial: Half a Storm; Under the Plain. Failures: Sealed for Good; The Failsafe; The Greywall; A Scar on the Plain; Left to the Weather.
+  - Unconventional routes: the founder's unsent letter, Marit entering the key herself, Lowe reading the plate, a mapped override, shuttles to the storm cellars. Rask refuses to burn the Engine out with people inside.
+  - Listed in the catalogue and Mission Archive; launch with "Computer, begin the Weather Engine simulation" (also "simulation eighteen"). Distinct voice hints for Lowe, Tull and Marit. Marit is reached on the colony net ("hail Marit"), and plain speech then goes to her.
+  - Evaluator cites care-1 (§4.1), care-2 (§4.2), honesty-1 (§6.1). Hidden handbook training cross-refs on general-1 (§1.5), cmd-3 (§2.5), honesty-1 (§6.1), contact-2 (§9.3). Exercise objective: have Lt. Szabo read the lock and vouch for a key before anything is entered. No new regulation proposed.
+- `tests/sim18/`: catalogue, scenario (seed sweep, fuzz, invariants, speech routing), endings (all ten), evaluation (reckless/responsible pair, principled marker).
+- `scripts/smoke.mjs`: sim18 block.
+
+### Changed
+- Library is **18 of 30**. Package version **0.8.19**.
+- Interpreter: a `weather-engine` rule (gated on the scenario id), "eighteen/eighteenth" in launch lines, and the new names protected from spelling correction.
+- `tests/sim16/` and `tests/sim17/catalogue.test.ts`: the library count is now a lower bound, and sim17's example launch line check follows sim16's (the example names the newest simulation).
+
 ## [0.8.18] — 2026-11-06 — Training Simulation 017: Tribunal at Kesh Varo
 
 ### Added

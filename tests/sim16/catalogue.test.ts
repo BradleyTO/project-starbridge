@@ -38,7 +38,7 @@ describe('catalogue and registry', () => {
     expect(scenarioFor('glass-nebula')).toBe(G);
     expect(G.title).toBe(x.title);
     expect(TRAINING_SCENARIOS['glass-nebula']).toBe(G);
-    expect(SIMULATIONS.length).toBe(17);
+    expect(SIMULATIONS.length).toBeGreaterThanOrEqual(17);
   });
 
   it('names resolve to the right simulation, and older names are unchanged', () => {

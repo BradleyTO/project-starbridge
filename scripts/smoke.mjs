@@ -1924,6 +1924,70 @@ for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape',
   await ctxT.close();
 }
 
+// ============================================================== v0.8.19 ====
+// Training Simulation 018: The Weather Engine. Listed, launched by name, Szabo reads the lock, the colony shelters, an ending, AAR filed.
+{
+  const ctxW = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await ctxW.addInitScript(stubs);
+  const pg = await ctxW.newPage();
+  pg.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  pg.on('pageerror', (e) => errors.push(String(e)));
+  const allW = async () => (await pg.innerText('[data-testid=narrative]')) + '\n' + (await pg.innerText('[data-testid=comms]'));
+  const modeW = () => pg.getAttribute('[data-testid=mode-banner]', 'data-mode');
+  const endedW = async () => (await pg.locator('[data-testid=outcome]').count()) > 0;
+  await pg.goto(withSeed(8), { waitUntil: 'networkidle' });
+  await pg.waitForTimeout(600);
+  await skipIntro(pg);
+  await sendOn(pg, 'Computer, list simulations', 600);
+  check('sim18: "list simulations" names The Weather Engine', /The Weather Engine/.test(await allW()));
+  if (!(await pg.locator('[data-testid=hub]').count())) await pg.click('[data-testid=open-hub]');
+  await pg.click('[data-testid=hub-tab-archive]');
+  await pg.waitForTimeout(150);
+  check('sim18: Mission Archive lists Training Simulation 018', /Training Simulation 018: The Weather Engine/.test(await pg.innerText('[data-testid=hub]')) && (await pg.locator('[data-testid=archive-train-TRN-weather]').count()) === 1);
+  await pg.click('[data-testid=hub-close]');
+  await pg.waitForTimeout(100);
+  await sendOn(pg, 'Computer, begin the Weather Engine simulation', 1200);
+  await pg.waitForSelector('[data-testid=mode-banner][data-mode=simulation]');
+  check('sim18: launch by name starts a simulation', (await modeW()) === 'simulation');
+  await pg.waitForTimeout(4500);
+  await skipIntro(pg);
+  let tw = await allW();
+  check('sim18: intro plays (Meridian, the Weather Engine, the Greywall)', /Meridian/.test(tw) && /Weather Engine/.test(tw) && /Greywall/.test(tw), tw.slice(0, 300));
+  await pg.screenshot({ path: `${SHOTS}/sim18-01-intro.png` });
+  check('sim18: the station on sensors by name', /Weather Engine/.test(await pg.innerText('[data-testid=contact-kestrel]')));
+  await sendOn(pg, 'Szabo, read the lock', 500);
+  await sendOn(pg, 'Varga, give me a landfall time', 500);
+  for (let i = 0; i < 2; i++) await sendOn(pg, 'wait', 400);
+  tw = await allW();
+  check('sim18: Szabo reads the lock', /I have the lock/.test(tw), tw.slice(-500));
+  await pg.screenshot({ path: `${SHOTS}/sim18-02-lock.png` });
+  await sendOn(pg, 'hail the Steward', 500);
+  await sendOn(pg, 'order the colony to shelter', 500);
+  await sendOn(pg, 'order the colony to shelter, I insist', 500);
+  await sendOn(pg, "ask the Steward for the founder's letters, lives depend on it", 500);
+  await sendOn(pg, 'close the channel', 400);
+  await sendOn(pg, 'Szabo, work the cipher', 500);
+  for (let i = 0; i < 60 && !(await endedW()); i++) await sendOn(pg, 'wait', 400);
+  await pg.waitForSelector('[data-testid=outcome]');
+  const outW = await pg.innerText('[data-testid=outcome]');
+  check('sim18: led to an ending', /The Founder's Key|His Daughter's Hand|Through the Trunk|Half a Storm|Under the Plain|Sealed for Good|The Failsafe|The Greywall|A Scar on the Plain|Left to the Weather/i.test(outW), outW.slice(0, 200));
+  tw = await allW();
+  const LEAK18 = /Kestrel|Prefect|Ashen Covenant|Tallis|Sabeth|Thornwake|Cantor|Brenn|Teyma|Paley|Larkspur|Saltglass|Rhune|Tarvo|Hollis|Brack|Teague|Saffron Mule|Gannet|Corrie Drift|Hesper|Krenn|Vesk|Sallow|Fosse|Vell Crossing|Eventide|Wick|Vollan|Kittiwake|Orrey|Sorrel|Roake|Dahl|Marchbank|Wrenmoor|Iron Psalm|Sable Narrows|Crake|Haskett|Gardener|Coldwater|Plumb Line|Penhale|Corley|Toller|Hadley|Myrr|Ketter|Mattock|Ember Tide|Strome|Ferrier|furnace|Tamber|Stavely|Seraphine|Vory|Stern Mercy|Calderon|Seventh Bell|Harrow Lane|Caradoc|Thistledown|Kemble|Quell|Dividend|Hagfish|Draycott|Skerrit|Veyl|Gavel|Bryony|Citrine|Nessa Vale|Prism|Looking Glass|Glass Nebula|Askel|Lirra|Soth|Yasha|Toras|Brask|Quiet Stone|Orun Hold|Kesh Varo|\[[a-zA-Z_]+\]|undefined|Intergalactic Agency|the Agency/;
+  check('sim18: no other simulation\'s names leak in', !LEAK18.test(tw), (tw.match(new RegExp(`.{0,60}(${LEAK18.source}).{0,60}`)) ?? [''])[0]);
+  await pg.screenshot({ path: `${SHOTS}/sim18-03-outcome.png` });
+  if (await pg.locator('[data-testid=outcome-aar]').count()) await pg.click('[data-testid=outcome-aar]');
+  await pg.waitForTimeout(300);
+  const aarW = (await pg.locator('[data-testid=aar]').count()) ? await pg.innerText('[data-testid=aar]') : '';
+  check('sim18: AAR is available, cites regulations and has no percentages', /Weather Engine/i.test(aarW) && /ISA regulations/.test(aarW) && !/\d\s*%/.test(aarW), aarW.slice(0, 200));
+  await pg.screenshot({ path: `${SHOTS}/sim18-04-aar.png`, fullPage: true });
+  if (await pg.locator('[data-testid=aar-close]').count()) await pg.click('[data-testid=aar-close]');
+  await pg.setViewportSize({ width: 390, height: 844 });
+  await pg.waitForTimeout(400);
+  const ovW = await pg.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  check('sim18 phone: no horizontal overflow', ovW <= 0, `overflow ${ovW}px`);
+  await ctxW.close();
+}
+
 // ============================================================== v0.8.0 =====
 // The Captain's Handbook: contents, articles, search, bridge commands in every timeline (state untouched),
 // report citations, spoiler safety, desktop and phone width.
