@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.8.20] — 2026-11-08 — Training Simulation 019: Hollow Crown
+
+Nightly simulation build. Nineteenth of 30 training simulations. No change to grading rules, crew refusal behaviour in other simulations or ISA-COM-001 wording.
+
+### Added
+- **Training Simulation 019: Hollow Crown** (`src/scenarios/hollow/`). Severin Mallory, removed as governor of the colony Aubrel last week, holds the Ostrin Relay's duty staff hostage and will speak only to the Halcyon. Acting Governor Rhea Stannard has a Civic Guard team in the relay's lower ring. One of the hostages, who calls herself Tamsin Rook, is not who she claims to be.
+  - Primary challenge: reading people and detecting lies. Secondary: restraint. Pivotal officer: Dr. Osei (Medical).
+  - Seeded: his condition (exhaustion, grief or withdrawal) and what brings him down, who the false hostage is (a Guard agent, his armed accomplice, or a hiding auditor with proof the vote was bought), the successor's temperament, the strike time, his starting strain, the number of hostages and the clocks.
+  - Success endings: The Crown Laid Down; A Hearing, Not a Crown; Out of the Hollow. Partial: Through the Door; The Hollow Crown. Failures: The Civic Guard Goes In; A Wrong Word; Fire in the Relay; Given to the Successor; Blood on the Ring; Left to Aubrel.
+  - Unconventional routes: the supply pod as a transporter window, tracing and jamming the agent, jamming the accomplice's trigger, ISA custody as a reason for a political successor to hold, protecting the witness. Shared rules of engagement refuse to fire on the civilian relay with people aboard.
+  - Listed in the catalogue and Mission Archive; launch with "Computer, begin the Hollow Crown simulation" (also "simulation nineteen"). Distinct voice hints for Mallory, Stannard and Rook. "hail Rook" reaches the false hostage, and plain speech then goes to her.
+  - Evaluator cites roe-2 (§3.1), care-1 (§4.1), honesty-1 (§6.1), asylum-1 (§7.1). Hidden handbook training cross-refs on roe-2, care-1, honesty-1, asylum-1, asylum-2 (§7.4; the planned #19 links, now live) and health-2 (§8.3). Exercise objective: have Dr. Osei assess the governor's condition before pressing him to surrender. No new regulation proposed.
+- `tests/sim19/`: catalogue, scenario (seed sweep, fuzz, invariants, speech routing), endings (all eleven), evaluation (reckless/responsible pair, principled markers).
+- `scripts/smoke.mjs`: sim19 block.
+
+### Changed
+- Library is **19 of 30**. Package version **0.8.20**.
+- Interpreter: a `hollow-crown` rule (gated on the scenario id), "nineteen/nineteenth" in launch lines, and the new names protected from spelling correction.
+- `tests/sim18/catalogue.test.ts`: the example launch line check no longer assumes The Weather Engine is the newest simulation.
+- Handbook data: whitespace tidied in care-1's training list (no wording change).
+
 ## [0.8.19] — 2026-11-07 — Training Simulation 018: The Weather Engine
 
 Nightly simulation build. Eighteenth of 30 training simulations. No change to grading rules, crew refusal behaviour in other simulations or ISA-COM-001 wording.

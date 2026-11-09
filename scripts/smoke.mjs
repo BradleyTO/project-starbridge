@@ -1988,6 +1988,71 @@ for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape',
   await ctxW.close();
 }
 
+// ============================================================== v0.8.20 ====
+// Training Simulation 019: Hollow Crown. Listed, launched by name, Dr. Osei reads the governor, the roster check, an ending, AAR filed.
+{
+  const ctxH = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await ctxH.addInitScript(stubs);
+  const pg = await ctxH.newPage();
+  pg.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  pg.on('pageerror', (e) => errors.push(String(e)));
+  const allH = async () => (await pg.innerText('[data-testid=narrative]')) + '\n' + (await pg.innerText('[data-testid=comms]'));
+  const modeH = () => pg.getAttribute('[data-testid=mode-banner]', 'data-mode');
+  const endedH = async () => (await pg.locator('[data-testid=outcome]').count()) > 0;
+  await pg.goto(withSeed(9), { waitUntil: 'networkidle' });
+  await pg.waitForTimeout(600);
+  await skipIntro(pg);
+  await sendOn(pg, 'Computer, list simulations', 600);
+  check('sim19: "list simulations" names Hollow Crown', /Hollow Crown/.test(await allH()));
+  if (!(await pg.locator('[data-testid=hub]').count())) await pg.click('[data-testid=open-hub]');
+  await pg.click('[data-testid=hub-tab-archive]');
+  await pg.waitForTimeout(150);
+  check('sim19: Mission Archive lists Training Simulation 019', /Training Simulation 019: Hollow Crown/.test(await pg.innerText('[data-testid=hub]')) && (await pg.locator('[data-testid=archive-train-TRN-hollow]').count()) === 1);
+  await pg.click('[data-testid=hub-close]');
+  await pg.waitForTimeout(100);
+  await sendOn(pg, 'Computer, begin the Hollow Crown simulation', 1200);
+  await pg.waitForSelector('[data-testid=mode-banner][data-mode=simulation]');
+  check('sim19: launch by name starts a simulation', (await modeH()) === 'simulation');
+  await pg.waitForTimeout(4500);
+  await skipIntro(pg);
+  let th = await allH();
+  check('sim19: intro plays (Aubrel, the Ostrin Relay, Severin Mallory)', /Aubrel/.test(th) && /Ostrin Relay/.test(th) && /Severin Mallory/.test(th), th.slice(0, 300));
+  await pg.screenshot({ path: `${SHOTS}/sim19-01-intro.png` });
+  check('sim19: the relay on sensors by name', /Ostrin Relay/.test(await pg.innerText('[data-testid=contact-kestrel]')));
+  await sendOn(pg, 'hail the relay', 500);
+  await sendOn(pg, 'Doctor, assess the governor', 500);
+  await sendOn(pg, 'Tell me what happened.', 500);
+  await sendOn(pg, 'The ISA can offer you protection and a fair hearing before Fleet Command.', 500);
+  for (let i = 0; i < 2; i++) await sendOn(pg, 'wait', 400);
+  th = await allH();
+  check('sim19: Dr. Osei reads his condition', /has not slept in days|this is grief|this is medical/.test(th), th.slice(-500));
+  await pg.screenshot({ path: `${SHOTS}/sim19-02-osei.png` });
+  await sendOn(pg, 'close the channel', 400);
+  await sendOn(pg, 'Szabo, check the duty roster', 500);
+  await sendOn(pg, 'wait', 400);
+  th = await allH();
+  check('sim19: the roster shows a false hostage', /roster does not match/.test(th), th.slice(-500));
+  for (let i = 0; i < 60 && !(await endedH()); i++) await sendOn(pg, 'wait', 400);
+  await pg.waitForSelector('[data-testid=outcome]');
+  const outH = await pg.innerText('[data-testid=outcome]');
+  check('sim19: led to an ending', /The Crown Laid Down|A Hearing, Not a Crown|Out of the Hollow|Through the Door|The Hollow Crown|The Civic Guard Goes In|A Wrong Word|Fire in the Relay|Given to the Successor|Blood on the Ring|Left to Aubrel/i.test(outH), outH.slice(0, 200));
+  th = await allH();
+  const LEAK19 = /Kestrel|Prefect|Ashen Covenant|Tallis|Sabeth|Thornwake|Cantor|Brenn|Teyma|Paley|Larkspur|Saltglass|Rhune|Tarvo|Hollis|Brack|Teague|Saffron Mule|Gannet|Corrie Drift|Hesper|Krenn|Vesk|Sallow|Fosse|Vell Crossing|Eventide|Wick|Vollan|Kittiwake|Orrey|Sorrel|Roake|Dahl|Marchbank|Wrenmoor|Iron Psalm|Sable Narrows|Crake|Haskett|Gardener|Coldwater|Plumb Line|Penhale|Corley|Toller|Hadley|Myrr|Ketter|Mattock|Ember Tide|Strome|Ferrier|furnace|Tamber|Stavely|Seraphine|Vory|Stern Mercy|Calderon|Seventh Bell|Harrow Lane|Caradoc|Thistledown|Kemble|Quell|Dividend|Hagfish|Draycott|Skerrit|Veyl|Gavel|Bryony|Citrine|Nessa Vale|Prism|Looking Glass|Glass Nebula|Askel|Lirra|Soth|Yasha|Toras|Brask|Quiet Stone|Orun Hold|Kesh Varo|Meridian|Quarrie|Marit|Greywall|Anwen|Bastian|Weather Engine|\[[a-zA-Z_]+\]|undefined|Intergalactic Agency|the Agency/;
+  check('sim19: no other simulation\'s names leak in', !LEAK19.test(th), (th.match(new RegExp(`.{0,60}(${LEAK19.source}).{0,60}`)) ?? [''])[0]);
+  await pg.screenshot({ path: `${SHOTS}/sim19-03-outcome.png` });
+  if (await pg.locator('[data-testid=outcome-aar]').count()) await pg.click('[data-testid=outcome-aar]');
+  await pg.waitForTimeout(300);
+  const aarH = (await pg.locator('[data-testid=aar]').count()) ? await pg.innerText('[data-testid=aar]') : '';
+  check('sim19: AAR is available, cites regulations and has no percentages', /Hollow Crown/i.test(aarH) && /ISA regulations/.test(aarH) && !/\d\s*%/.test(aarH), aarH.slice(0, 200));
+  await pg.screenshot({ path: `${SHOTS}/sim19-04-aar.png`, fullPage: true });
+  if (await pg.locator('[data-testid=aar-close]').count()) await pg.click('[data-testid=aar-close]');
+  await pg.setViewportSize({ width: 390, height: 844 });
+  await pg.waitForTimeout(400);
+  const ovH = await pg.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  check('sim19 phone: no horizontal overflow', ovH <= 0, `overflow ${ovH}px`);
+  await ctxH.close();
+}
+
 // ============================================================== v0.8.0 =====
 // The Captain's Handbook: contents, articles, search, bridge commands in every timeline (state untouched),
 // report citations, spoiler safety, desktop and phone width.

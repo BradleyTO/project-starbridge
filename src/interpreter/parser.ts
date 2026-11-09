@@ -27,6 +27,7 @@ import { ADDRESSED as STAR_ADDRESSED, SPEECHY as STAR_SPEECHY, STARFALL_NAMES, s
 import { ADDRESSED as CORS_ADDRESSED, SPEECHY as CORS_SPEECHY, CORSAIRS_NAMES, corsairsAsk, corsairsOrder } from '../scenarios/corsairs/words';
 import { ADDRESSED as GLASS_ADDRESSED, SPEECHY as GLASS_SPEECHY, GLASS_NAMES, glassAsk, glassOrder } from '../scenarios/glass/words';
 import { ADDRESSED as WEATHER_ADDRESSED, SPEECHY as WEATHER_SPEECHY, WEATHER_NAMES, weatherAsk, weatherOrder } from '../scenarios/weather/words';
+import { ADDRESSED as HOLLOW_ADDRESSED, SPEECHY as HOLLOW_SPEECHY, HOLLOW_NAMES, hollowAsk, hollowCommand, hollowOrder } from '../scenarios/hollow/words';
 import { ADDRESSED as TRIB_ADDRESSED, SPEECHY as TRIB_SPEECHY, TRIBUNAL_NAMES, tribunalAsk, tribunalOrder } from '../scenarios/tribunal/words';
 import { ADDRESSED as BELL_ADDRESSED, SPEECHY as BELL_SPEECHY, BELL_NAMES, bellAsk, bellFleetReply, bellOrder } from '../scenarios/seventhbell/words';
 import { ADDRESSED as COLDWATER_ADDRESSED, SPEECHY as COLDWATER_SPEECHY, COLDWATER_NAMES, coldwaterAsk, coldwaterOrder } from '../scenarios/coldwater/words';
@@ -503,6 +504,30 @@ const RULES: Rule[] = [
     },
   },
   {
+    // v0.8.20: Hollow Crown — orders and words about the governor, the hostages, the successor and
+    // her Guard ("Doctor, assess the governor", "check the duty roster", "hail Rook", "jam the
+    // trigger"). Only while that simulation runs; the scenario decides what they mean.
+    name: 'hollow-crown',
+    test: /\S/,
+    build: (c0, ctx) => {
+      if (ctx.setting?.scenarioId !== 'hollow-crown') return { kind: 'none' };
+      // "Rook, who are you?" arrives as "rook and …" once the filler is normalised away.
+      const c = c0.replace(/^(?:tamsin\s+)?rook(?:\s+and\b|\s*,)\s*/, 'rook, ');
+      const d = ctx.addressee ? `${ctx.addressee}: ${c}` : c;
+      if (ctx.channel?.state === 'open' && !ctx.addressee && !HOLLOW_ADDRESSED.test(c) && !hollowCommand(c) && HOLLOW_SPEECHY.test(c)) {
+        if (ctx.channel.party === 'passenger') return { kind: 'action', action: { type: 'bridge', op: 'chat', officer: '', text: `rook, ${c}`.slice(0, 300) } };
+        return { kind: 'action', action: { type: 'speak', to: ctx.channel.party, text: c.slice(0, 400), intents: ['unknown'], relayed: false } };
+      }
+      // After "hail Rook" (no channel of her own), plain speech goes on to her.
+      if (!ctx.channel && ctx.lastCommTarget === 'passenger' && !ctx.addressee && !HOLLOW_ADDRESSED.test(c) && !hollowOrder(c, ctx.addressee) && (HOLLOW_SPEECHY.test(c) || /\?\s*$/.test(c))) {
+        return { kind: 'action', action: { type: 'bridge', op: 'chat', officer: '', text: `rook, ${c}`.slice(0, 300) } };
+      }
+      if (hollowOrder(c, ctx.addressee)) return { kind: 'action', action: { type: 'improvise', method: 'other', description: d.slice(0, 400) } };
+      if (hollowAsk(c)) return { kind: 'action', action: { type: 'bridge', op: 'chat', officer: '', text: d.slice(0, 300) } };
+      return { kind: 'none' };
+    },
+  },
+  {
     name: 'options',
     test: /\b(options|what (can|should) (we|i) do|suggestions?|recommend\w*|ideas|advice|advise|what now|what next|thoughts)\b/,
     build: () => ({ kind: 'action', action: { type: 'query', topic: 'options' } }),
@@ -869,6 +894,8 @@ function splitMarked(text: string, ctx: InterpreterContext): { clause: string; s
         // v0.8.15: in Starfall, "Lt. Duarte, take the helm" — the relief pilot is not a bridge station, so his name joins the order.
         else if (ctx.setting?.scenarioId === 'starfall' && /^(?:(?:lt\.?|lieutenant|mr\.?)\s+)?(?:rafe\s+)?duarte$/.test(prev.clause.replace(DEPT_MARK, '').trim())) merge = true;
         // v0.8.19: in The Weather Engine, "Marit, will you go up and enter the key yourself?" stays one line to her.
+        // v0.8.20: in Hollow Crown, "Rook, who are you really?" stays one line to her.
+        else if (!newSentence && ctx.setting?.scenarioId === 'hollow-crown' && /^(?:tamsin\s+)?rook\b/.test(prev.clause.replace(DEPT_MARK, '').trim())) merge = true;
         else if (!newSentence && ctx.setting?.scenarioId === 'weather-engine' && /^(?:miss\s+)?(?:marit|quarrie)\b/.test(prev.clause.replace(DEPT_MARK, '').trim())) merge = true;
         else if (reported && !(newSentence && rationale)) merge = true; // "tell them we mean no harm"
         else if (continuation && !newSentence) merge = true;
@@ -1413,7 +1440,7 @@ export function interpretSync(input: string, ctx: InterpreterContext): Interpret
 
 const SIM_WORD = '(?:simulation|sim|simulator|drill|exercise|training(?: simulation| run| exercise)?|holo(?:gram|deck)?(?: program(?:me)?)?|(?:simulation|training|holo) program(?:me)?)';
 const LEAD = "^(?:(?:computer|ship|ops|xo|number one|first officer|commander|marrow)[,:]?\\s+)?(?:please\\s+)?(?:(?:can|could|would) you\\s+)?(?:let'?s\\s+)?";
-const BEGIN_SIM = new RegExp(`${LEAD}(?:begin|start|run|load|launch|initiate|commence|play|engage|activate|set up|give me|i want|i'd like|we'?ll (?:run|do))\\s+(?:up\\s+)?(?:the\\s+|a\\s+|another\\s+|new\\s+)*(?:(.{0,40}?)\\s+)?${SIM_WORD}\\b(?:\\s+(?:of|called|named|for)\\s+(.+)|\\s+(?:number\\s+|no\\.?\\s+|#\\s*)?(\\d{1,3}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|sixteenth|seventeen|seventeenth|eighteen|eighteenth)\\b)?|${LEAD}(?:begin|start|run|load|launch|play)\\s+(?:the\\s+)?(${SIMULATION_NAME_PATTERN})\\b`);
+const BEGIN_SIM = new RegExp(`${LEAD}(?:begin|start|run|load|launch|initiate|commence|play|engage|activate|set up|give me|i want|i'd like|we'?ll (?:run|do))\\s+(?:up\\s+)?(?:the\\s+|a\\s+|another\\s+|new\\s+)*(?:(.{0,40}?)\\s+)?${SIM_WORD}\\b(?:\\s+(?:of|called|named|for)\\s+(.+)|\\s+(?:number\\s+|no\\.?\\s+|#\\s*)?(\\d{1,3}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|sixteenth|seventeen|seventeenth|eighteen|eighteenth|nineteen|nineteenth)\\b)?|${LEAD}(?:begin|start|run|load|launch|play)\\s+(?:the\\s+)?(${SIMULATION_NAME_PATTERN})\\b`);
 const END_SIM = new RegExp(`${LEAD}(?:end|stop|terminate|exit|abort|cancel|quit|close|leave|freeze)\\s+(?:the\\s+|this\\s+)?${SIM_WORD}\\b|^(?:computer[,:]?\\s+)?(?:end|exit) program(?:me)?\\b`);
 /** "List simulations", "what simulations are available?", "which training simulations do we have?" */
 const LIST_SIMS = new RegExp(`${LEAD}(?:list|name|read(?: out)?|tell me)\\s+(?:the\\s+|all\\s+|our\\s+|the available\\s+)*(?:training\\s+)?(?:simulations|sims|training (?:simulations|programs?|programmes?))\\b|\\b(?:what|which)\\s+(?:training\\s+)?(?:simulations|sims)\\b(?:.*\\b(?:available|have|are there|on file|can (?:i|we) (?:run|play|do)|do we))?|\\bhow many (?:training )?simulations\\b`);
@@ -1629,11 +1656,11 @@ function applyScenarioVocabulary(ctx: InterpreterContext): void {
 
 // ------------------------------------------------------------- spelling ---
 
-let protectedNames = new Set<string>(['arden', 'vane', 'venn', 'maras', 'ivet', 'lysa', 'teo', 'szabo', 'varga', 'rask', 'okafor', 'adeyemi', 'marrow', 'osei', 'halcyon', 'tessarine', 'calloway', 'askel', 'soth', 'dorn', 'toras', 'brask', 'kesh', 'varo', 'orun', 'quarrie', 'marit', 'tull', 'anwen', 'lowe', 'bastian', 'greywall', 'meridian']);
+let protectedNames = new Set<string>(['arden', 'vane', 'venn', 'maras', 'ivet', 'lysa', 'teo', 'szabo', 'varga', 'rask', 'okafor', 'adeyemi', 'marrow', 'osei', 'halcyon', 'tessarine', 'calloway', 'askel', 'soth', 'dorn', 'toras', 'brask', 'kesh', 'varo', 'orun', 'quarrie', 'marit', 'tull', 'anwen', 'lowe', 'bastian', 'greywall', 'meridian', 'mallory', 'severin', 'stannard', 'rhea', 'rook', 'tamsin', 'ostrin', 'aubrel', 'aris', 'marsh', 'selene', 'dace', 'liane', 'castell']);
 let spell: SpellCorrector | null = null;
 function SPELL(): SpellCorrector {
   if (!spell) {
-    const sources: (RegExp | string)[] = [KESTREL_BASE, CRUISER_BASE, PASSENGER, BORDER, PAIR, COMPARTMENT, SPEECH, ON_SCREEN, ALL_TARGETS, SPEED_SLOW, SPEED_HALF, NEGATED_HOSTILITY, PEACEFUL, ASSERTIVE, ADDRESSEES, ...SYSTEMS.map((x) => x[1]), ...RULES.map((r) => r.test), LEDGER_NAMES, LANTERN_NAMES, PICKET_NAMES, GARDENER_NAMES, COLDWATER_NAMES, EMBER_NAMES, BELL_NAMES, STARFALL_NAMES, CORSAIRS_NAMES, GLASS_NAMES, TRIBUNAL_NAMES, WEATHER_NAMES, 'shields weapons transporter tractor channel freighter cruiser kestrel position between hostile hail aggressive threatening'];
+    const sources: (RegExp | string)[] = [KESTREL_BASE, CRUISER_BASE, PASSENGER, BORDER, PAIR, COMPARTMENT, SPEECH, ON_SCREEN, ALL_TARGETS, SPEED_SLOW, SPEED_HALF, NEGATED_HOSTILITY, PEACEFUL, ASSERTIVE, ADDRESSEES, ...SYSTEMS.map((x) => x[1]), ...RULES.map((r) => r.test), LEDGER_NAMES, LANTERN_NAMES, PICKET_NAMES, GARDENER_NAMES, COLDWATER_NAMES, EMBER_NAMES, BELL_NAMES, STARFALL_NAMES, CORSAIRS_NAMES, GLASS_NAMES, TRIBUNAL_NAMES, WEATHER_NAMES, HOLLOW_NAMES, 'shields weapons transporter tractor channel freighter cruiser kestrel position between hostile hail aggressive threatening'];
     spell = new SpellCorrector(vocabularyFrom(sources));
   }
   return spell;

@@ -65,7 +65,7 @@ describe('launch from the bridge', () => {
   it('"list simulations" includes it, and its example launch line does not double the article', () => {
     const text = logText(sayB(bridge(), 'Computer, list simulations'));
     expect(text).toContain('The Weather Engine');
-    expect(text).toContain('"begin the Weather Engine simulation"');
+    expect(text).toMatch(/"begin the [A-Z][^"]* simulation"/);
     expect(text).not.toMatch(/the The\b/);
   });
 

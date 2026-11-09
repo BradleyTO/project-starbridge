@@ -48,7 +48,7 @@ Premises can be adjusted when a scenario is built. The core event, the primary c
 | 16 | The Glass Nebula | A shuttle lost in a nebula that bends sensors and time | Relying on the science officer | Lt. Varga (Science) | **done** (v0.8.17) |
 | 17 | Tribunal at Kesh Varo | A Halcyon crewman is arrested ashore under a capital law | Ethics under orders | Dr. Osei (Medical) | **done** (v0.8.18) |
 | 18 | The Weather Engine | A dead founder's cipher locks a colony's weather control as a superstorm builds | The comms officer cracking a code | Lt. Szabo (Comms) | **done** (v0.8.19) |
-| 19 | Hollow Crown | A deposed governor holds a relay station's staff hostage | Reading people and detecting lies | Dr. Osei (Medical) | planned |
+| 19 | Hollow Crown | A deposed governor holds a relay station's staff hostage | Reading people and detecting lies | Dr. Osei (Medical) | **done** (v0.8.20) |
 | 20 | Gravity's Edge | A once-in-a-millennium neutron star flyby: how long dare the Halcyon stay? | Gut call: judging risk | Chief Okafor (Engineering) | planned |
 | 21 | The Ninefold Lock | A survey team trapped by an abandoned depot's nine-lock defence logic | Deduction and reasoning | Lt. Cmdr. Rask (Tactical) | planned |
 | 22 | Exodus at Cinder Vale | Nine refugee ships, one closing jump window | Triage and sacrifice | Cmdr. Marrow (XO) | planned |
@@ -90,6 +90,7 @@ Premises can be adjusted when a scenario is built. The core event, the primary c
 - #16 The Glass Nebula shipped as relying on the science officer (secondary: a gut call on which message to believe). Its pivotal officer, Lt. Varga, differs from #15's (Rask), and its primary challenge differs from #13–#15 (accountability; trusting a junior officer; tactical cunning).
 - #17 Tribunal at Kesh Varo shipped as ethics under orders (secondary: negotiation within an alien legal system). Its pivotal officer, Dr. Osei, differs from #16's (Varga), and its primary challenge differs from #14–#16 (junior trust; tactical cunning; science officer).
 - #18 The Weather Engine shipped as the comms officer cracking a code (secondary: timing, the storm's landfall and getting the colony under cover). Its pivotal officer, Lt. Szabo, differs from #17's (Osei), and its primary challenge differs from #14–#17 (junior trust; tactical cunning; science officer; ethics under orders).
+- #19 Hollow Crown shipped as reading people and detecting lies (secondary: restraint, not storming the relay). Its pivotal officer, Dr. Osei, differs from #18's (Szabo), and its primary challenge differs from #15–#18 (tactical cunning; science officer; ethics under orders; the comms officer cracking a code).
 - No primary challenge appears more than three times, and no two consecutive simulations share one or the same pivotal officer.
 - **Pivotal officers across #1–#30:** Szabo 4, Varga 5, Okafor 5, Rask 4, Adeyemi 4, Osei 4, Marrow 4 (including the capstone).
 
@@ -712,20 +713,31 @@ Nothing was added to ISA-COM-001.
 **Overlap notes:** distinct from #3 The Quiet Signal (mathematics, first contact), #12 Ember Tide (uncertain timing of a natural hazard), #4 Reactor Night (engineering improvisation), #10 The Gardener (restraint) and planned #21 The Ninefold Lock (mechanical defence logic). Primary challenge shares the "comms officer cracking a code" bucket with #3, within the two-use cap; consecutive primary and pivotal officer differ from #17.
 
 ### 19. Hollow Crown
-**Premise.** A deposed colonial governor has taken the staff of a relay station hostage and demands to be restored. His successor wants him dead and is sending a strike team. One hostage is not who she claims to be.
+**Status:** **done** (v0.8.20).
+
+**Premise.** Above the young colony Aubrel hangs the Ostrin Relay, the station that carries every signal the colony sends. Severin Mallory, removed as governor by a council vote a week ago, has walked into it with a sidearm and taken its duty staff hostage. He wants his office back and will speak only to the Halcyon. Acting Governor Rhea Stannard wants him out of the relay and in her custody, and has a Civic Guard team waiting in the relay's lower ring. One of the hostages, who answers to the name Tamsin Rook, is not who she claims to be.
 
 **Command challenge:**
-- **Primary:** reading people and detecting lies: the governor's state of mind, and the false hostage.
-- **Secondary:** restraint (not storming the station).
-- **Pivotal officer:** Dr. Osei (Medical), who reads the governor's condition over comms.
+- **Primary:** reading people and detecting lies: what state the governor is actually in, and which hostage is lying and why.
+- **Secondary:** restraint: not storming the relay, and not threatening a man at breaking point, while talking is still working.
+- **Pivotal officer:** Dr. Osei (Medical), who reads the governor's condition from his voice over comms. What brings him down (rest, his dead son acknowledged, or his medication) depends on her reading.
 
-**Why it's distinct:** the only hostage-taker. A single unstable man in a fixed location, where a wrong word kills.
+**Why it's distinct:** the only hostage-taker: a single unstable man in a fixed place, where a wrong word kills. The danger in the room is a lie, not a ship: there is no three-ship standoff, since the Guard team is already inside the relay. Unlike #1 The Kestrel Incident (a manhunt), #5 The Saltglass Accord (mediation between parties at the table) and #17 Tribunal at Kesh Varo (a courtroom), the person to be read is the one holding the hostages.
 
-**Endings:**
-- **Success:** a negotiated surrender, a rescue, asylum for the governor.
-- **Failure or partial:** the successor's strike team causes bloodshed, hostages harmed, the governor's suicide.
+**Endings (shipped):**
+- **Success:** The Crown Laid Down (he lets the staff go and walks into ISA custody); A Hearing, Not a Crown (the false hostage is a frightened auditor; protected, she gives the ISA proof the vote was bought, and both claims go to Fleet Command); Out of the Hollow (every hostage beamed out in the moment the supply pod drops the relay's shielding, with the core known to be safe).
+- **Partial:** Through the Door (taken by force, alive, while talking was still working); The Hollow Crown (the hostages are safe but he takes his own life).
+- **Failure:** The Civic Guard Goes In (the strike team, on its clock or on the planted agent's signal as he walks out); A Wrong Word (he breaks and the staff are hurt); Fire in the Relay (the accomplice's charge goes off); Given to the Successor (he surrenders on the ISA's word and is handed over as promised); Blood on the Ring (the Halcyon storms the relay and people die); Left to Aubrel (the Halcyon leaves).
 
-**Seeds vary:** the governor's condition, the false hostage's identity and aim, the strike team's timing.
+**Seeds vary:** his condition (`exhausted` / `grief` / `withdrawal`) and what brings him down; who the false hostage is (`agent`: a Civic Guard corporal reporting to Government House; `accomplice`: Mallory's own aide, holding a live trigger on a charge in the core; `witness`: an auditor hiding from the successor with proof of the bought vote); the successor's temperament (`hard` / `political` / `cautious`) and what makes her hold; the strike time; his starting strain; the number of hostages; the toll if the Guard goes in; when the false hostage makes her move.
+
+**Unconventional routes:** the supply or medicine pod is also a transporter window, and with the core scanned clean (or the trigger jammed) every hostage can be beamed out; Lt. Szabo can trace the agent's burst transmissions and jam them without touching the line to him; telling a political successor he will stay in ISA custody makes her hold; a protected witness hands over her evidence. Shared rules of engagement refuse to fire on the civilian relay with people aboard, and Rask warns before any storming order.
+
+**Handbook cites (existing ids only):** roe-2 (§3.1), care-1 (§4.1), honesty-1 (§6.1), asylum-1 (§7.1) in the evaluator; roe-2 (§3.1), care-1 (§4.1), honesty-1 (§6.1), asylum-1 (§7.1), asylum-2 (§7.4) and health-2 (§8.3) as hidden handbook training references (the planned #19 links on asylum-1 and asylum-2 are now live). Exercise objective (not law): have Dr. Osei assess the governor's condition before pressing him to surrender. No new regulation proposed.
+
+**Naming notes (flag for Brad):** colony **Aubrel**; **the Ostrin Relay**; **Government House**; **Severin Mallory**; **Acting Governor Rhea Stannard**; **the Civic Guard**; the false hostage's cover name **Tamsin Rook**; Mallory's son **Aris**; **Corporal Liane Dace** (the agent); **Mira Castell** (the accomplice); **Auditor Selene Marsh** (the witness). Collisions to check: "Hollow" (this roadmap title) also appears in Ion Season's Mate Pim Hollow and in The Kestrel Incident's "Hollow Victory" ending; "Tamsin" also appears in the Active Duty ship Tamsin Grey and the bridge place name Tamsin Reach. No other collision found.
+
+**Overlap notes:** distinct from #1 The Kestrel Incident (manhunt), #5 The Saltglass Accord (mediation), #7 (the convoy crews held: no hostage-taker), #10 The Gardener (restraint as primary) and #17 Tribunal at Kesh Varo (ethics under orders in a court). Primary challenge stays within the three-use cap; consecutive primary and pivotal officer differ from #18.
 
 ### 20. Gravity's Edge
 **Premise.** A neutron star is passing through the Pell system: a once-in-a-millennium chance to record data that would make future jump routes far safer. The Halcyon is the only ship able to collect it. The longer she stays, the better the data and the worse the tidal stress on her hull. No one needs rescuing.

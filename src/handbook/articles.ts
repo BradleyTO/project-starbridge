@@ -594,6 +594,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "simulation": 15,
           "title": "Corsairs of the Veyl Shoals",
           "purpose": "Using force economically when it is truly needed."
+        },
+        {
+          "simulation": 19,
+          "title": "Hollow Crown",
+          "purpose": "Holding back force while talking is still working."
         }
       ],
       "enforcement": {
@@ -971,12 +976,17 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "title": "The Lantern Drift",
           "purpose": "Deciding who can be saved when not everyone can."
         },
-                {
+        {
           "simulation": 16,
           "title": "The Glass Nebula",
           "purpose": "Recovering people when their distress calls may not be what they seem."
         },
-{
+        {
+          "simulation": 19,
+          "title": "Hollow Crown",
+          "purpose": "Keeping hostages safe from every side of a standoff."
+        },
+        {
           "simulation": 22,
           "title": "Exodus at Cinder Vale",
           "purpose": "Making hard choices against the clock.",
@@ -1738,6 +1748,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "simulation": 18,
           "title": "The Weather Engine",
           "purpose": "Keeping your word honest when someone's help depends on it."
+        },
+        {
+          "simulation": 19,
+          "title": "Hollow Crown",
+          "purpose": "Keeping your word honest with someone at the edge."
         }
       ],
       "enforcement": {
@@ -1960,8 +1975,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
         {
           "simulation": 19,
           "title": "Hollow Crown",
-          "purpose": "Dealing fairly with people whose claims conflict.",
-          "planned": true
+          "purpose": "Dealing fairly with people whose claims conflict."
         }
       ],
       "enforcement": {
@@ -2024,8 +2038,7 @@ export const ARTICLES: readonly HandbookArticle[] = [
         {
           "simulation": 19,
           "title": "Hollow Crown",
-          "purpose": "Keeping people safe while their fate is decided.",
-          "planned": true
+          "purpose": "Keeping people safe while their fate is decided."
         },
         {
           "simulation": 29,
@@ -2179,6 +2192,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "simulation": 17,
           "title": "Tribunal at Kesh Varo",
           "purpose": "Standing by crew when a foreign law threatens them."
+        },
+        {
+          "simulation": 19,
+          "title": "Hollow Crown",
+          "purpose": "Leaning on the medical officer's judgement of a person's condition."
         }
       ],
       "enforcement": {
