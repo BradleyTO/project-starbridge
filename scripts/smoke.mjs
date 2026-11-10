@@ -2053,6 +2053,69 @@ for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape',
   await ctxH.close();
 }
 
+// ============================================================== v0.8.21 ====
+// Training Simulation 020: Gravity's Edge. Listed, launched by name, the relay, Chief Okafor's read, an ending, AAR filed.
+{
+  const ctxG = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await ctxG.addInitScript(stubs);
+  const pg = await ctxG.newPage();
+  pg.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  pg.on('pageerror', (e) => errors.push(String(e)));
+  const allG = async () => (await pg.innerText('[data-testid=narrative]')) + '\n' + (await pg.innerText('[data-testid=comms]'));
+  const modeG = () => pg.getAttribute('[data-testid=mode-banner]', 'data-mode');
+  const endedG = async () => (await pg.locator('[data-testid=outcome]').count()) > 0;
+  await pg.goto(withSeed(11), { waitUntil: 'networkidle' });
+  await pg.waitForTimeout(600);
+  await skipIntro(pg);
+  await sendOn(pg, 'Computer, list simulations', 600);
+  check('sim20: "list simulations" names Gravity\'s Edge', /Gravity's Edge/.test(await allG()));
+  if (!(await pg.locator('[data-testid=hub]').count())) await pg.click('[data-testid=open-hub]');
+  await pg.click('[data-testid=hub-tab-archive]');
+  await pg.waitForTimeout(150);
+  check('sim20: Mission Archive lists Training Simulation 020', /Training Simulation 020: Gravity's Edge/.test(await pg.innerText('[data-testid=hub]')) && (await pg.locator('[data-testid=archive-train-TRN-gravity]').count()) === 1);
+  await pg.click('[data-testid=hub-close]');
+  await pg.waitForTimeout(100);
+  await sendOn(pg, "Computer, begin the Gravity's Edge simulation", 1200);
+  await pg.waitForSelector('[data-testid=mode-banner][data-mode=simulation]');
+  check('sim20: launch by name starts a simulation', (await modeG()) === 'simulation');
+  await pg.waitForTimeout(4500);
+  await skipIntro(pg);
+  let tg = await allG();
+  check('sim20: intro plays (the Vagrant, Lisle Observatory, Director Aalto)', /Vagrant/.test(tg) && /Lisle Observatory/.test(tg) && /Aalto/.test(tg), tg.slice(0, 300));
+  await pg.screenshot({ path: `${SHOTS}/sim20-01-intro.png` });
+  check('sim20: the Lodestar on sensors by name', /Lodestar/.test(await pg.innerText('[data-testid=contact-kestrel]')));
+  await sendOn(pg, 'Chief, how does she feel?', 500);
+  tg = await allG();
+  check('sim20: Chief Okafor has no read before the frame speaks', /has not said anything yet/.test(tg), tg.slice(-400));
+  await sendOn(pg, 'Szabo, relay our data to the observatory', 500);
+  await sendOn(pg, 'wait', 400);
+  tg = await allG();
+  check('sim20: the observatory takes a copy', /Lisle Observatory has us/.test(tg), tg.slice(-400));
+  await pg.screenshot({ path: `${SHOTS}/sim20-02-relay.png` });
+  await sendOn(pg, 'clear the outer sections', 400);
+  await sendOn(pg, 'Chief, listen to the frame', 400);
+  await sendOn(pg, 'take us out', 400);
+  for (let i = 0; i < 60 && !(await endedG()); i++) await sendOn(pg, 'wait', 400);
+  await pg.waitForSelector('[data-testid=outcome]');
+  const outG = await pg.innerText('[data-testid=outcome]');
+  check('sim20: led to an ending', /The Whole Pass|What the Lodestar Saw|Enough to Matter|Nothing to Show|A Broken Keel|Paid in Lives|The Burned Array/i.test(outG), outG.slice(0, 200));
+  tg = await allG();
+  const LEAK20 = /Prefect|Ashen Covenant|Tallis|Sabeth|Thornwake|Cantor|Brenn|Teyma|Paley|Larkspur|Saltglass|Rhune|Tarvo|Hollis|Brack|Teague|Saffron Mule|Gannet|Hesper|Krenn|Vesk|Sallow|Fosse|Vell Crossing|Eventide|Wick|Vollan|Kittiwake|Orrey|Sorrel|Roake|Dahl|Marchbank|Wrenmoor|Iron Psalm|Sable Narrows|Crake|Haskett|Gardener|Coldwater|Plumb Line|Penhale|Corley|Toller|Hadley|Myrr|Ketter|Mattock|Ember Tide|Strome|Ferrier|Tamber|Stavely|Seraphine|Vory|Stern Mercy|Calderon|Seventh Bell|Harrow Lane|Caradoc|Thistledown|Kemble|Quell|Dividend|Hagfish|Draycott|Skerrit|Veyl|Gavel|Bryony|Citrine|Nessa Vale|Looking Glass|Glass Nebula|Askel|Lirra|Soth|Yasha|Toras|Brask|Quiet Stone|Orun Hold|Kesh Varo|Meridian|Quarrie|Marit|Greywall|Anwen|Bastian|Weather Engine|Aubrel|Ostrin|Mallory|Stannard|Civic Guard|Tamsin|Hollow Crown|hostage|\[[a-zA-Z_]+\]|undefined|Intergalactic Agency|the Agency/;
+  check('sim20: no other simulation\'s names leak in', !LEAK20.test(tg), (tg.match(new RegExp(`.{0,60}(${LEAK20.source}).{0,60}`)) ?? [''])[0]);
+  await pg.screenshot({ path: `${SHOTS}/sim20-03-outcome.png` });
+  if (await pg.locator('[data-testid=outcome-aar]').count()) await pg.click('[data-testid=outcome-aar]');
+  await pg.waitForTimeout(300);
+  const aarG = (await pg.locator('[data-testid=aar]').count()) ? await pg.innerText('[data-testid=aar]') : '';
+  check('sim20: AAR is available, cites regulations and has no percentages', /Gravity's Edge/i.test(aarG) && /ISA regulations/.test(aarG) && !/\d\s*%/.test(aarG), aarG.slice(0, 200));
+  await pg.screenshot({ path: `${SHOTS}/sim20-04-aar.png`, fullPage: true });
+  if (await pg.locator('[data-testid=aar-close]').count()) await pg.click('[data-testid=aar-close]');
+  await pg.setViewportSize({ width: 390, height: 844 });
+  await pg.waitForTimeout(400);
+  const ovG = await pg.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  check('sim20 phone: no horizontal overflow', ovG <= 0, `overflow ${ovG}px`);
+  await ctxG.close();
+}
+
 // ============================================================== v0.8.0 =====
 // The Captain's Handbook: contents, articles, search, bridge commands in every timeline (state untouched),
 // report citations, spoiler safety, desktop and phone width.

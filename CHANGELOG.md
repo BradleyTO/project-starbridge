@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.8.21] — 2026-11-09 — Training Simulation 020: Gravity's Edge
+
+Nightly simulation build. Twentieth of 30 training simulations. No change to grading rules, crew refusal behaviour in other simulations or ISA-COM-001 wording.
+
+### Added
+- **Training Simulation 020: Gravity's Edge** (`src/scenarios/gravity/`). The neutron star the Vagrant is passing through the Corriden system, a once-in-a-millennium chance to record space from inside its bend. Director Benedikt Aalto of Lisle Observatory, on the moon Fennick, is waiting for the data. The deeper the Halcyon sits in the tide, the more she records and the more it costs her frame. No one needs rescuing.
+  - Primary challenge: a gut call, judging risk with no clear line. Secondary: the engineer's readings. Pivotal officer: Chief Okafor (Engineering).
+  - Seeded: the hull's true tolerance, whether the gauges read high, true or low, the glitch pattern, the peak and end of the pass, a false gauge stutter, the observatory's dish time, the probe's life and the crew in the outer sections.
+  - Success endings: The Whole Pass; What the Lodestar Saw; Enough to Matter. Partial: Nothing to Show. Failures: A Broken Keel; Paid in Lives; The Burned Array.
+  - Unconventional routes: sending the tethered probe the Lodestar in alone, relaying the data to the observatory so a burned array loses nothing, turning end-on to the star, reinforcing the frame, clearing the outer sections.
+  - Listed in the catalogue and Mission Archive; launch with "Computer, begin the Gravity's Edge simulation" (also "simulation twenty"). A distinct voice hint for Director Aalto.
+  - Evaluator cites roe-3 (§3.9), care-2 (§4.2), honesty-1 (§6.1). Hidden handbook training cross-refs on roe-3 (the planned #20 link, now live), care-2, honesty-1, cmd-1 (§2.1) and cmd-4 (§1.4). Exercise objective: hear Chief Okafor's own read of the frame before taking the ship past her rated limit. No new regulation proposed.
+- `tests/sim20/`: catalogue, scenario (seed sweep, fuzz, invariants), endings (all seven, plus the gut-call, false-stutter and do-nothing checks), evaluation (reckless/responsible pair, principled markers).
+- `scripts/smoke.mjs`: sim20 block.
+
+### Changed
+- Library is **20 of 30**. Package version **0.8.21**.
+- Interpreter: a `gravitys-edge` rule (gated on the scenario id), "twenty/twentieth" in launch lines, and the new names protected from spelling correction.
+- Handbook data: the planned #20 training link on care-4 (§4.5) removed, since §4.5 concerns withdrawing from a rescue and this simulation has none; whitespace tidied in the training lists (no wording change).
+
 ## [0.8.20] — 2026-11-08 — Training Simulation 019: Hollow Crown
 
 Nightly simulation build. Nineteenth of 30 training simulations. No change to grading rules, crew refusal behaviour in other simulations or ISA-COM-001 wording.

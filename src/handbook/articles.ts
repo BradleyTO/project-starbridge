@@ -212,6 +212,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "simulation": 16,
           "title": "The Glass Nebula",
           "purpose": "Judging which signal to trust on the information available at the time, not on its label."
+        },
+        {
+          "simulation": 20,
+          "title": "Gravity's Edge",
+          "purpose": "Making a judgement call on incomplete information, judged on what was known at the time."
         }
       ],
       "enforcement": {
@@ -376,6 +381,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "simulation": 1,
           "title": "The Kestrel Incident",
           "purpose": "Taking command of a situation whose facts are not yet known."
+        },
+        {
+          "simulation": 20,
+          "title": "Gravity's Edge",
+          "purpose": "Answering for the ship and crew when nobody else is asking you to take a risk."
         },
         {
           "simulation": 30,
@@ -881,16 +891,15 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "title": "Ion Season",
           "purpose": "Weighing what the ship carries for others against her own safety."
         },
-                {
+        {
           "simulation": 16,
           "title": "The Glass Nebula",
           "purpose": "Not committing the ship to a lying environment on an unproven signal."
         },
-{
+        {
           "simulation": 20,
           "title": "Gravity's Edge",
-          "purpose": "Judging how much risk to the ship a goal is worth.",
-          "planned": true
+          "purpose": "Judging how much risk to the ship a goal is worth."
         }
       ],
       "enforcement": {
@@ -1080,6 +1089,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "simulation": 16,
           "title": "The Glass Nebula",
           "purpose": "Keeping the crew out of a lying environment until science has a map."
+        },
+        {
+          "simulation": 20,
+          "title": "Gravity's Edge",
+          "purpose": "Keeping the crew out of a risk the goal does not need them to share."
         }
       ],
       "enforcement": {
@@ -1217,16 +1231,10 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "title": "Starfall",
           "purpose": "Weighing what the ship can still take against the people still waiting."
         },
-                {
+        {
           "simulation": 16,
           "title": "The Glass Nebula",
           "purpose": "Not leaving a rescue unfinished when the evidence still says it can be reached."
-        },
-{
-          "simulation": 20,
-          "title": "Gravity's Edge",
-          "purpose": "Judging how long it is safe to stay.",
-          "planned": true
         }
       ],
       "enforcement": {
@@ -1753,6 +1761,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "simulation": 19,
           "title": "Hollow Crown",
           "purpose": "Keeping your word honest with someone at the edge."
+        },
+        {
+          "simulation": 20,
+          "title": "Gravity's Edge",
+          "purpose": "Not promising more than the ship can safely deliver."
         }
       ],
       "enforcement": {

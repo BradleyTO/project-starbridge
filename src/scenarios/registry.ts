@@ -19,11 +19,12 @@ import { glassScenario } from './glass';
 import { tribunalScenario } from './tribunal';
 import { weatherScenario } from './weather';
 import { hollowScenario } from './hollow';
+import { gravityScenario } from './gravity';
 import { bridgeScenario } from './bridge';
 import { SIMULATIONS } from './catalogue';
 
 /** Training simulations by scenario id (one module per catalogue entry that has been built). */
-export const TRAINING_SCENARIOS: Record<string, ScenarioModule> = { [kestrelScenario.id]: kestrelScenario, [tallisScenario.id]: tallisScenario, [quietScenario.id]: quietScenario, [reactorScenario.id]: reactorScenario, [saltglassScenario.id]: saltglassScenario, [ionScenario.id]: ionScenario, [ledgerScenario.id]: ledgerScenario, [lanternScenario.id]: lanternScenario, [picketScenario.id]: picketScenario, [gardenerScenario.id]: gardenerScenario, [coldwaterScenario.id]: coldwaterScenario, [emberScenario.id]: emberScenario, [seventhBellScenario.id]: seventhBellScenario, [starfallScenario.id]: starfallScenario, [corsairsScenario.id]: corsairsScenario, [glassScenario.id]: glassScenario, [tribunalScenario.id]: tribunalScenario, [weatherScenario.id]: weatherScenario, [hollowScenario.id]: hollowScenario };
+export const TRAINING_SCENARIOS: Record<string, ScenarioModule> = { [kestrelScenario.id]: kestrelScenario, [tallisScenario.id]: tallisScenario, [quietScenario.id]: quietScenario, [reactorScenario.id]: reactorScenario, [saltglassScenario.id]: saltglassScenario, [ionScenario.id]: ionScenario, [ledgerScenario.id]: ledgerScenario, [lanternScenario.id]: lanternScenario, [picketScenario.id]: picketScenario, [gardenerScenario.id]: gardenerScenario, [coldwaterScenario.id]: coldwaterScenario, [emberScenario.id]: emberScenario, [seventhBellScenario.id]: seventhBellScenario, [starfallScenario.id]: starfallScenario, [corsairsScenario.id]: corsairsScenario, [glassScenario.id]: glassScenario, [tribunalScenario.id]: tribunalScenario, [weatherScenario.id]: weatherScenario, [hollowScenario.id]: hollowScenario, [gravityScenario.id]: gravityScenario };
 
 export const SCENARIOS: Record<string, ScenarioModule> = { ...TRAINING_SCENARIOS, [bridgeScenario.id]: bridgeScenario };
 

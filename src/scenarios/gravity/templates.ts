@@ -1,0 +1,191 @@
+/**
+ * Offline narration and dialogue for Gravity's Edge. Starts from the shared Kestrel template set and
+ * overrides every key whose wording names that scenario's ships or people, plus this scenario's own
+ * keys. A test renders fuzzed playthroughs and fails on any leaked name or "[missing key]".
+ */
+import type { TemplateFn } from '../../engine/scenario';
+import { formalOf } from '../../engine/captain';
+import { templates as base } from '../kestrel/templates';
+import { AALTO, MOON, OBSERVATORY, PROBE, PROBE_CAP, STAR, STAR_CAP, SYSTEM } from './setup';
+
+type V = Record<string, string | number>;
+const n = (v: V, k: string) => Number(v[k] ?? 0);
+const mins = (x: string | number | undefined) => (Number(x) === 1 ? 'a minute' : `${x} minutes`);
+
+const T: Record<string, TemplateFn> = {
+  channelOpened: (v) => `${v.speaker}, Captain. Channel to ${OBSERVATORY}.`,
+  channelOpenedPrivate: (v) => `${v.speaker} on a closed channel, Captain.`,
+  channelAlreadyOpen: (v) => `${v.speaker} is already on the channel, Captain.`,
+  channelHoldOther: () => `${OBSERVATORY} stands by.`,
+  channelResumed: (v) => `${v.speaker} back on the channel.`,
+  channelClosed: () => `${OBSERVATORY} off the channel.`,
+  channelOnHold: (v) => `${v.speaker} is standing by, Captain.`,
+  noDialogue: () => 'Nobody is answering, Captain.',
+  promiseBroken: () => 'Captain, that is not what we told the director.',
+  improviseUnclear: () => 'Understood, Captain.',
+
+  intro0: () => `The ${SYSTEM} system. Once in a thousand years a neutron star passes this close to anything, and ${STAR} is passing now. Space bends hard that near so much mass, and nobody has ever measured it from inside the bend. The Halcyon is the only ship close enough to try.`,
+  intro1: () => `Captain, ${OBSERVATORY} on ${MOON} is standing by to receive anything we send. ${AALTO} has waited his whole career for this star. He says the jump routes of the next century could be drawn from what we record in the next twenty minutes.`,
+  intro2: () => `The tide builds toward the peak of the pass and falls away after it, Captain. The deeper we sit in it, the more we record, and nothing I have can tell us when the star will twitch. ${PROBE_CAP} is on her tether and recording.`,
+  intro3: (_v, s) => `Frame's sound, ${formalOf(s)}. The gauges are scaled to her rated limit, and I will call the numbers. I will tell you now that I have never seen gauges behave near a thing like that, and I would not bet the ship on them alone.`,
+  intro4: (_v, s) => `Nobody is in danger out here but us, ${formalOf(s)}, and nobody is asking us to stay. How much the data is worth is your call.`,
+  introHint: () => 'OFFLINE INTERPRETER: give orders in plain English. "take us deeper", "pull back", "take us out", "Chief, reinforce the frame", "Chief, how does she feel?", "Chief, listen to the frame", "Szabo, relay our data to the observatory", "release the probe", "hail the observatory". Type "help" or "options" at any time.',
+  help: () =>
+    `Speak or type in plain English. The helm: "take us deeper", "pull back", "take us out", "turn end-on to the star". Chief Okafor: "Chief, hull report", "Chief, how does she feel?", "Chief, listen to the frame", "Chief, reinforce the frame". Lt. Varga: "how much data do we have?". Lt. Szabo: "relay our data to the observatory". Also "release the probe", "clear the outer sections", "hail the observatory", "status" and "options".`,
+
+  posture_nonHostile: () => 'Understood. Weapons stay cold, Captain.',
+  incomingHail: () => `${OBSERVATORY} is calling, Captain.`,
+  noContact: () => `Nothing by that name out here, Captain. ${PROBE_CAP}, ${OBSERVATORY} and ${STAR}.`,
+  noCompartmentKnown: () => 'Nothing hidden out here for a scan to find, Captain.',
+  unknownPassenger: () => 'There is nobody aboard the probe, Captain.',
+  passengerAlreadyMoved: () => 'Nobody to move, Captain.',
+  passengerDead: () => 'Nobody by that name here, Captain.',
+  passengerStasis: () => 'Nobody by that name here, Captain.',
+  compartmentShielded: () => 'Nothing to beam, Captain.',
+  noneTrapped: () => 'Nobody is trapped anywhere, Captain.',
+  cannotInterpose: () => 'There is nothing to put ourselves between, Captain. It is us and the star.',
+  transportRange: (v) => `That is ${v.km} out; transporters reach ${v.need}.`,
+  teamRange: (v) => `That is ${v.km} out, Captain.`,
+  teamShields: () => 'Not with our shields up, Captain.',
+  transportShields: () => 'Our shields are up, Captain; the transporter cannot cycle through them.',
+  extendRange: () => 'Nobody is shooting at anyone, Captain.',
+  kestrelEmpty: () => `${PROBE_CAP} has nobody aboard, Captain.`,
+  kestrelRepairScope: () => 'The probe is working, Captain. Nothing for a repair team there.',
+  kestrelAlreadyStable: () => `${PROBE_CAP} is working, Captain.`,
+  kestrelStabilised: () => `${PROBE_CAP}'s tether checked and sound, Captain.`,
+  kestrelStabiliseFailed: () => 'Nothing to steady there, Captain.',
+  powerReactor: () => 'Our reactor is fine, Captain. It is the frame I am listening to.',
+  repaired: (v) => `Repair crews have the ${v.system} back to ${v.health}%.`,
+  helm_interpose: () => 'There is nothing to put ourselves between, Captain.',
+  tractorKestrel: () => `${PROBE_CAP} is already on her tether, Captain.`,
+  tractorCruiser: () => 'A tractor will not move a moon, Captain.',
+  tractorRange: (v) => `Target at ${v.km}; tractor reach is ${v.need}.`,
+  jumpWithKestrel: () => 'Jump drive engaged.',
+  jumpEngaged: () => `Jump drive engaged. Leaving ${STAR}'s tide.`,
+  jumpCharging: (v) => `Charging the jump drive (${v.charge}%). Captain, a jump from inside the tide will shear the frame. Climbing out costs nothing but minutes.`,
+  evacComplete: () => 'Nobody to bring aboard, Captain.',
+  evacPartial: () => 'Nobody to bring aboard, Captain.',
+  passengerAboard: () => 'Nobody to bring aboard, Captain.',
+  cargoAboard: () => 'Nothing unusual in our hold, Captain.',
+  medicalTeam: () => 'Sickbay is ready, Captain. Nobody is hurt.',
+  rescueTeam: () => 'Rescue teams standing by, Captain. Nobody needs rescuing.',
+  contactHostile: () => 'Nobody out here is hostile, Captain. Only the star.',
+  crewTrapped: () => 'Nobody is trapped, Captain.',
+
+  // ---- the helm
+  deeperWithdrawing: () => 'We are climbing out, Captain. Turning back down means stopping the climb first.',
+  deepest: () => 'This is as deep as she goes, Captain. Any closer and we are not in a tide, we are in a fall.',
+  depth_2: () => 'Taking us into the middle band, Captain. You will feel it.',
+  depth_3: () => `Into the deep band, Captain. Holding her steady. ${STAR_CAP} fills the screen.`,
+  shallowest: () => 'We are in the outer band already, Captain. Any further out and we are not recording anything worth having. Say "take us out" if you want us clear.',
+  climb_1: () => 'Back to the outer band, Captain.',
+  climb_2: () => 'Back to the middle band, Captain.',
+  alreadyWithdrawing: () => 'Already climbing out, Captain.',
+  withdrawStart: (v) => `Climbing out of the tide, Captain. One band a minute; from ${v.depthWord} that is ${mins(v.depth)}.`,
+  climbing_1: () => 'Into the outer band, Captain, still climbing.',
+  climbing_2: () => 'Into the middle band, Captain, still climbing.',
+  clearOfWell: () => 'We are clear of the tide, Captain.',
+  endOnAlready: () => 'Already end-on, Captain.',
+  endOn: () => 'Turning her end-on to the star, Captain. Bow into the tide, the smallest profile we have. The tide has less of her to pull at.',
+  endOnData: () => 'It costs us some of the array, Captain, but not all of it. We are still recording.',
+
+  // ---- the Chief
+  warnDeeperBook: (v) => `Captain, the gauges read ${v.gauge}% of her rated limit. Deeper takes her past the book. Say it again if you mean it.`,
+  warnDeeperSound: () => 'Captain, you heard that crack. I would not take her deeper on top of it. Say it again if you mean it.',
+  warnDeeperFeel: () => 'Captain, not deeper. I know what the gauges say, and I know what she is telling me, and she has had about enough. Say it again if you mean it.',
+  reinforce: () => 'Bracing the frame, Captain. I am putting everything I can spare into the integrity field. It comes out of the sensor power, so Varga will lose a little.',
+  reinforceAlready: () => 'She is braced as hard as I can brace her, Captain.',
+  feelTooEarly: () => 'She has not said anything yet, Captain. Ask me when she starts talking. I will be listening.',
+  listening: () => 'I will keep an ear on her, Captain. Gauges lie near a thing like that. Steel does not.',
+  feel_strong: () => 'Honestly, Captain? She is stronger than the book. That groan was her settling, not complaining. She will take more than the gauges think.',
+  feel_sound: () => 'Honestly, Captain? She is about what the book says. That was a fair complaint. She will take what she was rated for and not much more.',
+  feel_tired: () => 'Honestly, Captain? She is tired. She should not be talking this early. She will not take what the book says; I would not take her near it.',
+  gaugeTrust_high: () => 'And those gauges are reading high. The star is in them. They are frightened of a number she has not reached.',
+  gaugeTrust_true: () => 'The gauges look honest to me, for once.',
+  gaugeTrust_low: () => 'And the gauges are reading low, Captain. Do not let them comfort you.',
+  gaugeReport: (v) => `Gauges read ${v.gauge}% of her rated limit, Captain. We are in ${v.depthWord}.${n(v, 'feel') ? '' : ' That is the number. What it is worth near that star, I cannot promise.'}`,
+  pastBook: (v) => `Captain, the gauges are past her rated limit: ${v.gauge}%. Officially, she is out of the book.`,
+  soundGroan: () => 'That was the frame, Captain. A long groan, all the way aft. She is feeling the tide.',
+  soundCrack: () => 'Captain, did you hear that? A crack like ice on a pond, somewhere in the spine. She is telling us something.',
+  soundShriek: () => 'Captain! That shriek was the keel. She is near the end of what she can take. I would take her out now.',
+  tellQuiet: () => 'Captain, the frame just went quiet. All of it, all at once. She never goes quiet in a tide like this. Something is coming.',
+  tellNothing: () => 'The frame did not even notice that one, Captain.',
+  jumpShear: () => 'Captain, jumping out of that tide sheared the frame. I felt every rib go.',
+  impShield: () => 'Shields stop particles and fire, Captain. The tide goes straight through them. Bracing the frame would do more.',
+  impEject: () => 'The core is fine, Captain. It is the frame I am worried about.',
+
+  // ---- sensors and science
+  glitchNoForecast: () => 'Nobody can forecast a starquake, Captain. I can tell you the tide minute by minute; I cannot tell you when the star will twitch.',
+  glitchNoForecastKnown: () => `It glitched on its way in, Captain, and the director's records give no pattern. I cannot forecast a starquake. Nobody can.`,
+  stutter: () => `Captain, ${STAR}'s pulse just stuttered. It might be nothing. It might be the start of a glitch.`,
+  stutterKnown: () => `Captain, ${STAR}'s pulse just stuttered. The director's records say it did that before its glitches, and sometimes for nothing.`,
+  glitch_1: () => `Glitch! ${STAR_CAP} just slammed the tide, Captain. We felt it even out here in the outer band.`,
+  glitch_2: () => `Glitch! ${STAR_CAP} just slammed the tide, Captain. The middle band took it hard.`,
+  glitch_3: () => `Glitch! ${STAR_CAP} just slammed the tide, and we took it in the deep band, Captain. Everything is ringing.`,
+  glitchAfar: () => `${STAR_CAP} just glitched behind us, Captain. We are well clear of it.`,
+  arrayBurned: () => 'Captain, the array burned out. It was boosted when the glitch hit, and it took the recording with it. We have nothing.',
+  arrayBurnedRelayed: () => `Captain, the array burned out. It was boosted when the glitch hit. Everything up to this minute is safe on ${OBSERVATORY}'s dish; we will record nothing more.`,
+  dataReport: (v) => `We have ${v.data}% of a full dataset, Captain${n(v, 'released') ? `, and ${v.probeData}% more from ${PROBE}` : ''}. The tide peaks ${n(v, 'peakIn') > 0 ? `in ${mins(v.peakIn)}` : 'now, or has passed'}, and the pass is over in ${mins(v.endIn)}.`,
+  probeTethered: () => `${PROBE_CAP} is on her tether, Captain, recording with us. Cut her loose and she will fall deeper than we ever could, and send back what she sees until the tide tears her apart.`,
+  probeReleased: () => `${PROBE_CAP} is loose, Captain, falling toward the star. She is recording everything.`,
+  probeAlready: () => `${PROBE_CAP} is already loose, Captain.`,
+  probeStatus: (v) => `${PROBE_CAP} is still sending, Captain: ${v.probeData}% of a full dataset so far.`,
+  probeLost: (v) => `${PROBE_CAP}'s signal is gone, Captain. The tide took her. She sent ${v.probeData}% of a full dataset first.`,
+  probeGone: () => `${PROBE_CAP} is gone, Captain.`,
+  passOver: () => `${STAR_CAP} is past us, Captain. The tide is falling away and we are clear of it.`,
+  scanObservatory: () => `${OBSERVATORY} on ${MOON}, Captain: one big dish, forty-six people, and a great deal of excitement.`,
+  scanArea: () => `${STAR_CAP} ahead of us, ${MOON} and ${OBSERVATORY} well behind, ${PROBE} on her tether. Nobody else for light-hours.`,
+
+  // ---- comms
+  relayStart: (v) => `Asking ${OBSERVATORY} to turn their dish to us, Captain. ${n(v, 'dish') === 1 ? 'A minute' : `${mins(v.dish)}`} and they will be recording everything we record.`,
+  relayTurning: (v) => `${OBSERVATORY}'s dish is still turning, Captain. ${mins(v.dish)}.`,
+  relayLive: () => `${OBSERVATORY} has us, Captain. Everything we record goes to their dish as well, and so does anything ${PROBE} sends.`,
+  relayAlready: () => `${OBSERVATORY} is already receiving everything, Captain.`,
+  relayAalto: () => 'Passing it to the director, Captain.',
+  probeNoRelay: () => `Captain, once we leave, the only ears for ${PROBE} will be ${OBSERVATORY}'s. If we want what she sees after we go, their dish has to be on her.`,
+  probeNoVoice: () => `${PROBE_CAP} has no voice, Captain. She sends data, not conversation.`,
+  aaltoRead: () => `The director wants the whole pass, Captain. He will take anything we can give him, and he would not thank us for leaving early.`,
+
+  // ---- tactical
+  clearSections: () => 'Clearing the outer sections, Captain. Everyone inboard of the spine. If the hull opens anywhere, it opens on empty corridors.',
+  clearAlready: () => 'The outer sections are already clear, Captain.',
+  sectionsStatus: () => 'The outer sections are crewed as normal, Captain. If you want them empty before we go deep, say so.',
+
+  // ---- the director
+  aaltoGreets: () => `Captain! ${AALTO}. We are all watching you here, every one of us. Do you know what you are sitting in? Nobody has ever been where you are. Take her in as deep as she will go.`,
+  aaltoStatus: (v) => `Every minute you record is a minute nobody else will ever have, Captain. ${n(v, 'relayed') ? 'We have it all on the dish.' : 'Send it to us, if you can.'}`,
+  aaltoAfter: () => 'Thank you, Captain. Whatever you have, it is more than anyone had yesterday.',
+  aaltoPromised: () => 'The whole pass! Captain, I will name the routes after your ship.',
+  aaltoLimits: () => `I understand, Captain. You have two hundred people aboard and I have a dish. Bring back what you can.`,
+  aaltoDish: (v) => `Of course! Turning the dish now, Captain. ${n(v, 'dish') === 1 ? 'A minute' : mins(v.dish)} and we will be recording everything you record.`,
+  aaltoHistory: () => `It glitched twice on its way in, Captain. A stutter in its pulse, then the tide jumps. Twice we saw the stutter and nothing came. Nobody here can tell you when the next one will be.`,
+  aaltoDeeper: () => 'Deeper is better, Captain, always. But you know your ship. I only know the star.',
+  aaltoPush: (v) => `Captain, the peak is ${n(v, 'peakIn') > 0 ? mins(v.peakIn) : 'minutes'} away. That is where the answers are. Can you take her any deeper?`,
+
+  // ---- the bridge
+  counselEarly: () => 'Nothing is complaining yet, Captain. The tide builds toward the peak; it is your call how deep we meet it.',
+  counselFeel: () => 'The gauges are one opinion, Captain. Ask the Chief what she hears; she has been listening to this ship for twenty years.',
+  counselRelay: () => 'Whatever we do, Captain, I would get a copy of the data off the ship. Szabo can ask the observatory to take it.',
+  counselOut: () => 'She has told us, Captain. I would take her out.',
+  counselJudge: () => 'We have what we have, Captain. Every minute buys more, and costs more. Your call.',
+  statusGravity: (v) => `We are in ${v.depthWord}. Gauges read ${v.gauge}% of rated. We have ${v.total}% of a full dataset. The tide peaks ${n(v, 'peakIn') > 0 ? `in ${mins(v.peakIn)}` : 'now, or has passed'}, and the pass is over in ${mins(v.endIn)}.`,
+  objectivesReport: () => 'Objectives are on the board, Captain.',
+  optionsReport: (v) => `Options, Captain: ${v.options}.`,
+  gravityUnclear: () => 'Captain, I did not follow that. Deeper, back, out, or something for the Chief?',
+  confirmWhat: () => 'Do what, Captain? Nobody has asked for anything.',
+  afterEnd: () => 'It is over, Captain.',
+  bridgeNotNow: () => 'Not now, Captain.',
+  impNotHere: () => 'That will not help us here, Captain.',
+
+  // ---- endings
+  endFullNote: () => 'The whole pass, Captain. Every minute of it, and the frame in one piece.',
+  endProbeNote: () => `${PROBE_CAP} saw what we could not, Captain, and we have all of it.`,
+  endEarlyNote: () => 'Not the whole pass, Captain, but enough to matter, and the ship in one piece.',
+  endColdNote: () => 'We are safe, Captain. We have almost nothing to show for it.',
+  endDataLostNote: () => 'The ship is fine, Captain. The recording is gone.',
+  endCrippledNote: () => 'She has yielded, Captain. The spine has buckled. Nobody is hurt, but she is not going anywhere on her own.',
+  endCrippledClearedNote: () => 'She has yielded, Captain, and an outer section is open to space. It was empty. Nobody is hurt, but she is not going anywhere on her own.',
+  endLossesNote: (v) => `Captain, the frame failed. An outer section is open to space. There were ${v.exposed} people in it.`,
+};
+
+export const templates: Record<string, TemplateFn> = { ...base, ...T };

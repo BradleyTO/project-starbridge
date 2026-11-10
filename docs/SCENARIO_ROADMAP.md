@@ -49,7 +49,7 @@ Premises can be adjusted when a scenario is built. The core event, the primary c
 | 17 | Tribunal at Kesh Varo | A Halcyon crewman is arrested ashore under a capital law | Ethics under orders | Dr. Osei (Medical) | **done** (v0.8.18) |
 | 18 | The Weather Engine | A dead founder's cipher locks a colony's weather control as a superstorm builds | The comms officer cracking a code | Lt. Szabo (Comms) | **done** (v0.8.19) |
 | 19 | Hollow Crown | A deposed governor holds a relay station's staff hostage | Reading people and detecting lies | Dr. Osei (Medical) | **done** (v0.8.20) |
-| 20 | Gravity's Edge | A once-in-a-millennium neutron star flyby: how long dare the Halcyon stay? | Gut call: judging risk | Chief Okafor (Engineering) | planned |
+| 20 | Gravity's Edge | A once-in-a-millennium neutron star flyby: how long dare the Halcyon stay? | Gut call: judging risk | Chief Okafor (Engineering) | **done** (v0.8.21) |
 | 21 | The Ninefold Lock | A survey team trapped by an abandoned depot's nine-lock defence logic | Deduction and reasoning | Lt. Cmdr. Rask (Tactical) | planned |
 | 22 | Exodus at Cinder Vale | Nine refugee ships, one closing jump window | Triage and sacrifice | Cmdr. Marrow (XO) | planned |
 | 23 | Wake of the Sundered | A Directorate warship with a comatose crew on a runaway course toward a station | The engineer improvising | Chief Okafor (Engineering) | planned |
@@ -91,6 +91,7 @@ Premises can be adjusted when a scenario is built. The core event, the primary c
 - #17 Tribunal at Kesh Varo shipped as ethics under orders (secondary: negotiation within an alien legal system). Its pivotal officer, Dr. Osei, differs from #16's (Varga), and its primary challenge differs from #14–#16 (junior trust; tactical cunning; science officer).
 - #18 The Weather Engine shipped as the comms officer cracking a code (secondary: timing, the storm's landfall and getting the colony under cover). Its pivotal officer, Lt. Szabo, differs from #17's (Osei), and its primary challenge differs from #14–#17 (junior trust; tactical cunning; science officer; ethics under orders).
 - #19 Hollow Crown shipped as reading people and detecting lies (secondary: restraint, not storming the relay). Its pivotal officer, Dr. Osei, differs from #18's (Szabo), and its primary challenge differs from #15–#18 (tactical cunning; science officer; ethics under orders; the comms officer cracking a code).
+- #20 Gravity's Edge shipped as a gut call: judging risk with no clear line (secondary: the engineer's readings, which may be wrong). Its pivotal officer, Chief Okafor, differs from #19's (Osei), and its primary challenge differs from #16–#19 (science officer; ethics under orders; the comms officer cracking a code; reading people).
 - No primary challenge appears more than three times, and no two consecutive simulations share one or the same pivotal officer.
 - **Pivotal officers across #1–#30:** Szabo 4, Varga 5, Okafor 5, Rask 4, Adeyemi 4, Osei 4, Marrow 4 (including the capstone).
 
@@ -583,7 +584,7 @@ Overlap check (guide §12):
 - Unlike #6 Ion Season (also Adeyemi at the helm), the call here is not the captain's gut on incomplete information; it is whether to hand the ship to the ensign and leave it with him. There is no convoy to lead and no route to choose.
 - Unlike #8 The Lantern Drift, the triage is not who to save among the dying; everyone can live if the hull is managed. The scarce thing is the Halcyon's own strain, and the Chief's limit is a fact to ask for, not a moral choice.
 - Unlike #12 Ember Tide, the clock is not uncertain and waiting does not help: the habitat sinks at a known rate, and the question is who flies and how far.
-- Unlike #20 Gravity's Edge (planned), the risk to the ship is spent for people, not for science, and the Chief's limit is set by the captain's asking, not by a gamble on the unknown.
+- Unlike #20 Gravity's Edge, the risk to the ship is spent for people, not for science, and the Chief's limit is set by the captain's asking, not by a gamble on the unknown.
 
 **Hidden:** the storm (squall, gale or shear); Adeyemi's nerve today (steady, eager or shaken); the sink rate and starting depth; the hull's safe strain (72–90) until the Chief is asked; the ring's load; the true head count (Kemble's manifest may leave out 12–20 contract scoop hands working off the books in the lower works, and whether he admits it, ashamed or defensive, depends on how he is asked); Adeyemi's line, which exists only once he has flown a descent; and whether Quell is pragmatic or stands on the company's property.
 
@@ -740,20 +741,31 @@ Nothing was added to ISA-COM-001.
 **Overlap notes:** distinct from #1 The Kestrel Incident (manhunt), #5 The Saltglass Accord (mediation), #7 (the convoy crews held: no hostage-taker), #10 The Gardener (restraint as primary) and #17 Tribunal at Kesh Varo (ethics under orders in a court). Primary challenge stays within the three-use cap; consecutive primary and pivotal officer differ from #18.
 
 ### 20. Gravity's Edge
-**Premise.** A neutron star is passing through the Pell system: a once-in-a-millennium chance to record data that would make future jump routes far safer. The Halcyon is the only ship able to collect it. The longer she stays, the better the data and the worse the tidal stress on her hull. No one needs rescuing.
+**Status:** **done** (v0.8.21).
+
+**Premise.** The neutron star the Vagrant is passing through the Corriden system, closer to anything than it comes in a thousand years. Nobody has ever measured space from inside a bend that hard, and Director Benedikt Aalto of Lisle Observatory, on the moon Fennick, believes the next century's jump routes could be drawn from what the Halcyon records in the next twenty minutes. The deeper she sits in the star's tide, the more she records and the harder it pulls at her frame. No one needs rescuing, and nobody is asking her to stay.
 
 **Command challenge:**
-- **Primary:** a gut call: judging risk against reward with no clear line.
-- **Secondary:** the engineer's readings.
-- **Pivotal officer:** Chief Okafor (Engineering), whose hull-stress estimates are uncertain.
+- **Primary:** a gut call: how much risk to the ship and crew the data is worth, with no clear line.
+- **Secondary:** the engineer's readings: the hull gauges may read high, true or low near the star; the frame's own sounds do not lie.
+- **Pivotal officer:** Chief Okafor (Engineering). Once the frame has groaned, asking her how the ship feels gives her honest read of the true limit and of whether the gauges are lying; if she is told to listen to the frame, she hears it go quiet just before a tidal glitch.
 
-**Why it's distinct:** the only simulation with no one in danger but the Halcyon, and no one to blame. It is purely a captain's appetite for risk.
+**Why it's distinct:** the only simulation with no one in danger but the Halcyon and no one to blame. Unlike #12 Ember Tide, the deadline is nobody else's and the forecast never narrows; unlike #6 Ion Season and #4 Reactor Night, nothing is broken until the captain pushes too far.
 
-**Endings:**
-- **Success:** the full dataset with an undamaged ship, a partial dataset recovered by improvisation, a clean early withdrawal that still advances the science.
-- **Failure or partial:** the data lost, the Halcyon crippled, losses among the crew.
+**Endings (shipped):**
+- **Success:** The Whole Pass (a full dataset and the ship whole); What the Lodestar Saw (the tethered probe sent in on its own, its data heard through the relay or while the ship is near); Enough to Matter (out early, ship whole, enough data to move the science on).
+- **Partial:** Nothing to Show (the ship is safe but brings home too little).
+- **Failure:** A Broken Keel (the frame fails and the ship is crippled); Paid in Lives (the frame fails in the deep band with the outer sections still crewed); The Burned Array (the sensor array burns out under boost with no copy sent to the observatory).
 
-**Seeds vary:** the hull's true tolerance, the data value curve, sudden tidal spikes.
+**Seeds vary:** the hull's true tolerance (`strong` / `sound` / `tired`); the gauges (`high` / `true` / `low`); the glitches (`early` / `late` / `double`); when the pass peaks and ends; a false stutter in the gauges before or after a real glitch; how long the observatory's dish takes to turn; how long the probe lasts; how many crew are in the outer sections.
+
+**Unconventional routes:** release the Lodestar on its own while the Halcyon stays shallow; relay everything to Lisle Observatory so a burned array loses nothing; turn the ship end-on to the star or have the Chief reinforce the frame (less stress, less data); clear the outer sections before going deep.
+
+**Handbook cites (existing ids only):** roe-3 (§3.9), care-2 (§4.2), honesty-1 (§6.1) in the evaluator; roe-3 (§3.9), care-2 (§4.2), honesty-1 (§6.1), cmd-1 (§2.1) and cmd-4 (§1.4) as hidden handbook training references (the planned roe-3 link is now live). The planned #20 link on care-4 (§4.5) was removed, because §4.5 concerns withdrawing from a rescue and this simulation has none. Exercise objective (not law): hear Chief Okafor's own read of the frame before taking the ship past her rated limit. No new regulation proposed.
+
+**Naming notes (flag for Brad):** neutron star **the Vagrant**; system **Corriden**; **Lisle Observatory**; moon **Fennick**; **Director Benedikt Aalto**; tethered probe **the Lodestar**. Collisions: this entry's original system name "Pell" clashes with Ens. Sera Pell, so the system is **Corriden** instead; a working name "Plumb" was dropped because of ISV Plumb Line. No other collision found.
+
+**Overlap notes:** distinct from #12 Ember Tide (timing a natural hazard for others), #6 Ion Season and #4 Reactor Night (where the crisis is the ship itself, with no choice to stay in danger). Primary challenge stays within the three-use cap; consecutive primary and pivotal officer differ from #19.
 
 ### 21. The Ninefold Lock
 **Premise.** An abandoned Directorate depot's automated defence grid wakes when an Agency survey team lands. The team is trapped with eight hours of air. The grid's logic has nine locks: some answer to codes, some to behaviour, and one to a question.
