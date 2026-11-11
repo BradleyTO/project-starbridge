@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.8.22] — 2026-11-10 — Training Simulation 021: The Ninefold Lock
+
+Nightly simulation build. Twenty-first of 30 training simulations. No change to grading rules, crew refusal behaviour in other simulations or ISA-COM-001 wording.
+
+### Added
+- **Training Simulation 021: The Ninefold Lock** (`src/scenarios/ninefold/`). Lt. Odette Kaminski's ISA survey team is sealed in the entry hall of an abandoned Directorate supply depot on the airless moon Istra, with the depot's guns awake and only their suit air on the clock. The depot is a Directorate ninefold lock: the Watch (guns that answer to one behaviour), the Screen (a transporter screen with timed gaps that hardens if hammered) and the Keystone (one question about the depot; a right answer stands everything down). The Directorate recovery cutter Ordinal, under Quartermaster-Commander Ottilie Kovar, arrives partway through and can stand the lock down if dealt with honestly.
+  - Primary challenge: deduction and reasoning. Secondary: timing (the team's air). Pivotal officer: Lt. Cmdr. Rask (Tactical), who reads Directorate doctrine and glyphs and says how far the evidence goes.
+  - Seeded: what the Watch answers to, what the shuttle's recorder caught, whether Tran was hit, whether Rask's lean is right, the Keystone's question and answer, the Screen's cycle, the air, when the Keystone asks, and the quartermaster's temperament and arrival.
+  - Success endings: The Keystone Answered; Through the Gap; Stood Down by Its Makers; Cut Free. Partial: Rescued at a Cost; Out by Force. Failures: The Team Lost; Left Behind; An Incident at Istra; Held by the Directorate.
+  - Unconventional routes: probing the Watch, drifting in cold, an active scan of the Screen, asking the depot's makers, a slow cutting team, beating a hard-line quartermaster to the team.
+  - Listed in the catalogue and Mission Archive; launch with "Computer, begin the Ninefold Lock simulation" (also "simulation twenty-one"). Distinct voice hints for Lt. Kaminski, Cdr. Kovar and the Keystone.
+  - The crew refuse to fire into the hall where the team is (explained on "why?"); the gun emplacements alone can be ordered, with a warning first.
+  - Evaluator cites care-2 (§4.2), roe-2 (§3.1), roe-3 (§3.9), honesty-1 (§6.1). Hidden handbook training cross-refs on care-2, roe-2, roe-3, honesty-1 and cmd-4 (§1.4). Exercise objectives (not law): establish what the depot's guns answer to before taking the ship or a crew within their reach; resolve it without force against the depot. A new regulation on another power's property is proposed in the roadmap, not added.
+- `tests/sim21/`: catalogue, scenario (seed sweep, fuzz, invariants), endings (all ten, plus deduction, guessing, the Rask lean, the Kovar clock, the crew refusal and unconventional routes), evaluation (reckless/responsible pair, principled markers).
+- `scripts/smoke.mjs`: sim21 block.
+
+### Changed
+- Library is **21 of 30**. Package version **0.8.22**.
+- Interpreter: a `ninefold-lock` rule (gated on the scenario id), "twenty-one/twenty-first" in launch lines and simulation names, and the new names protected from spelling correction.
+- Roadmap #21 revised: the ISA (not "the Agency"), suit air on the exercise clock instead of eight hours, and the Directorate response as one cutter rather than a standoff.
+
 ## [0.8.21] — 2026-11-09 — Training Simulation 020: Gravity's Edge
 
 Nightly simulation build. Twentieth of 30 training simulations. No change to grading rules, crew refusal behaviour in other simulations or ISA-COM-001 wording.

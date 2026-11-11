@@ -217,6 +217,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "simulation": 20,
           "title": "Gravity's Edge",
           "purpose": "Making a judgement call on incomplete information, judged on what was known at the time."
+        },
+        {
+          "simulation": 21,
+          "title": "The Ninefold Lock",
+          "purpose": "Reasoning from the evidence available at the time, not from a hunch."
         }
       ],
       "enforcement": {
@@ -609,6 +614,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "simulation": 19,
           "title": "Hollow Crown",
           "purpose": "Holding back force while talking is still working."
+        },
+        {
+          "simulation": 21,
+          "title": "The Ninefold Lock",
+          "purpose": "Keeping force in reserve while understanding is still possible."
         }
       ],
       "enforcement": {
@@ -900,6 +910,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "simulation": 20,
           "title": "Gravity's Edge",
           "purpose": "Judging how much risk to the ship a goal is worth."
+        },
+        {
+          "simulation": 21,
+          "title": "The Ninefold Lock",
+          "purpose": "Not taking the ship into a danger whose rules are not yet known."
         }
       ],
       "enforcement": {
@@ -1094,6 +1109,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "simulation": 20,
           "title": "Gravity's Edge",
           "purpose": "Keeping the crew out of a risk the goal does not need them to share."
+        },
+        {
+          "simulation": 21,
+          "title": "The Ninefold Lock",
+          "purpose": "Understanding a hazard before sending anyone into it."
         }
       ],
       "enforcement": {
@@ -1766,6 +1786,11 @@ export const ARTICLES: readonly HandbookArticle[] = [
           "simulation": 20,
           "title": "Gravity's Edge",
           "purpose": "Not promising more than the ship can safely deliver."
+        },
+        {
+          "simulation": 21,
+          "title": "The Ninefold Lock",
+          "purpose": "Dealing honestly with another power when its help is needed."
         }
       ],
       "enforcement": {

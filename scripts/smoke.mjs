@@ -2116,6 +2116,70 @@ for (const [name, w, h] of [['tablet-portrait', 820, 1180], ['tablet-landscape',
   await ctxG.close();
 }
 
+// ============================================================== v0.8.22 ====
+// Training Simulation 021: The Ninefold Lock. Listed, launched by name, Rask's doctrine, the team's account, the shuttle's log, an ending, AAR filed.
+{
+  const ctxN = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await ctxN.addInitScript(stubs);
+  const pg = await ctxN.newPage();
+  pg.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  pg.on('pageerror', (e) => errors.push(String(e)));
+  const allN = async () => (await pg.innerText('[data-testid=narrative]')) + '\n' + (await pg.innerText('[data-testid=comms]'));
+  const modeN = () => pg.getAttribute('[data-testid=mode-banner]', 'data-mode');
+  const endedN = async () => (await pg.locator('[data-testid=outcome]').count()) > 0;
+  await pg.goto(withSeed(12), { waitUntil: 'networkidle' });
+  await pg.waitForTimeout(600);
+  await skipIntro(pg);
+  await sendOn(pg, 'Computer, list simulations', 600);
+  check('sim21: "list simulations" names The Ninefold Lock', /The Ninefold Lock/.test(await allN()));
+  if (!(await pg.locator('[data-testid=hub]').count())) await pg.click('[data-testid=open-hub]');
+  await pg.click('[data-testid=hub-tab-archive]');
+  await pg.waitForTimeout(150);
+  check('sim21: Mission Archive lists Training Simulation 021', /Training Simulation 021: The Ninefold Lock/.test(await pg.innerText('[data-testid=hub]')) && (await pg.locator('[data-testid=archive-train-TRN-ninefold]').count()) === 1);
+  await pg.click('[data-testid=hub-close]');
+  await pg.waitForTimeout(100);
+  await sendOn(pg, 'Computer, begin the Ninefold Lock simulation', 1200);
+  await pg.waitForSelector('[data-testid=mode-banner][data-mode=simulation]');
+  check('sim21: launch by name starts a simulation', (await modeN()) === 'simulation');
+  await pg.waitForTimeout(4500);
+  await skipIntro(pg);
+  let tn = await allN();
+  check('sim21: intro plays (Istra, Lt. Kaminski, the Pipit, the ninefold lock)', /Istra/.test(tn) && /Kaminski/.test(tn) && /Pipit/.test(tn) && /ninefold lock/.test(tn), tn.slice(0, 300));
+  await pg.screenshot({ path: `${SHOTS}/sim21-01-intro.png` });
+  check('sim21: the Istra depot on sensors by name', /Istra depot/i.test(await pg.innerText('[data-testid=contact-kestrel]')));
+  await sendOn(pg, 'Rask, what sets off the Watch?', 500);
+  tn = await allN();
+  check('sim21: Rask will not name the trigger without evidence', /cannot tell you which one|nothing yet that tells me/.test(tn), tn.slice(-400));
+  await sendOn(pg, 'hail Lieutenant Kaminski', 600);
+  await sendOn(pg, 'what happened on the pad?', 500);
+  await sendOn(pg, 'close the channel', 400);
+  await sendOn(pg, "Szabo, pull the Pipit's log", 500);
+  await sendOn(pg, 'Rask, what sets off the Watch?', 500);
+  tn = await allN();
+  check('sim21: the team and the log settle what the Watch answers to', /Pipit's recorder/.test(tn) && /It is (active emissions|a powered approach|haste)/.test(tn), tn.slice(-500));
+  await pg.screenshot({ path: `${SHOTS}/sim21-02-evidence.png` });
+  await sendOn(pg, 'Chief, send a cutting team down slowly to cut them out', 500);
+  for (let i = 0; i < 60 && !(await endedN()); i++) await sendOn(pg, 'wait', 400);
+  await pg.waitForSelector('[data-testid=outcome]');
+  const outN = await pg.innerText('[data-testid=outcome]');
+  check('sim21: led to an ending', /The Keystone Answered|Through the Gap|Stood Down by Its Makers|Cut Free|Rescued at a Cost|Out by Force|The Team Lost|Left Behind|An Incident at Istra|Held by the Directorate/i.test(outN), outN.slice(0, 200));
+  tn = await allN();
+  const LEAK21 = /Prefect|Ashen Covenant|Tallis|Sabeth|Thornwake|Cantor|Brenn|Teyma|Paley|Larkspur|Saltglass|Rhune|Tarvo|Hollis|Brack|Teague|Saffron Mule|Gannet|Hesper|Krenn|Vesk|Sallow|Fosse|Vell Crossing|Eventide|Wick|Vollan|Kittiwake|Orrey|Sorrel|Roake|Dahl|Marchbank|Wrenmoor|Iron Psalm|Sable Narrows|Crake|Haskett|Gardener|Coldwater|Plumb Line|Penhale|Corley|Toller|Hadley|Myrr|Ketter|Mattock|Ember Tide|Strome|Ferrier|Tamber|Stavely|Seraphine|Vory|Stern Mercy|Calderon|Seventh Bell|Harrow Lane|Caradoc|Thistledown|Kemble|Quell|Dividend|Hagfish|Draycott|Skerrit|Veyl|Gavel|Bryony|Citrine|Nessa Vale|Looking Glass|Glass Nebula|Askel|Lirra|Soth|Yasha|Toras|Brask|Quiet Stone|Orun Hold|Kesh Varo|Meridian|Quarrie|Marit|Greywall|Anwen|Bastian|Weather Engine|Aubrel|Ostrin|Mallory|Stannard|Civic Guard|Tamsin|Hollow Crown|hostage|Vagrant|Corriden|Lisle|Aalto|Lodestar|\[[a-zA-Z_]+\]|undefined|Intergalactic Agency|the Agency/;
+  check('sim21: no other simulation\'s names leak in', !LEAK21.test(tn), (tn.match(new RegExp(`.{0,60}(${LEAK21.source}).{0,60}`)) ?? [''])[0]);
+  await pg.screenshot({ path: `${SHOTS}/sim21-03-outcome.png` });
+  if (await pg.locator('[data-testid=outcome-aar]').count()) await pg.click('[data-testid=outcome-aar]');
+  await pg.waitForTimeout(300);
+  const aarN = (await pg.locator('[data-testid=aar]').count()) ? await pg.innerText('[data-testid=aar]') : '';
+  check('sim21: AAR is available, cites regulations and has no percentages', /Ninefold Lock/i.test(aarN) && /ISA regulations/.test(aarN) && !/\d\s*%/.test(aarN), aarN.slice(0, 200));
+  await pg.screenshot({ path: `${SHOTS}/sim21-04-aar.png`, fullPage: true });
+  if (await pg.locator('[data-testid=aar-close]').count()) await pg.click('[data-testid=aar-close]');
+  await pg.setViewportSize({ width: 390, height: 844 });
+  await pg.waitForTimeout(400);
+  const ovN = await pg.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  check('sim21 phone: no horizontal overflow', ovN <= 0, `overflow ${ovN}px`);
+  await ctxN.close();
+}
+
 // ============================================================== v0.8.0 =====
 // The Captain's Handbook: contents, articles, search, bridge commands in every timeline (state untouched),
 // report citations, spoiler safety, desktop and phone width.
